@@ -1,0 +1,312 @@
+---
+monofont: 'Fira Mono'
+---
+
+# Reference {#sec:reference}
+
+## Primitive Datatypes
+Walrus has 5 primitve datatypes (`Bool`, `Int`, `Float`, `Char`, `String`), with
+corresponding syntax for creating literal values.
+
+### Bools {#sec:reference:bools}
+The `Bool` datatype represents the logical values of Boolean Algebra: `true` and
+`false`. Since there are only 2 possible values of this datatype, each `Bool`
+value occupies one byte of memory.
+
+### Ints {#sec:reference:ints}
+The `Int` datatype represents signed 32-bit integers: that is, integers between
+$-2^{-31}$ ($-2,147,483,648$) and $2^{31}-1$  ($2,147,483,657$) inclusive. 
+`Int`s are stored in memory as twos-complement's integers, and occupy 4 bytes each.
+
+`Int` literals may be given in either decimal, binary or hexadecimal notation.
+Underscores may be used to enhance the readability of long literals. Note that
+sign prefixes (`+` or `-`) are *not* part of `Int` literals, but are unary
+operators. Hence the code `-123` is actually lexed and parsed as a unary
+operator  followed by a decimal integer literal.
+
+```rust
+0b101         // Binary
+123_345_789   // Decimal
+0x123_abc_789 // Hexadecimal
+```
+Walrus currently only has one integer type. This is in contrast to most other
+strongly typed languages, which have different types for integers of different
+signedness and bit-width [^ExtraIntTypes]. Extra integral types could be added
+to Walrus with little effort in future versions.
+
+[^ExtraIntTypes]: See the `char`, `short`, `int`, `long`, hierarchy and
+`signed`/ `unsigned` modifiers in C, or the `i8`/`u8` upto `i128`/`u128` types
+in Rust
+
+### Floats {#sec:reference:floats}
+The `Float` datatype represents (approximations of) real numbers: the binary32
+format specified in IEEE-754-2008. This allows representing rational numbers
+between $-3.40282347 \times 10^{38}$ and $3.40282347 \times 10^{38}$, as well as
+positive and negative zero, positive and negative infiity, and various NaN
+values. `Float`s are stored in memory according to the binary32 format, and
+occupy 4 bytes of memory.
+
+`Float` literals are given in decimal notation, with a decimal point separating
+the integral and fractional parts. Scientific notation, such as `1.0e6` for one
+million, is not currently supported. As with `Int` literals, sign prefixes are
+parsed as separate unary operators, not as part of the `Float` ltieral. 
+
+```rust
+1_000_000.05
+```
+
+There is currently only one floating-point type: Walrus does not yet have a type
+for binary64 floats [^ExtraFloatTypes].
+
+[^ExtraFloatTypes]: See the `double` or `f64`  types in C and Rust, respectively.
+
+### Chars {#sec:reference:chars}
+The `Char` datatype represents single characters of textual data. However,
+unlike the `char` datatype in C, which may represent a 7-bit ASCII character, a
+16-bit UTF-16 code-unit, or a 8-bit UTF-8 code-unit depending on the platform,
+Walrus' `Char`s are always capable of representing any Unicode character, and
+have the same representation on every platform.
+
+Each single `Char` is a 'Unicode Scalar Value': that is any 'Unicode Code Point'
+except for high and low surrogates, which are only needed in UTF-8 encodings.
+In terms of memory representation, this corresponds to any integer value between
+$0$ and $D7FF_{16}$ or $E000_{16}$ and $10FFFF_{16}$, inclusive. A consequence
+of this representation is that every `Char` value occupies 4 bytes in memory,
+even if it is an ASCII character that could fit within 1 byte.
+
+`Char` literals are given by enclosing the literal character within
+single-quotes, or by specifying the exact Unicode Scalar Value if a difficult 
+to type character is needed. A few commonly used non-graphical characters also
+have thier own special shorthand syntax, inherited from C:
+
+|Shorthand|Description      |Unicode Scalar Value
+|---------|-----------------|--------------------
+|`'\n'`   | newline         | `U+000A` 
+|`'\r'`   | carriage return | `U+000D` 
+|`'\t'`   | horizontal tab  | `U+0009` 
+|`'\0'`   | null character  | `U+0000` 
+|`'\''`   | single quote    | `U+0027` 
+|`'\"'`   | double quote    | `U+0022` 
+|`'\\'`   | backslash       | `U+005C` 
+
+```rust
+'a'        // The first letter of the Latin alphabet
+'λ'        // The eleventh letter of the Greek alphabet
+'\u{03BB}' // The same Greek letter
+'\n'       // A newline
+```
+
+### Strings {#sec:reference:strings}
+The `String` datatype represents textual data. Unlike `Char`s, which represent a
+single character, `String`s may represent several characters (or none). As with
+`Char`s, `String`s may represent any possible sequence of Unicode characters.
+
+When storing a series of Unicode characters, there are 3 potential schemes for
+translating a series of 32-bit Unicode Code Points into a series of 8-bit bytes,
+depending on the size of each Code Unit. UTF-32 encodes each Code Point as a single
+32-bit Code Unit, even if it could fit in a single byte. UTF-16 encodes each
+Code Point as 1 or more 16-bit Code Units, and suffers from the same problem as
+UTF-16, in that ASCII characters that could be optimally represented as a single
+byte occupy 2 bytes. Only UTF-8 does not have this overhead: ASCII characters
+are stored exactly as they would be in a legacy ASCII string. Only Code Points
+greater than $FF_{16}$ will be encoded as multiple 8-bit Code Units. For this
+reason, Walrus uses UTF-8 for its `String` encoding.
+
+A `String`'s representation in memory is more complex than the other datatypes:
+while all other primitive datatypes occupy a fixed amount of space that can be
+known ahead of time, `String`s whose size cannot be known at compile-time can be
+created by concatenating two existing `String`s together [^StringConcat], or by converting
+another datatype to a human-readable representation [^ToString]. Therefore
+`String`s are represented as a pair of a 32-bit integer representing the `String`s
+'length' (the number of bytes occupied by the `String`'s characters), and a
+pointer to the `String`'s UTF-8 encoded contents. This pointer indirection
+allows each `String` to occupy the same amount of memory on the stack,
+regardless of its contents.
+
+This choice of representation differs from that used by C. In C, a string value
+is simple a pointer to a single `char` in memory. Since string values do not
+carry around their length, the *null-character* acts as a *sentinel value* to
+mark the end of a string. (for this reason, C-style strings are also known as
+*null-terminated strings*) This choice of representation was chosen due to the
+memory constraints of the 1970s: computer memories were measured in kilobytes
+and an extra integer per string value was considered an unaffordable luxury. 
+This memory-saving trick has a number of disadvantages compared to storing the
+length alongside the contents-pointer:
+
+* **Time complexity**: Calculating the length of a null-terminated string takes
+  $O(n)$ time (ie time proportional to the length of the string): the string
+  must be scanned left to right, starting at the first character, until a null
+  character is found. By contrast, storing the string's length alongside its
+  contents-pointer allows the length to be simply looked-up in $O(1)$ time (ie
+  constant time) instead of calculated. A little extra bookeeping is required to
+  update the length field after each operation that modifies or creates a new
+  string, but this is usually simple.
+* **Flexibility**: Null-terminated strings are unable to represent strings
+  containing a null-character, since a null-character by definition marks the
+  end of the null-terminated string. Attempts to insert a null-character into
+  the middle of a null-terminated string will simply truncate the string to the 
+  first occurance of a null-character [^NullTruncated]. However, the null-
+  character is a Unicode character in its own right ($U+0000$), and a string
+  representation that cannot contain null-characters cannot faithfully represent
+  every possible Unicode string.
+* **Safety**: If the terminating null-character is omitted, attempts to
+  calculate the string's length will blindly continue searching past the end of
+  the string and either return an overestimate of the string's length (if a null
+  character belonging to a nearby object in memory is found), or else cause a
+  memory protection fault if the search crosses over into priveleged or
+  nonexistant memory. Since a primary aim of Walrus is that it should be
+  impossible for normal code to produce undefined behaviour or violate memory
+  safety, this makes null-terminated strings an unacceptable representation.
+
+String literals are given by enclosing the text within double-quotes. As with
+`Char` literals, the contents may be entered verbatim, by giving the Unicode
+Code Point, or by using backslash shorthands:
+
+```
+"Hello, world!\n"          // A timeless greeting
+"Hello,\u{20}world!\u{0A}" // The same greeting, with Unicode Code Points
+"Γειά σου Κόσμε!\n"        // The same greeing, in Greek
+```
+
+[^StringConcat]: See @sec:reference:operators
+[^ToString]: See @sec:reference:builtin-functions for a list of functions that convert
+builtin datatypes to thier string representations.
+[^NullTruncated]: For example, the C code `printf("Hello\0world!\n")` will
+output `Hello` to the terminal.
+
+## Identifiers {#sec:reference:identifiers}
+Identifiers are used in Walrus to signify any entity that requires a name: local
+variables, functions, structs and enums, and fields. Identifiers may consist of
+any sequence of alphabetic characters, digits, and underscores, as long as the
+resulting identifier would not be a single underscore or start with a digit.
+
+```rust
+abcXYZ
+λ           // Unicode letters are allowed
+hello_world // Identifiers can include underscores
+_hello      // or start with underscores
+_           // but a single underscore is not an identifier
+
+the_number_123 // Identifiers can include digits
+123abc         // but they cannot start with digits
+```
+
+## Let bindings {#sec:reference:let-bindings}
+Local variables are introduced by *let-statements*:
+
+```rust
+let x = 5;
+```
+
+Optional type-annotations may be supplied, but most of the time Walrus' type
+inference is sophisticated enough to infer the type of the variable without
+needing an explicit annotation [^LetTypes].
+
+```rust
+let x: Int = 5;
+```
+
+Once defined, a variable is said to be *in-scope*  and can be referred to in
+subsequent expressions (it is an error to attempt to refer to a local variable
+before it has beeen defined).
+
+```rust
+let x = 5;
+let y = 6;
+let z = x + y;
+```
+
+Unlike in C, it is not an error to introduce a new variable with the same name
+as an existing in-scope variable: instead, the old binding is said to be
+*shadowed* - it is no longer accessible:
+```rust
+let x = 5;
+let x = x + 1; // x is now 6, old variable is inaccessible
+```
+
+All local variables are *immutable* by default. To mutate a variable, mutability
+must be explictly requested using the `mut` keyword: 
+```rust
+let mut x = 5;
+x = x + 1;
+```
+
+Making immutability the default option nudges the user towards writing their
+code in a functional style where new variables are produced instead of updating
+existing variables. However, the option of mutability is still available if an
+algorithm canot easily be expressed with immutability.
+
+Local variables must be declared and initialized in the same let-statement. It
+is not possible to declare a variable without initalizing it and then initialize
+it by mutating it later. For a rationale for this design, consider the following
+C code:
+```c
+int x;
+printf("The value of x is %d\n", x);
+```
+This code reads from the memory region denoted by `x`, even though that memory
+is unitialized. In other words, it produces undefined behaviour. Walrus removes
+the possibility of reading from unitialized variables by making a let-statemen
+without an initalizing expression a syntax error.
+
+Rust *does* manage to allow separate definition and initialization of variables,
+without undefined behaviour creeping into user programs, by performing a
+dataflow analysis to check that each variable has been initalized in every
+possible path of control flow before it is first read from. This feature was
+left out of Walrus for lack of time.
+
+[^LetTypes]: See @sec:reference:types for more information about types and type-inference.
+
+## Operators {#sec:reference:operators}
+Walrus provides a set of arithmetical and logical operators (both *prefix* and
+*infix*) for performing operations that are too primitive to be implemented by
+users in normal Walrus code:
+
+|Operator         | Description
+|-----------------|----------------------------
+|prefix `-`       | Negates `Int`s and `Float`s
+|prefix `+`       | Identity operator on `Int`s and `Float`s
+|prefix `!`       | Negates `Bool`s
+|infix `&&`, `||` | Short-circuiting $\land$ and $\lor$ on `Bool`s
+|infix `+`        | Adds `Int`s and `Float`s, concatenates `String`s
+|infix `-`        | Subtracts `Int`s and `Float`s
+|infix `*`        | Multiplies `Int`s and `Float`s
+|infix `/`        | Divides `Int`s and `Float`s
+|infix `=`        | Mutates local variables and struct fields
+|infix `==`, `!=`, `<`, `<=`, `>`, `>=` | Compares primitve types
+
+Operators have set rules of *precedence* and *associativity* which determine the
+final syntax tree built by the parser. This allows the user to write 
+`1 + 2 * 3 - 4`{.rust} in standard mathematical notation, instead of a
+hypothetical `mul(add(1, 2), sub(3, 4))`{.rust} using only functions:
+
+| Operator             | Precedence | Associativity
+|----------------------|------------|---------------
+| prefix `-`, `+`, `!` | Highest    | Left
+| infix `*`, `/`       |            | Left
+| infix `+`, `-`       |            | Left
+| infix `==`, `!=`, `<`, `<=`, `>`, `>=` |  | Left
+| infix `&&`           |            | Left
+| infix `||`           |            | Left
+| infix `=`            | Lowest     | Right
+
+Unlike languages such as Haskell or Ocaml, the set of operators in Walrus is
+fixed: new operators cannot be defined by the user. This simplifies parsing, but
+can make expressions which could otherwise be expressed in specialised notation
+a little more cumbersome to write.
+
+Walrus operators also cannot be treated as first-class values as they can be in
+Haskell or Ocaml, where an operator can be treated as a variable by enclosing it
+in parentheses: `(+)`{.haskell} and passed to other functions: `foldr (+) 0
+xs`{.haskell}. The set of types to which each operator can be applied is also
+fixed: the user cannot provide their own implementation of an operator for other
+types. These two limitations are due to a current shortcoming in Walrus' type system, which will be explained in depth in @sec:reference:types.
+
+## Builtin Functions {#sec:reference:builtin-functions}
+## Functions and Closures {#sec:reference:functions}
+## Control Flow {#sec:reference:control-flow}
+## Tuples {#sec:reference:tuples}
+## Structs {#sec:reference:structs}
+## Enums {#sec:reference:enums}
+## Pattern Matching {#sec:reference:pattern-matching}
+## Type Inference {#sec:reference:types}
