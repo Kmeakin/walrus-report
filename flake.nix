@@ -11,7 +11,8 @@
           devShell = pkgs.mkShell {
             nativeBuildInputs = with pkgs; [
               pandoc
-	      haskellPackages.pandoc-crossref
+              haskellPackages.pandoc-crossref
+              (aspellWithDicts (dicts: [ dicts.en dicts.en-computers ]))
             ];
           };
         }

@@ -302,8 +302,154 @@ xs`{.haskell}. The set of types to which each operator can be applied is also
 fixed: the user cannot provide their own implementation of an operator for other
 types. These two limitations are due to a current shortcoming in Walrus' type system, which will be explained in depth in @sec:reference:types.
 
-## Builtin Functions {#sec:reference:builtin-functions}
 ## Functions and Closures {#sec:reference:functions}
+Functions are the primary unit of abstraction in Walrus, allowing complex
+programs to be split into smaller independent parts:
+```rust
+fn hello() -> String {
+    "hello"
+}
+
+fn world() -> _ {
+    "world"
+}
+
+fn main() {
+    print(hello() + world())
+}
+```
+
+Functions automatically return the value of the last expression in thier body
+(or the unit value, `()`, if the body is empty or consists only of statements).
+No explicit `return` is necessary as in C ^[though explicit returns can still be
+used, see @sec:reference:control-flow]. The return type of a function can be
+specified on the right-hand-side of the `->` (as in `hello`), or left blank to let
+the Walrus compiler infer the correct type (as in `world`). If no return type is
+given, the function is assumed to return the unit type, `()`, (as in `main`).
+
+### Function parameters
+As well as returning values, functions can accept input *parameters* and operate
+on them:
+```rust
+fn square(x: Int) -> Int {
+    x * x
+}
+
+fn main() {
+    print("10 squared is " + int_to_string(square(10)))
+}
+```
+
+As function parameters are local variables, they can be mutated just like
+variables introduced by let-statements:
+```rust
+fn mutate(mut x: Int) {
+    x = x + 1;
+    print(int_to_string(x) + " ")
+}
+
+fn main() {
+    let x = 5;
+    print(int_to_string(x) + " ")
+    mutate(x);
+    print(int_to_string(x))
+}
+```
+Note however that this program will print `5 6 5`, not `5 6 6` as some readers
+may have expected. This is because arguments to functions are always passed 
+*by value* in Walrus, not *by reference* as objects (but not primitive types) are in
+Java. In other words, each function recieves a new, independent copy of the
+arguments passed in. It may help to think of the `mutate` function as being
+equivalent to 
+```rust
+fn mutate(x: Int) {
+    let mut x = x;
+    x = x + 1;
+    print(int_to_string(x) + " ")
+}
+```
+which should make it apparant that any mutations done on `mutate`'s parameters
+will be local to the body of `mutate`.
+
+In C, which is also a call by value language, it *is* possible to write a version
+of `mutate` that will make its mutation visible to the caller:
+```c
+void mutate(int* x) {
+    *x = *x + 1;
+    printf("%d ", *x);
+}
+
+void main() {
+    int x = 5;
+    printf("%d ", x);
+    mutate(&x);
+    printf("%d", x);
+}
+```
+This is because `mutate` now receives a pointer to the memory location occupied
+by `x`, rather than a copy of the value in `x`.
+
+An equivalent function in Walrus is not yet possible, as Walrus currently does
+not have references.
+
+### Function scoping
+Unlike local variables, functions are *globally-scoped*: a function need not be
+defined before it is referred to (as long as it is defined *somewhere* in the
+file). There is no requirement to separatly *declare* and *define* a pair of
+mutually-recursive functions as in C:
+```c
+// This declaration is required, as otherwise is_odd will not 
+// be in the scope of is_even
+bool is_odd(unsigned int x); 
+
+bool is_even(unsigned int x) {
+    return x == 0 || is_odd(x - 1)
+}
+
+bool is_odd(unsigned int x) {
+    return x != 0 || is_even(x - 1)
+}
+```
+
+The equivalent [^NotQuiteEquivalent] pair of functions can be written in Walrus without needing to
+repeat `is_odd`'s signature:
+```rust
+fn is_even(x: Int) -> Bool {
+    x == 0 || is_odd(x - 1)
+}
+
+fn is_odd(x: Int) -> Bool {
+    x != 0 || is_even(x - 1)
+}
+```
+
+[^NotQuiteEquivalent]: The astute reader will notice that these functions
+are not *exactly* equivalent to their C counterparts, as they will recur
+repeatedly until causing a stack overflow if passed a value less than `0`.
+Unfortunately, this is the best implementation that can be done until unsigned integers are added to Walrus.
+
+### First class functions
+Walrus functions are first class values: they can not only be called, but also
+be passed around and stored in variables:
+
+```rust
+fn apply(f: (Int) -> Int, x: Int) -> Int {
+    f(x)
+}
+
+fn square(x: Int) -> Int {
+    x * x
+}
+
+fn main() {
+    let f = square;
+    print("10 squared is " + apply(f, 10))
+}
+```
+
+## Builtin Functions {#sec:reference:builtin-functions}
+Walrus has a small collection of built-in functions provided by the compiler
+
 ## Control Flow {#sec:reference:control-flow}
 ## Tuples {#sec:reference:tuples}
 ## Structs {#sec:reference:structs}
