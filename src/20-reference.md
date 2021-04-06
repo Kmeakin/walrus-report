@@ -290,6 +290,10 @@ hypothetical `sub(add(1, mul(2, 3)), 4)`{.rust} using only functions:
 | infix `||`           |            | Left
 | infix `=`            | Lowest     | Right
 
+As in standard mathematical notation, parentheses bind tighter than any
+operators, and so can be used to override the normal operator precedences:
+`(1 + 2) * (3 - 4)`{.rust}
+
 Unlike languages such as Haskell or Ocaml, the set of operators in Walrus is
 fixed: new operators cannot be defined by the user. This simplifies parsing, but
 can make expressions which could otherwise be expressed in specialised notation
