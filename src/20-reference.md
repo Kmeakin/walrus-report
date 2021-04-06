@@ -278,7 +278,7 @@ users in normal Walrus code:
 Operators have set rules of *precedence* and *associativity* which determine the
 final syntax tree built by the parser. This allows the user to write 
 `1 + 2 * 3 - 4`{.rust} in standard mathematical notation, instead of a
-hypothetical `mul(add(1, 2), sub(3, 4))`{.rust} using only functions:
+hypothetical `sub(add(1, mul(2, 3)), 4)`{.rust} using only functions:
 
 | Operator             | Precedence | Associativity
 |----------------------|------------|---------------
