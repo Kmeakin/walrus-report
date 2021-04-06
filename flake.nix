@@ -12,7 +12,7 @@
             nativeBuildInputs = with pkgs; [
               pandoc
               haskellPackages.pandoc-crossref
-              (aspellWithDicts (dicts: [ dicts.en dicts.en-computers ]))
+              (aspellWithDicts (dicts: [ dicts.en dicts.en-computers dicts.en-science ]))
             ];
           };
         }

@@ -14,6 +14,7 @@ all:
 wordcount:
 	pandoc src/*.md \
 	--lua-filter lua-filters/wordcount/wordcount.lua
+
 spellcheck:
 	pandoc src/*.md \
 	--lua-filter lua-filters/spellcheck/spellcheck.lua
