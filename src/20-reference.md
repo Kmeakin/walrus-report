@@ -452,6 +452,7 @@ fn main() {
 
 ## Builtin Functions {#sec:reference:builtin-functions}
 Walrus has a small collection of built-in functions provided by the compiler:
+
 |Name             |Type                 |Description                      |
 |-----------------|---------------------|---------------------------------|
 |`print`          | `(String) -> ()`    | Print to standard-output        |
@@ -461,7 +462,7 @@ Walrus has a small collection of built-in functions provided by the compiler:
 |`int_to_string`  | `(String) -> (Int)` | Convert an `Int` to a `String`  |
 |`float_to_string`| `(String) -> (Int)` | Convert a `Float` to a `String` |
 |`char_to_string` | `(String) -> (Int)` | Convert a `Char` to a `String`  |
-|`exit`           | `(Int) -> Never`    | Immediately exit the program, returning the status code to the shell
+|`exit`           | `(Int) -> Never`    | Immediately exit the program, returning the status to the shell    |
 
 These functions are implicitly in global scope, even though they are not defined
 anywhere. Unlike user-defined functions, they *can* be shadowed.
