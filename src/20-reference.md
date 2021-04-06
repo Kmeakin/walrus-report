@@ -5,15 +5,15 @@ monofont: 'Fira Mono'
 # Reference {#sec:reference}
 
 ## Primitive Datatypes
-Walrus has 5 primitve datatypes (`Bool`, `Int`, `Float`, `Char`, `String`), with
+Walrus has 5 primitive datatypes (`Bool`, `Int`, `Float`, `Char`, `String`), with
 corresponding syntax for creating literal values.
 
-### Bools {#sec:reference:bools}
+### `Bool`s {#sec:reference:bools}
 The `Bool` datatype represents the logical values of Boolean Algebra: `true` and
 `false`. Since there are only 2 possible values of this datatype, each `Bool`
 value occupies one byte of memory.
 
-### Ints {#sec:reference:ints}
+### `Int`s {#sec:reference:ints}
 The `Int` datatype represents signed 32-bit integers: that is, integers between
 $-2^{-31}$ ($-2,147,483,648$) and $2^{31}-1$  ($2,147,483,657$) inclusive. 
 `Int`s are stored in memory as twos-complement's integers, and occupy 4 bytes each.
@@ -31,25 +31,25 @@ operator  followed by a decimal integer literal.
 ```
 Walrus currently only has one integer type. This is in contrast to most other
 strongly typed languages, which have different types for integers of different
-signedness and bit-width [^ExtraIntTypes]. Extra integral types could be added
+sign and bit-width [^ExtraIntTypes]. Extra integral types could be added
 to Walrus with little effort in future versions.
 
 [^ExtraIntTypes]: See the `char`, `short`, `int`, `long`, hierarchy and
-`signed`/ `unsigned` modifiers in C, or the `i8`/`u8` upto `i128`/`u128` types
+`signed`/ `unsigned` modifiers in C, or the `i8`/`u8` up-to `i128`/`u128` types
 in Rust
 
-### Floats {#sec:reference:floats}
+### `Float`s {#sec:reference:floats}
 The `Float` datatype represents (approximations of) real numbers: the binary32
 format specified in IEEE-754-2008. This allows representing rational numbers
 between $-3.40282347 \times 10^{38}$ and $3.40282347 \times 10^{38}$, as well as
-positive and negative zero, positive and negative infiity, and various NaN
+positive and negative zero, positive and negative infinity, and various NaN
 values. `Float`s are stored in memory according to the binary32 format, and
 occupy 4 bytes of memory.
 
 `Float` literals are given in decimal notation, with a decimal point separating
 the integral and fractional parts. Scientific notation, such as `1.0e6` for one
 million, is not currently supported. As with `Int` literals, sign prefixes are
-parsed as separate unary operators, not as part of the `Float` ltieral. 
+parsed as separate unary operators, not as part of the `Float` literal. 
 
 ```rust
 1_000_000.05
@@ -60,7 +60,7 @@ for binary64 floats [^ExtraFloatTypes].
 
 [^ExtraFloatTypes]: See the `double` or `f64`  types in C and Rust, respectively.
 
-### Chars {#sec:reference:chars}
+### `Char`s {#sec:reference:chars}
 The `Char` datatype represents single characters of textual data. However,
 unlike the `char` datatype in C, which may represent a 7-bit ASCII character, a
 16-bit UTF-16 code-unit, or a 8-bit UTF-8 code-unit depending on the platform,
@@ -77,7 +77,7 @@ even if it is an ASCII character that could fit within 1 byte.
 `Char` literals are given by enclosing the literal character within
 single-quotes, or by specifying the exact Unicode Scalar Value if a difficult 
 to type character is needed. A few commonly used non-graphical characters also
-have thier own special shorthand syntax, inherited from C:
+have their own special shorthand syntax, inherited from C:
 
 |Shorthand|Description      |Unicode Scalar Value
 |---------|-----------------|--------------------
@@ -96,7 +96,7 @@ have thier own special shorthand syntax, inherited from C:
 '\n'       // A newline
 ```
 
-### Strings {#sec:reference:strings}
+### `String`s {#sec:reference:strings}
 The `String` datatype represents textual data. Unlike `Char`s, which represent a
 single character, `String`s may represent several characters (or none). As with
 `Char`s, `String`s may represent any possible sequence of Unicode characters.
@@ -129,7 +129,7 @@ carry around their length, the *null-character* acts as a *sentinel value* to
 mark the end of a string. (for this reason, C-style strings are also known as
 *null-terminated strings*) This choice of representation was chosen due to the
 memory constraints of the 1970s: computer memories were measured in kilobytes
-and an extra integer per string value was considered an unaffordable luxury. 
+and an extra integer per string value was considered an un-affordable luxury. 
 This memory-saving trick has a number of disadvantages compared to storing the
 length alongside the contents-pointer:
 
@@ -138,14 +138,14 @@ length alongside the contents-pointer:
   must be scanned left to right, starting at the first character, until a null
   character is found. By contrast, storing the string's length alongside its
   contents-pointer allows the length to be simply looked-up in $O(1)$ time (ie
-  constant time) instead of calculated. A little extra bookeeping is required to
+  constant time) instead of calculated. A little extra book-keeping is required to
   update the length field after each operation that modifies or creates a new
   string, but this is usually simple.
 * **Flexibility**: Null-terminated strings are unable to represent strings
   containing a null-character, since a null-character by definition marks the
   end of the null-terminated string. Attempts to insert a null-character into
   the middle of a null-terminated string will simply truncate the string to the 
-  first occurance of a null-character [^NullTruncated]. However, the null-
+  first occurrence of a null-character [^NullTruncated]. However, the null-
   character is a Unicode character in its own right ($U+0000$), and a string
   representation that cannot contain null-characters cannot faithfully represent
   every possible Unicode string.
@@ -153,14 +153,14 @@ length alongside the contents-pointer:
   calculate the string's length will blindly continue searching past the end of
   the string and either return an overestimate of the string's length (if a null
   character belonging to a nearby object in memory is found), or else cause a
-  memory protection fault if the search crosses over into priveleged or
-  nonexistant memory. Since a primary aim of Walrus is that it should be
+  memory protection fault if the search crosses over into privileged or
+  un-mapped memory. Since a primary aim of Walrus is that it should be
   impossible for normal code to produce undefined behaviour or violate memory
   safety, this makes null-terminated strings an unacceptable representation.
 
 String literals are given by enclosing the text within double-quotes. As with
 `Char` literals, the contents may be entered verbatim, by giving the Unicode
-Code Point, or by using backslash shorthands:
+Code Point, or by using the backslash shorthand:
 
 ```
 "Hello, world!\n"          // A timeless greeting
@@ -170,7 +170,7 @@ Code Point, or by using backslash shorthands:
 
 [^StringConcat]: See @sec:reference:operators
 [^ToString]: See @sec:reference:builtin-functions for a list of functions that convert
-builtin datatypes to thier string representations.
+builtin datatypes to their string representations.
 [^NullTruncated]: For example, the C code `printf("Hello\0world!\n")` will
 output `Hello` to the terminal.
 
@@ -208,7 +208,7 @@ let x: Int = 5;
 
 Once defined, a variable is said to be *in-scope*  and can be referred to in
 subsequent expressions (it is an error to attempt to refer to a local variable
-before it has beeen defined).
+before it has been defined).
 
 ```rust
 let x = 5;
@@ -225,7 +225,7 @@ let x = x + 1; // x is now 6, old variable is inaccessible
 ```
 
 All local variables are *immutable* by default. To mutate a variable, mutability
-must be explictly requested using the `mut` keyword: 
+must be explicitly requested using the `mut` keyword: 
 ```rust
 let mut x = 5;
 x = x + 1;
@@ -234,10 +234,10 @@ x = x + 1;
 Making immutability the default option nudges the user towards writing their
 code in a functional style where new variables are produced instead of updating
 existing variables. However, the option of mutability is still available if an
-algorithm canot easily be expressed with immutability.
+algorithm cannot easily be expressed with immutability.
 
 Local variables must be declared and initialized in the same let-statement. It
-is not possible to declare a variable without initalizing it and then initialize
+is not possible to declare a variable without initializing it and then initialize
 it by mutating it later. For a rationale for this design, consider the following
 C code:
 ```c
@@ -245,13 +245,13 @@ int x;
 printf("The value of x is %d\n", x);
 ```
 This code reads from the memory region denoted by `x`, even though that memory
-is unitialized. In other words, it produces undefined behaviour. Walrus removes
-the possibility of reading from unitialized variables by making a let-statemen
-without an initalizing expression a syntax error.
+is uninitialized. In other words, it produces undefined behaviour. Walrus removes
+the possibility of reading from uninitialized variables by making a let-statement
+without an initializing expression a syntax error.
 
 Rust *does* manage to allow separate definition and initialization of variables,
 without undefined behaviour creeping into user programs, by performing a
-dataflow analysis to check that each variable has been initalized in every
+data-flow analysis to check that each variable has been initialized in every
 possible path of control flow before it is first read from. This feature was
 left out of Walrus for lack of time.
 
@@ -273,7 +273,7 @@ users in normal Walrus code:
 |infix `*`        | Multiplies `Int`s and `Float`s
 |infix `/`        | Divides `Int`s and `Float`s
 |infix `=`        | Mutates local variables and struct fields
-|infix `==`, `!=`, `<`, `<=`, `>`, `>=` | Compares primitve types
+|infix `==`, `!=`, `<`, `<=`, `>`, `>=` | Compares primitive types
 
 Operators have set rules of *precedence* and *associativity* which determine the
 final syntax tree built by the parser. This allows the user to write 
@@ -319,7 +319,7 @@ fn main() {
 }
 ```
 
-Functions automatically return the value of the last expression in thier body
+Functions automatically return the value of the last expression in their body
 (or the unit value, `()`, if the body is empty or consists only of statements).
 No explicit `return` is necessary as in C ^[though explicit returns can still be
 used, see @sec:reference:control-flow]. The return type of a function can be
@@ -358,7 +358,7 @@ fn main() {
 Note however that this program will print `5 6 5`, not `5 6 6` as some readers
 may have expected. This is because arguments to functions are always passed 
 *by value* in Walrus, not *by reference* as objects (but not primitive types) are in
-Java. In other words, each function recieves a new, independent copy of the
+Java. In other words, each function receives a new, independent copy of the
 arguments passed in. It may help to think of the `mutate` function as being
 equivalent to 
 ```rust
@@ -368,7 +368,7 @@ fn mutate(x: Int) {
     print(int_to_string(x) + " ")
 }
 ```
-which should make it apparant that any mutations done on `mutate`'s parameters
+which should make it apparent that any mutations done on `mutate`'s parameters
 will be local to the body of `mutate`.
 
 In C, which is also a call by value language, it *is* possible to write a version
@@ -395,7 +395,7 @@ not have references.
 ### Function scoping
 Unlike local variables, functions are *globally-scoped*: a function need not be
 defined before it is referred to (as long as it is defined *somewhere* in the
-file). There is no requirement to separatly *declare* and *define* a pair of
+file). There is no requirement to separately *declare* and *define* a pair of
 mutually-recursive functions as in C:
 ```c
 // This declaration is required, as otherwise is_odd will not 
@@ -461,11 +461,10 @@ Walrus has a small collection of built-in functions provided by the compiler:
 |`int_to_string`  | `(String) -> (Int)` | Convert an `Int` to a `String`  |
 |`float_to_string`| `(String) -> (Int)` | Convert a `Float` to a `String` |
 |`char_to_string` | `(String) -> (Int)` | Convert a `Char` to a `String`  |
-|`exit`           | `(Int) -> Never`    | Immediatly exit the program, returning the status code to the shell
+|`exit`           | `(Int) -> Never`    | Immediately exit the program, returning the status code to the shell
 
-These functions are implitely in global scope, even though they are not defined
+These functions are implicitly in global scope, even though they are not defined
 anywhere. Unlike user-defined functions, they *can* be shadowed.
-
 
 ## Control Flow {#sec:reference:control-flow}
 ## Tuples {#sec:reference:tuples}
