@@ -423,6 +423,9 @@ fn is_odd(x: Int) -> Bool {
 }
 ```
 
+Since functions exist in the global scope, they cannot be shadowed: it is an
+error to define two functions with the same name.
+
 [^NotQuiteEquivalent]: The astute reader will notice that these functions
 are not *exactly* equivalent to their C counterparts, as they will recur
 repeatedly until causing a stack overflow if passed a value less than `0`.
@@ -448,7 +451,21 @@ fn main() {
 ```
 
 ## Builtin Functions {#sec:reference:builtin-functions}
-Walrus has a small collection of built-in functions provided by the compiler
+Walrus has a small collection of built-in functions provided by the compiler:
+|Name             |Type                 |Description                      |
+|-----------------|---------------------|---------------------------------|
+|`print`          | `(String) -> ()`    | Print to standard-output        |
+|`print_error`    | `(String) -> ()`    | Print to standard-error         |
+|`string_length`  | `(String) -> (Int)` | Get the length of a `String`    |
+|`bool_to_string` | `(String) -> (Int)` | Convert a `Bool` to a `String`  |
+|`int_to_string`  | `(String) -> (Int)` | Convert an `Int` to a `String`  |
+|`float_to_string`| `(String) -> (Int)` | Convert a `Float` to a `String` |
+|`char_to_string` | `(String) -> (Int)` | Convert a `Char` to a `String`  |
+|`exit`           | `(Int) -> Never`    | Immediatly exit the program, returning the status code to the shell
+
+These functions are implitely in global scope, even though they are not defined
+anywhere. Unlike user-defined functions, they *can* be shadowed.
+
 
 ## Control Flow {#sec:reference:control-flow}
 ## Tuples {#sec:reference:tuples}
