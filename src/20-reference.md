@@ -629,6 +629,14 @@ terminate. This means it has no meaningful return type, not even the unit type,
 will be explained in @sec:reference:types.
 
 ### Early Returns
+Just as `break` allows programs to return from loops early, `return` allows
+programs to return from functions early, without executing the rest of the
+function body. Although Walrus' pratice of automatically returning the value of
+the last expression in a function body obviates most of the need for `return`,
+it may still be useful in situations where a function cannot easily be
+expressed with a single exit point.
+
+TODO: example use of early return
 
 ## Tuples {#sec:reference:tuples}
 ## Structs {#sec:reference:structs}
