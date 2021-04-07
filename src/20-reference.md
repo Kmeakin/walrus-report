@@ -638,8 +638,105 @@ expressed with a single exit point.
 
 TODO: example use of early return
 
-## Tuples {#sec:reference:tuples}
-## Structs {#sec:reference:structs}
-## Enums {#sec:reference:enums}
+## Aggregate datatypes {#sec:reference:aggregates}
+All datatypes we have dealt with so far have been so-called
+*primitive datatypes*: the atoms from which other, more complex types can be
+built. Walrus has 3 methods of building more complex *aggregate datatypes* from
+combinations of primitive datatypes and other aggregate datatypes: *tuples*,
+*structs* and *enums*.
+
+### Tuples {#sec:reference:tuples}
+A tuple is an ordered sequence of elements. Unlike other ordered collections,
+such as lists or vectors, tuples are *heterogenous*, meaning that each element
+of the tuple can be distinct, and tuples of different *arity* (number of
+elements) are considered to be distinct, incompatible types.
+
+Tuples are produced by writing their elements in order, enclosed in parentheses.
+Note that 1-tuples require a trailing comma in order to disambiguate them from a
+parenthesised expression:
+```rust
+let unit: () = ();                  
+let singleton: (Int,) = (1,);       
+let not_a_tuple: Int = (1);
+let pair: (Int, Bool) = (1, false);
+let triple: (Int, Bool, String) = (1, false, "hello");
+```
+
+The individual elements of a tuple can be accessed either by *destructuring* the
+tuple via pattern-matching (see @sec:reference:pattern-matching), or by
+accessing the element as a field of the tuple:
+```rust
+let pair = (1, 2);
+let (x1, y1) = pair;
+let x2 = pair.0;
+let y2 = pair.1;
+```
+
+Tuples are useful for when you need to group data together, without the full
+ceremony of declaring a separate *struct* type to hold them. A common use case
+for tuples is for returning multiple values from a function. 
+
+Consider attempting to write a function that returns both the quotient of two
+integers, and any remainder left over (for simplicity we will ignore the case
+where the divisor is 0). In C, functions can only return 1 value (or `void` if
+they return no values), so the implementor must either mutate a pointer passed
+in by the caller, or declare a new struct which it returns:
+```c
+void quot_rem_a(int x, int y, int* quot, int* rem) {
+    *quot = x / y;
+    *rem = x % y;
+}
+
+typedef struct {
+    int quot;
+    int rem;
+} quot_rem_t;
+
+quot_rem_t quot_rem_b(int x, int y) {
+    return (quot_rem_t){.quot = x / y, .rem = x % y};
+}
+
+void main() {
+    int x = 5;
+    int y = 2;
+ 
+    int quot, rem;
+    quot_rem_a(x, y, &quot, &rem);
+    printf("%d divides %d %d times, with remainder %d\n", y, x, quot, rem);
+
+    quot_rem_t quot_rem = quot_rem_b(x, y);
+    printf("%d divides %d %d times, with remainder %d\n", y, x, 
+            quot_rem.quot, quot_rem.rem);
+}
+```
+
+By contrast, in Walrus, you can simulate multiple return values by returning a tuple:
+```rust
+fn quot_rem(x: Int, y: Int) -> (Int, Int) {
+    (x / y, x % y)
+}
+
+fn main() {
+    let x = 5;
+    let y = 2;
+    let (quot, rem) = quot_rem(x, y);
+    print(int_to_string(y) + " divides " + int_to_string(x) + " " +
+          int_to_string(quot) + " times, with remainder " + int_to_string(rem));
+}
+```
+
+A 0-tuple (also called an *empty tuple* or *unit tuple*) cannot contain any
+elements, and so carries no data at runtime. It is therefore used as a
+"placeholder" when some kind of value is needed, but no meaningful data can be
+provided. For example, assigment expressions (`x = x + 1`) return `()`, as does
+a function with no final expression in its body. It can be considered analogous
+to the `void` type from C, however unlike C's `void`, unit tuples are first
+class values that can be stored in variables, passed to and returned from
+functions, etc. For a more in-depth explanation of the empty tuple, see
+@sec:reference:types.
+
+### Structs {#sec:reference:structs}
+### Enums {#sec:reference:enums}
+
 ## Pattern Matching {#sec:reference:pattern-matching}
 ## Type Inference {#sec:reference:types}
