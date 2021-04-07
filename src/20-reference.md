@@ -509,6 +509,59 @@ These functions are implicitly in global scope, even though they are not defined
 anywhere. Unlike user-defined functions, they *can* be shadowed.
 
 ## Control Flow {#sec:reference:control-flow}
+### If {sec:reference:if}
+The *if-expression* allows selecting between alternative branches based on a
+condition:
+```rust
+fn max(x: Int, y: Int) -> Int {
+    if x > y {
+        x
+    } else {
+        y
+    }
+}
+```
+
+If the `else` branch is omitted, the body is executed only for side effects, and
+`()` is returned:
+```rust
+fn square(x: Int, verbose: Bool) {
+    if verbose {
+        print("squaring " + int_to_string(x))
+    }
+    x * x
+}
+```
+
+If-expressions can be *chained* to perform multiple conditional checks, selecting
+the first branch that evaluates to true:
+```rust
+fn sign(x: Int) -> String {
+    if x > 0 {
+        "positive"
+    } else if x < 0 {
+        "negative"
+    } else {
+        "zero"
+    }
+}
+```
+This function is equivalent to
+```rust
+#
+fn sign(x: Int) -> String {
+    if x > 0 {
+        "positive"
+    } else {
+        if x < 0 {
+            "negative"
+        } else {
+            "zero"
+        }
+    }
+}
+```
+
 ## Tuples {#sec:reference:tuples}
 ## Structs {#sec:reference:structs}
 ## Enums {#sec:reference:enums}
