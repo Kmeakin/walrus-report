@@ -494,22 +494,22 @@ fn main() {
 ## Builtin Functions {#sec:reference:builtin-functions}
 Walrus has a small collection of built-in functions provided by the compiler:
 
-|Name             |Type               |Description                      |
-|-----------------|-------------------|---------------------------------|
-|`print`          | `(String) -> ()`  | Print to standard-output        |
-|`print_error`    | `(String) -> ()`  | Print to standard-error         |
-|`string_length`  | `(String) -> Int` | Get the length of a `String`    |
-|`bool_to_string` | `(String) -> Int` | Convert a `Bool` to a `String`  |
-|`int_to_string`  | `(String) -> Int` | Convert an `Int` to a `String`  |
-|`float_to_string`| `(String) -> Int` | Convert a `Float` to a `String` |
-|`char_to_string` | `(String) -> Int` | Convert a `Char` to a `String`  |
-|`exit`           | `(Int) -> Never`  | Immediately exit the program, returning the status to the shell    |
+|Name             |Type                 |Description                      |
+|-----------------|---------------------|---------------------------------|
+|`print`          | `(String) -> ()`    | Print to standard-output        |
+|`print_error`    | `(String) -> ()`    | Print to standard-error         |
+|`string_length`  | `(String) -> Int`   | Get the length of a `String`    |
+|`bool_to_string` | `(Bool) -> String`  | Convert a `Bool` to a `String`  |
+|`int_to_string`  | `(Int) -> String`   | Convert an `Int` to a `String`  |
+|`float_to_string`| `(Float) -> String` | Convert a `Float` to a `String` |
+|`char_to_string` | `(Char) -> String`  | Convert a `Char` to a `String`  |
+|`exit`           | `(Int) -> String`   | Immediately exit the program, returning the status to the shell |
 
 These functions are implicitly in global scope, even though they are not defined
 anywhere. Unlike user-defined functions, they *can* be shadowed.
 
 ## Control Flow {#sec:reference:control-flow}
-### If {sec:reference:if}
+### If {#sec:reference:if}
 The *if-expression* allows selecting between alternative branches based on a
 condition:
 ```rust
@@ -546,9 +546,9 @@ fn sign(x: Int) -> String {
     }
 }
 ```
+
 This function is equivalent to
 ```rust
-#
 fn sign(x: Int) -> String {
     if x > 0 {
         "positive"
@@ -561,6 +561,74 @@ fn sign(x: Int) -> String {
     }
 }
 ```
+
+### Loops
+The *loop-expression* allows repeating a block until a *break-expression* is evaluated:
+```rust
+fn countdown(mut x: Int) {
+    loop {
+        if x == 0 {
+            break;
+        } else {
+            print(int_to_string(x) + "\n");
+            x = x - 1;
+        }
+    }
+}
+```
+
+A break-expression may optionally accept a value, which becomes the final
+result of the enclosing loop-expression:
+```rust
+fn smallest_prime_factor(x: Int) -> Int {
+    let mut q = 2;
+    loop {
+        if x % q == 0 {
+            break q;
+        }
+        q = q + 1;
+    }
+}
+```
+
+As well as `break` to terminate early, loops may `continue` to skip the rest of
+the loop body and start the next iteration early [^NoReadLine]:
+```rust
+fn login() -> Int {
+    let secret = 42;
+    let max_length = 20;
+    let password = "password";
+
+    loop {
+        print("password: ");
+        let line = read_line();
+        if line == "" {
+            print("Password cannot be empty\n");
+            continue;
+        }
+        if string_length(line) > max_length {
+            print("Password is too long\n");
+            continue;
+        }
+        if line != password {
+            print("Incorrect password\n");
+            continue;
+        }
+        break secret;
+    }
+}
+```
+
+[^NoReadLine]: Assume for the sake of this example that a builtin function
+`read_line: () -> String` exists
+
+#### Nonterminating loops
+A loop-expression with no `break` expression inside its body will never
+terminate. This means it has no meaningful return type, not even the unit type,
+`()`. Instead, the return type of an infinite loop is `Never`. The `Never` type
+will be explained in @sec:reference:types.
+
+### Early Returns
 
 ## Tuples {#sec:reference:tuples}
 ## Structs {#sec:reference:structs}
