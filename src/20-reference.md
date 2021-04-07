@@ -454,6 +454,43 @@ fn main() {
 }
 ```
 
+### Lambdas
+As well as global, named functions, Walrus allows the creation of local,
+*anonymous* functions (also sometimes called *lambda abstractions* or simply
+*lambdas*):
+
+```rust
+fn quadratic(a: Int, b: Int, c: Int) -> (Int, Int, Int) -> Int {
+    (x) => a * x * x + b * x + c
+}
+
+fn main() {
+    let f = quadratic(10, 5, -2);
+    print("f(2) = " + int_to_string(f(2)));
+}
+```
+
+Lambda abstractions are also able to *close over their envionment*: if the body
+of a lambda abstraction refers to a variable that is defined in its enclosing
+scope (its *environment*), rather than defined in its parameter list, it is said
+to *capture* that variable: the lambda value now carries around an independent
+copy of the captured variable, which will then be read from when the lambda
+value is subsequently called. The resulting combination of function code and
+captured variables is called a *closure*:
+
+```rust
+fn constantly(k: Int) -> (Int) -> Int {
+    (_) => k
+}
+
+fn main() {
+    let always_5 = constantly(5);
+    print(int_to_string(always_5(1)));
+    print(int_to_string(always_5(2)));
+    print(int_to_string(always_5(3)));
+}
+```
+
 ## Builtin Functions {#sec:reference:builtin-functions}
 Walrus has a small collection of built-in functions provided by the compiler:
 
