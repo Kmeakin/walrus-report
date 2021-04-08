@@ -11,6 +11,7 @@
           devShell = pkgs.mkShell {
             nativeBuildInputs = with pkgs; [
               pandoc
+              texlive.combined.scheme-full
               haskellPackages.pandoc-crossref
               (aspellWithDicts (dicts: [ dicts.en dicts.en-computers dicts.en-science ]))
             ];

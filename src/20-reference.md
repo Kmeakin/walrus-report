@@ -732,10 +732,132 @@ provided. For example, assigment expressions (`x = x + 1`) return `()`, as does
 a function with no final expression in its body. It can be considered analogous
 to the `void` type from C, however unlike C's `void`, unit tuples are first
 class values that can be stored in variables, passed to and returned from
-functions, etc. For a more in-depth explanation of the empty tuple, see
-@sec:reference:types.
+functions, etc.
 
 ### Structs {#sec:reference:structs}
+Structs are similar to tuples, in that they are heterogenous collections.
+However, unlike tupes, struct fields are indexed by name rather than position:
+```rust
+struct Person {
+    name: String,
+    age: Int,
+    weight: Float,
+}
+```
+
+Once declared, values of a struct can be *constructed* by giving an initializer
+value for each field in the struct:
+```rust
+let p = Person {
+    name: "John Doe",
+    weight: 100.0,
+    age: 21,
+};
+```
+The fields in the constructor needn't be initialized in the same order as they
+are given in the struct declaration, but all fields must be initialized: a
+struct may not be created with some fields unitialized as in C.
+
+#### Lack of constructors
+Unlike C++ or Java classes, Walrus structs cannot have "constructor methods"
+associated with them. The only way to create a struct value is to simply provide
+the value of all the fields up front. This design choice was made because
+constructors may leave a class in an inconsistent state if they `return` early
+or throw an exception.
+
+Consider a Java `Person` class with a constructor that calculates a Person's age
+from their year of birth. This requires getting the current date via an
+(imaginary) `getCurrentYear` function, which on rare occasions may throw an
+exception for various reasons. If this exception is not caught, the constructor
+will terminate early, resulting in a `Person` with an unitialized `age` and `weight`:
+```java
+class Person {
+    String name;
+    int age;
+    float weight;
+
+    Person(String name, int birthYear, float weight) {
+        this.name = name;
+        int currentYear = getCurrentYear();
+        this.age = currentYear - birtthYear;
+        this.weight = weight;
+    }
+}
+```
+
+By contrast, the corresponding Walrus function will either successfully return a
+fully initialized person, or else return an error which must be handled by the
+caller &[See @sec:reference:enum and @sec:reference:pattern_matching for a
+description of the `enum` and `match` keywords]:
+```rust
+enum PersonResult {
+    Ok{p: Person},
+    Err{e: ClockError},
+}
+
+fn new_person(name: String, birth_year: Int, weight: Float) -> PersonResult {
+    let current_year = match get_current_year() {
+        YearResult::Ok(year) => year,
+        YearResult::Err(err) => return PersonResult::Err{err},
+    };
+    PersonResult::Ok{p: Person{name, weight, age: current_year - birth_year}}
+}
+```
+
+#### Nominal typing
+Structs are also named and therefore *nominally-typed*: two structs declared with
+different names have different types, even if they have exactly the same contents.
+Nominal typing of structs allows the contents of an aggregate datatype to be
+separated from the intended meaning of the type. For example, a coordinate in 3D
+space, and a date in day-month-year format can both be represented as a `(Int,
+Int, Int)` 3-tuple, but this would create an opportunity for two types with
+different meanings to get confused:
+```rust
+fn print_event(date: (Int, Int, Int), position: (Int, Int, Int), description: String) {
+    let (day, month, year) = date;
+    let (x, y, z) = position;
+    print("On " + int_to_string(day) + "/" + int_to_string(month) + "/" + int_to_string(year)
+          + ", at coordinates (" + int_to_string(z) ", " + int_to_string(y) + ", " + int_to_string(z) 
+          + "), " + description
+    )
+}
+
+fn main() {
+    let date = (01, 01, 1970);
+    let position = (0, 0, 0);
+    let description = "something happened";
+    print_event(date, position, description); // Order of arguments is incorrect, but no error is indicated
+}
+```
+
+If instead structs were used, it would be impossible to accidentally pass the
+arguments to `print_event` in the wrong order:
+```rust
+struct Position {
+    x: Int,
+    y: Int,
+    z: Int,
+}
+
+struct Date {
+    day: Int,
+    month: Int,
+    year: Int,
+}
+
+fn print_event(date: Date, position: Position, description: String) {
+    ...
+}
+
+fn main() {
+    let date = (01, 01, 1970);
+    let position = (0, 0, 0);
+    let description = "something happened";
+    print_event(position, date, description); // Type error
+
+}
+```
+
 ### Enums {#sec:reference:enums}
 
 ## Pattern Matching {#sec:reference:pattern-matching}
