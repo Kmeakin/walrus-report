@@ -491,6 +491,9 @@ fn main() {
 }
 ```
 
+## Blocks {#sec:reference:blocks}
+TODO
+
 ## Builtin Functions {#sec:reference:builtin-functions}
 Walrus has a small collection of built-in functions provided by the compiler:
 
@@ -562,10 +565,7 @@ fn sign(x: Int) -> String {
 }
 ```
 
-### Loops
-The *loop-expression* allows repeating a block until a *break-expression* is evaluated:
-```rust
-fn countdown(mut x: Int) {
+### Loops {
     loop {
         if x == 0 {
             break;
@@ -755,8 +755,14 @@ let p = Person {
 };
 ```
 The fields in the constructor needn't be initialized in the same order as they
-are given in the struct declaration, but all fields must be initialized: a
-struct may not be created with some fields unitialized as in C.
+are given in the struct declaration, but all fields must be initialized: a *
+via pattern matching, or by accessing individual fields:
+```rust
+let Person{name, weight, age} = p;
+let name2 = p.name;
+let weight2 = p.weight;
+let age2 = p.age;
+```
 
 #### Lack of constructors
 Unlike C++ or Java classes, Walrus structs cannot have "constructor methods"
@@ -787,7 +793,7 @@ class Person {
 
 By contrast, the corresponding Walrus function will either successfully return a
 fully initialized person, or else return an error which must be handled by the
-caller &[See @sec:reference:enum and @sec:reference:pattern_matching for a
+caller ^[See @sec:reference:enum and @sec:reference:pattern_matching for a
 description of the `enum` and `match` keywords]:
 ```rust
 enum PersonResult {
@@ -859,6 +865,209 @@ fn main() {
 ```
 
 ### Enums {#sec:reference:enums}
+Despite their name, enums are much more powerful than enum types in C or Java^[A
+more appropraite name would be *algebraic datatype*, as they are known in
+functional programming. However, Walrus inherits the `enum` name from Rust,
+which chose the name `enum` as it would be more familiar to C programmers].
+Walrus' enums are capable of representing one of several different structs
+(called *variants* when in the context of an enum) at once:
+```rust
+enum IntOrFloat {
+    Int{x: Int},
+    Float{y: Float},
+}
+```
+
+Enum values are constructed similary to struct values, by specifying an
+initalizer for each field:
+```rust
+let int = IntOrFloat::Int{x: 5},
+let float = IntOrFloat::Float{y: 5.0},
+```
+
+Unlike structs, the fields of an enum cannot be accessed simply by accessing the
+individual fields, since which variant the enum occupies is only known at
+runtime. Instead, the enum must be pattern-matched over ^[See
+@sec:reference:pattern_matching for more information on pattern-matching]:
+
+```rust
+fn print_int_or_float(it: IntOrFloat) {
+    match it {
+        IntOrFloat::Int{x} => print("Its an Int: " + int_to_string(x)),
+        IntOrFloat::Float{y => print("Its a Float: " + float_to_string(x)),
+    }
+}
+```
+
+Tradional C-style `enum`s can be mimicked by creating a Walrus `enum` where each
+variant has 0 fields:
+```rust
+enum Color {
+    Red{},
+    Green{},
+    Blue{},
+}
+```
+
+Enums are similar to *unions* in C, which can also be one of several types:
+```c
+typedef union {
+    int x;
+    float y;
+} IntOrFloat;
+```
+
+However, C unions carry no information at runtime to indicate which variant they
+occupy: accessing a variant of an enum simply reinterprets the contents of the
+enum as a value of the intended type. It is upto the programmer to ensure that
+the correct variant is accessed at the correct time:
+```c
+typedef union {
+    int x;
+    float y;
+} IntOrFloat;
+
+void main() {
+    IntOrFloat integer = (IntOrFloat){.x=-1};
+    IntOrFloat floating = (IntOrFloat){.y=-1.0};
+
+    printf("%d\n", integer.x); // prints "-1"
+    printf("%f\n", integer.y); // prints "-nan"
+
+    printf("%d\n", floating.x); // prints "-1082130432"
+    printf("%f\n", floating.y); // prints "-1.000000"
+}
+```
+In contrast, Walrus enums carry a *tag* indicating which variant they occupy at
+runtime, which allows fields to be accessed safely via pattern matching. The
+tag + fields representation is similar to that of the *tagged-union* design
+pattern in C, except in C the burden is still on the programmer to check the tag
+before accessing the fields:
+
+```c
+enum IntOrFloatTag {
+    INT,
+    FLOAT,
+}
+
+typedef struct IntOrFloat {
+    IntOrFloatTag tag;
+    union {
+        int x;
+        float y;
+    }
+}
+
+void print_int_or_float(IntOrFloat it) {
+   switch (it.tag) {
+       case INT:
+        printf("its an Int: %d\n", it.x);
+        break;
+       case INT:
+        printf("its a Float: %f\n", it.x);
+        break;
+   }
+}
+```
+
+The combination of `enum`s and pattern matching allows two particular
+problematic features of older languages such as C or Java to be replaced by
+simple enums:
+
+### Eliminating null
+Many languages have a concept of a `null` value to represent when a value is
+missing or invalid. This often occurs in algorithms for searching and lookup.
+Consider Java's `HashMap<K, V>`{.java} (`java.util.HashMap<K, V>`{.java} to be
+precise), where `K` is the type of the key and `V` is the type of the value
+being stored. Objects can be inserted into the map with the `void put(K key, V
+value)`{.java} method and retrieved with the `V get(Object key)`{.java} method.
+In the case where `get` is called with a key that is not present, `get` must
+return an object of type `V` which is in fact not a valid `V` at all, but a
+dummy value to indicate that no entry was found. This is what `null` is for.
+
+The inclusion of null-references is considered by many today to be a mistake:
+
+> I call it my billion-dollar mistake. It was the invention of the null
+> reference in 1965. At that time, I was designing the first comprehensive type
+> system for references in an object oriented language (ALGOL W). My goal was to
+> ensure that all use of references should be absolutely safe, with checking
+> performed automatically by the compiler. But I couldn't resist the temptation
+> to put in a null reference, simply because it was so easy to implement. This
+> has led to innumerable errors, vulnerabilities, and system crashes, which have
+> probably caused a billion dollars of pain and damage in the last forty years.
+- Tony Hoare
+
+There are several symptoms of those billion dollars of pain and damage:
+* **It is too permissive**: The type `T` implictly includes the `null` value,
+  even if there is no meaningfull interpretation of `null` in a particular
+  context. Countless methods in the Java standard library accept reference
+  types, such as `String`, only to throw `NullPointerException` if the reference
+  type passed in is `null`. This means that thier API is too permissive, because
+  invalid arguments can be ruled out only at runtime, not at compiletime via the
+  type system. 
+* **It confuses different cases**: methods like `HashMap.get`{.java} return
+  `null` when no valid output exists. However, in some situations, `null` is
+  itself a valid value: consider a `HashMap<String, Degree>`{.java}, which maps
+  the name of students and alumni of university name to their degree if they
+  have one, or `null` if they have not yet graduated. In this case, recieving a
+  `null` value from `get` could mean one of two things: that the person looked
+  up is not a current or former student at the university, or that the person is
+  a current student who has not yet graduated. To distinguish between these two
+  cases requires a separete method, such as `HashMap.containsKey`.
+* **It is not general enough**: `null` is only valid when the value in question
+  can be represented as a pointer: in Java, instances of classes are represented
+  as pointers to the heap, and so can be `null`. But Java's "primtive types`
+  (`int`, `float`, `boolean`, etc) are stored inline on the stack, and so cannot
+  be `null`. This can solved by "boxing" the value: storing it in a wrapper
+  class, such as `Integer` for boxing `int`s, but this imposes an overhead as
+  now every operaton on the value must follow a pointer to some potentially
+  uncached memory (and types that can be represented in less than a word of
+  memory, such as `byte`, must now be represented as a word-size pointer). The
+  other potential solution is to use some other "dummy" value to represent a
+  missing entry: for example `java.util.Arrays.binarySearch`{.java} returns an
+  `int` representing the 0-based position in an array that a key was found at,
+  or else a negative integer to indicate that no such key was found. However,
+  not every primtive type has such a "dummy" value: what would be a dummy value
+  for `boolean`, for example?
+  
+The solution is to do away entirly with `null`, and introduce an algebraic
+datatype with 2 variants: one for when the value is present, and one for when it
+is absent.
+
+In Haskell:
+```haskell
+data Maybe a = Nothing | Just a
+```
+
+In Rust:
+```rust
+enum Option<T> {
+    None,
+    Some(T),
+}
+```
+
+Now we have solved all the attendant problems `null` brings: 
+* **More accurate type signatures**: If a function accepts a `T`, it is an error
+  to attempt to pass an `Option<T>` to it.
+* **Different cases are seperated by the type system**: our hypothetical hashmap
+  of student degrees would become `HashMap<String, Option<Degree>>`{.rust}, and `get`
+  returns an `Option<Option<Degree>>`{.rust}: `None` for the case where the
+  student is not present, `Some(None)` for when the student has not yet
+  graduated, and `Some(Some(...))` for when the student is present and graduated.
+* **It is general enough**: any type can be wrapped in an `Option`, not just
+  heap-allocated types
+
+Walrus inherits Rust's `enum`s, however because the type system is currently
+monomorphic (does not support generic functions or datatypes), a seperate `enum`
+must be declared for each instantiation of the `Option<T>` type:
+
+```rust
+enum IntOption {
+    None{},
+    Some{x: Int},
+}
+```
 
 ## Pattern Matching {#sec:reference:pattern-matching}
 ## Type Inference {#sec:reference:types}
