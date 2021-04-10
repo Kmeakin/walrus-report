@@ -236,8 +236,8 @@ code in a functional style where new variables are produced instead of updating
 existing variables. However, the option of mutability is still available if an
 algorithm cannot easily be expressed with immutability.
 
-Local variables must be declared and initialized in the same let-statement. It
-is not possible to declare a variable without initializing it and then initialize
+Local variables must be declared and initialised in the same let-statement. It
+is not possible to declare a variable without initialising it and then initialise
 it by mutating it later. For a rationale for this design, consider the following
 C code:
 ```c
@@ -245,13 +245,13 @@ int x;
 printf("The value of x is %d\n", x);
 ```
 This code reads from the memory region denoted by `x`, even though that memory
-is uninitialized. In other words, it produces undefined behaviour. Walrus removes
-the possibility of reading from uninitialized variables by making a let-statement
-without an initializing expression a syntax error.
+is uninitialised. In other words, it produces undefined behaviour. Walrus removes
+the possibility of reading from uninitialised variables by making a let-statement
+without an initialising expression a syntax error.
 
-Rust *does* manage to allow separate definition and initialization of variables,
+Rust *does* manage to allow separate definition and initialisation of variables,
 without undefined behaviour creeping into user programs, by performing a
-data-flow analysis to check that each variable has been initialized in every
+data-flow analysis to check that each variable has been initialised in every
 possible path of control flow before it is first read from. This feature was
 left out of Walrus for lack of time.
 
@@ -291,7 +291,7 @@ hypothetical `sub(add(1, mul(2, 3)), 4)`{.rust} using only functions:
 | infix `=`            | Lowest     | Right
 
 As in standard mathematical notation, parentheses bind tighter than any
-operators, and so can be used to override the normal operator precedences:
+operators, and so can be used to override the normal operator precedence:
 `(1 + 2) * (3 - 4)`{.rust}
 
 Unlike languages such as Haskell or Ocaml, the set of operators in Walrus is
@@ -470,7 +470,7 @@ fn main() {
 }
 ```
 
-Lambda abstractions are also able to *close over their envionment*: if the body
+Lambda abstractions are also able to *close over their environment*: if the body
 of a lambda abstraction refers to a variable that is defined in its enclosing
 scope (its *environment*), rather than defined in its parameter list, it is said
 to *capture* that variable: the lambda value now carries around an independent
@@ -622,7 +622,7 @@ fn login() -> Int {
 [^NoReadLine]: Assume for the sake of this example that a builtin function
 `read_line: () -> String` exists
 
-#### Nonterminating loops
+#### Non-terminating loops
 A loop-expression with no `break` expression inside its body will never
 terminate. This means it has no meaningful return type, not even the unit type,
 `()`. Instead, the return type of an infinite loop is `Never`. The `Never` type
@@ -631,7 +631,7 @@ will be explained in @sec:reference:types.
 ### Early Returns
 Just as `break` allows programs to return from loops early, `return` allows
 programs to return from functions early, without executing the rest of the
-function body. Although Walrus' pratice of automatically returning the value of
+function body. Although Walrus' practice of automatically returning the value of
 the last expression in a function body obviates most of the need for `return`,
 it may still be useful in situations where a function cannot easily be
 expressed with a single exit point.
@@ -647,7 +647,7 @@ combinations of primitive datatypes and other aggregate datatypes: *tuples*,
 
 ### Tuples {#sec:reference:tuples}
 A tuple is an ordered sequence of elements. Unlike other ordered collections,
-such as lists or vectors, tuples are *heterogenous*, meaning that each element
+such as lists or vectors, tuples are *heterogeneous*, meaning that each element
 of the tuple can be distinct, and tuples of different *arity* (number of
 elements) are considered to be distinct, incompatible types.
 
@@ -679,7 +679,7 @@ for tuples is for returning multiple values from a function.
 Consider attempting to write a function that returns both the quotient of two
 integers, and any remainder left over (for simplicity we will ignore the case
 where the divisor is 0). In C, functions can only return 1 value (or `void` if
-they return no values), so the implementor must either mutate a pointer passed
+they return no values), so the implementer must either mutate a pointer passed
 in by the caller, or declare a new struct which it returns:
 ```c
 void quot_rem_a(int x, int y, int* quot, int* rem) {
@@ -728,15 +728,15 @@ fn main() {
 A 0-tuple (also called an *empty tuple* or *unit tuple*) cannot contain any
 elements, and so carries no data at runtime. It is therefore used as a
 "placeholder" when some kind of value is needed, but no meaningful data can be
-provided. For example, assigment expressions (`x = x + 1`) return `()`, as does
+provided. For example, assignment expressions (`x = x + 1`) return `()`, as does
 a function with no final expression in its body. It can be considered analogous
 to the `void` type from C, however unlike C's `void`, unit tuples are first
 class values that can be stored in variables, passed to and returned from
 functions, etc.
 
 ### Structs {#sec:reference:structs}
-Structs are similar to tuples, in that they are heterogenous collections.
-However, unlike tupes, struct fields are indexed by name rather than position:
+Structs are similar to tuples, in that they are heterogeneous collections.
+However, unlike tuples, struct fields are indexed by name rather than position:
 ```rust
 struct Person {
     name: String,
@@ -754,8 +754,8 @@ let p = Person {
     age: 21,
 };
 ```
-The fields in the constructor needn't be initialized in the same order as they
-are given in the struct declaration, but all fields must be initialized: a *
+The fields in the constructor needn't be initialised in the same order as they
+are given in the struct declaration, but all fields must be initialised: a *
 via pattern matching, or by accessing individual fields:
 ```rust
 let Person{name, weight, age} = p;
@@ -775,7 +775,7 @@ Consider a Java `Person` class with a constructor that calculates a Person's age
 from their year of birth. This requires getting the current date via an
 (imaginary) `getCurrentYear` function, which on rare occasions may throw an
 exception for various reasons. If this exception is not caught, the constructor
-will terminate early, resulting in a `Person` with an unitialized `age` and `weight`:
+will terminate early, resulting in a `Person` with an uninitialised `age` and `weight`:
 ```java
 class Person {
     String name;
@@ -792,7 +792,7 @@ class Person {
 ```
 
 By contrast, the corresponding Walrus function will either successfully return a
-fully initialized person, or else return an error which must be handled by the
+fully initialised person, or else return an error which must be handled by the
 caller ^[See @sec:reference:enum and @sec:reference:pattern_matching for a
 description of the `enum` and `match` keywords]:
 ```rust
@@ -866,7 +866,7 @@ fn main() {
 
 ### Enums {#sec:reference:enums}
 Despite their name, enums are much more powerful than enum types in C or Java^[A
-more appropraite name would be *algebraic datatype*, as they are known in
+more appropriate name would be *algebraic datatype*, as they are known in
 functional programming. However, Walrus inherits the `enum` name from Rust,
 which chose the name `enum` as it would be more familiar to C programmers].
 Walrus' enums are capable of representing one of several different structs
@@ -878,7 +878,7 @@ enum IntOrFloat {
 }
 ```
 
-Enum values are constructed similary to struct values, by specifying an
+Enum values are constructed similarly to struct values, by specifying an
 initalizer for each field:
 ```rust
 let int = IntOrFloat::Int{x: 5},
@@ -899,7 +899,7 @@ fn print_int_or_float(it: IntOrFloat) {
 }
 ```
 
-Tradional C-style `enum`s can be mimicked by creating a Walrus `enum` where each
+Traditional C-style `enum`s can be mimicked by creating a Walrus `enum` where each
 variant has 0 fields:
 ```rust
 enum Colour {
@@ -919,7 +919,7 @@ typedef union {
 
 However, C unions carry no information at runtime to indicate which variant they
 occupy: accessing a variant of an enum simply reinterprets the contents of the
-enum as a value of the intended type. It is upto the programmer to ensure that
+enum as a value of the intended type. It is up-to the programmer to ensure that
 the correct variant is accessed at the correct time:
 ```c
 typedef union {
@@ -974,10 +974,11 @@ void print_int_or_float(IntOrFloat it) {
 ##### Eliminating null
 Many languages have a concept of a `null` value to represent when a value is
 missing or invalid. This often occurs in algorithms for searching and lookup.
-Consider Java's `HashMap<K, V>`{.java} (`java.util.HashMap<K, V>`{.java} to be
+Consider Java's `HashMap<K, V>` (`java.util.HashMap<K, V>` to be
 precise), where `K` is the type of the key and `V` is the type of the value
-being stored. Objects can be inserted into the map with the `void put(K key, V
-value)`{.java} method and retrieved with the `V get(Object key)`{.java} method.
+being stored. Objects can be inserted into the map with the 
+`void put(K key, V value)`{.java} method and retrieved with the 
+`V get(Object key)` method.
 In the case where `get` is called with a key that is not present, `get` must
 return an object of type `V` which is in fact not a valid `V` at all, but a
 dummy value to indicate that no entry was found. This is what `null` is for.
@@ -994,40 +995,41 @@ The inclusion of null-references is considered by many today to be a mistake:
 > probably caused a billion dollars of pain and damage in the last forty years.
 - Tony Hoare
 
-There are several symptoms of those billion dollars of pain and damage:
-* **It is too permissive**: The type `T` implictly includes the `null` value,
-  even if there is no meaningfull interpretation of `null` in a particular
+Here are just some of the symptoms of those billion dollars of pain and damage:
+
+* **It is too permissive**: The type `T` implicitly includes the `null` value,
+  even if there is no meaningful interpretation of `null` in a particular
   context. Countless methods in the Java standard library accept reference
   types, such as `String`, only to throw `NullPointerException` if the reference
-  type passed in is `null`. This means that thier API is too permissive, because
-  invalid arguments can be ruled out only at runtime, not at compiletime via the
+  type passed in is `null`. This means that their API is too permissive, because
+  invalid arguments can be ruled out only at runtime, not at compile-time via the
   type system. 
 * **It confuses different cases**: methods like `HashMap.get`{.java} return
   `null` when no valid output exists. However, in some situations, `null` is
   itself a valid value: consider a `HashMap<String, Degree>`{.java}, which maps
   the name of students and alumni of university name to their degree if they
-  have one, or `null` if they have not yet graduated. In this case, recieving a
+  have one, or `null` if they have not yet graduated. In this case, receiving a
   `null` value from `get` could mean one of two things: that the person looked
   up is not a current or former student at the university, or that the person is
   a current student who has not yet graduated. To distinguish between these two
-  cases requires a separete method, such as `HashMap.containsKey`.
+  cases requires a separate method, such as `HashMap.containsKey`.
 * **It is not general enough**: `null` is only valid when the value in question
   can be represented as a pointer: in Java, instances of classes are represented
-  as pointers to the heap, and so can be `null`. But Java's "primtive types`
+  as pointers to the heap, and so can be `null`. But Java's "primitive types"
   (`int`, `float`, `boolean`, etc) are stored inline on the stack, and so cannot
   be `null`. This can solved by "boxing" the value: storing it in a wrapper
   class, such as `Integer` for boxing `int`s, but this imposes an overhead as
-  now every operaton on the value must follow a pointer to some potentially
+  now every operation on the value must follow a pointer to some potentially
   uncached memory (and types that can be represented in less than a word of
   memory, such as `byte`, must now be represented as a word-size pointer). The
   other potential solution is to use some other "dummy" value to represent a
   missing entry: for example `java.util.Arrays.binarySearch`{.java} returns an
   `int` representing the 0-based position in an array that a key was found at,
   or else a negative integer to indicate that no such key was found. However,
-  not every primtive type has such a "dummy" value: what would be a dummy value
+  not every primitive type has such a "dummy" value: what would be a dummy value
   for `boolean`, for example?
   
-The solution is to do away entirly with `null`, and introduce an algebraic
+The solution is to do away entirely with `null`, and introduce an algebraic
 datatype with 2 variants: one for when the value is present, and one for when it
 is absent.
 
@@ -1045,9 +1047,10 @@ enum Option<T> {
 ```
 
 Now we have solved all the attendant problems `null` brings: 
+
 * **More accurate type signatures**: If a function accepts a `T`, it is an error
   to attempt to pass an `Option<T>` to it.
-* **Different cases are seperated by the type system**: our hypothetical hashmap
+* **Different cases are separated by the type system**: our hypothetical hashmap
   of student degrees would become `HashMap<String, Option<Degree>>`{.rust}, and `get`
   returns an `Option<Option<Degree>>`{.rust}: `None` for the case where the
   student is not present, `Some(None)` for when the student has not yet
@@ -1056,7 +1059,7 @@ Now we have solved all the attendant problems `null` brings:
   heap-allocated types
 
 Walrus inherits Rust's `enum`s, however because the type system is currently
-monomorphic (does not support generic functions or datatypes), a seperate `enum`
+monomorphic (does not support generic functions or datatypes), a separate `enum`
 must be declared for each instantiation of the `Option<T>` type:
 
 ```rust
@@ -1099,12 +1102,12 @@ programming languages for error handling.
 TODO: advantages of `Result` over exceptions
 
 ## Pattern Matching {#sec:reference:pattern-matching}
-Pattern-matching allows matching agaisnt complex, potentially nested data. First
-introduced by TODO in TODO, patten-matching quickly became a staple feature of
+Pattern-matching allows matching against complex, potentially nested data. First
+introduced by TODO in TODO, pattern-matching quickly became a staple feature of
 functional programming languages, but has yet to break into more common
 mainstream languages. For those unfamiliar with it, it can be though of as a
 `switch` statement from C or Java, only generalised to work over all datatypes,
-and to allow binding of variables: Each *case* is matched agaisnt a value in
+and to allow binding of variables: Each *case* is matched against a value in
 order, and the right hand side of the first case to match is evaluated.
 
 The most basic patterns are *literal patterns*. In this case `match` operates
@@ -1133,8 +1136,8 @@ fn is_zero(x: Int) -> Bool {
 }
 ```
 
-As well as matching agaisnt primitve datatypes, aggregate types can be matched
-agaisnt, using the same syntax as their corresponding expression syntax:
+As well as matching against primitive datatypes, aggregate types can be matched
+against, using the same syntax as their corresponding expression syntax:
 
 ```rust
 fn add_pair(p: (Int, Int)) -> Int {
@@ -1178,7 +1181,7 @@ fn add_options(x: IntOption, y: IntOption) -> IntOption {
 
 ### Exhaustive matches
 Ideally, each `match` expression should be checked for *exhaustiveness*: that
-is, that every possible value being matched agaisnt is covered in at least one
+is, that every possible value being matched against is covered in at least one
 case. Walrus does not yet check `match` expressions for exhaustiveness, as the
 algorithm for checking exhaustiveness is quite complex.
 
@@ -1187,7 +1190,7 @@ Pattern matching can take place is several other Walrus constructs, not just the
 `match` expression. In particular, let-statements, function arguments, and
 lambda arguments all allow arbitrary patterns to be used, not just simple
 variable names. However, since these pattern-matching constructs only give one
-possible case to match agaisnt, the pattern being matched against must be
+possible case to match against, the pattern being matched against must be
 *irrefutable* - ie it must not be possible for the pattern to fail. This means
 that literal and enum patterns are not allowed.
 
