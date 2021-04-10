@@ -902,7 +902,7 @@ fn print_int_or_float(it: IntOrFloat) {
 Tradional C-style `enum`s can be mimicked by creating a Walrus `enum` where each
 variant has 0 fields:
 ```rust
-enum Color {
+enum Colour {
     Red{},
     Green{},
     Blue{},
@@ -1062,11 +1062,11 @@ must be declared for each instantiation of the `Option<T>` type:
 ```rust
 enum IntOption {
     None{},
-    Some{x: Int},
+    Some{val: Int},
 }
 ```
 
-#### Error handling
+##### Error handling
 As well as potentially-missing data, algebraic datatypes can be used to
 represent potentially-erroneous data: one variant for the "correct" data, and
 one for the data representing an error:
@@ -1099,4 +1099,97 @@ programming languages for error handling.
 TODO: advantages of `Result` over exceptions
 
 ## Pattern Matching {#sec:reference:pattern-matching}
-## Type Inference {#sec:reference:types}
+Pattern-matching allows matching agaisnt complex, potentially nested data. First
+introduced by TODO in TODO, patten-matching quickly became a staple feature of
+functional programming languages, but has yet to break into more common
+mainstream languages. For those unfamiliar with it, it can be though of as a
+`switch` statement from C or Java, only generalised to work over all datatypes,
+and to allow binding of variables: Each *case* is matched agaisnt a value in
+order, and the right hand side of the first case to match is evaluated.
+
+The most basic patterns are *literal patterns*. In this case `match` operates
+exactly the same as `case`. Note that the *wildcard-pattern*, `_`, matches any
+possible value, analogous to a `default` branch in a `switch` statement:
+```rust
+fn is_zero(x: Int) -> Bool {
+    match x {
+        0 => true,
+        _ => false,
+    }
+}
+```
+
+Patterns may also bind variables. Using an identifier as a pattern also matches
+any value, but also introduces a new variable bound to the value it matched
+against:
+```rust
+fn is_zero(x: Int) -> Bool {
+    match x {
+        0 => true,
+        y => {
+            print("x is not zero: its " + int_to_string(y));
+        }
+    }
+}
+```
+
+As well as matching agaisnt primitve datatypes, aggregate types can be matched
+agaisnt, using the same syntax as their corresponding expression syntax:
+
+```rust
+fn add_pair(p: (Int, Int)) -> Int {
+    match p {
+        (x, y) => x + y,
+    }
+}
+```
+
+```rust
+fn person_to_string(p: Person) {
+    match p {
+        Person{age, name, weight} => name + "is " + int_to_string(age) 
+                                     + " years old and weighs " 
+                                     + float_to_string(weight),
+    }
+}
+```
+
+```rust
+fn colour_to_string(c: Colour) -> String {
+    match c {
+        Colour::Red{} => "red",
+        Colour::Green{} => "green",
+        Colour::Blue{} => "blue",
+    }
+}
+```
+
+Patterns can of course be nested within each other:
+```rust
+fn add_options(x: IntOption, y: IntOption) -> IntOption {
+    match (x, y) {
+        (IntOption::Some{val: x}, IntOption::Some{val: y}) => IntOption::Some{val: x + y}
+        (IntOption::Some{val}, _) => IntOption::Some{val},
+        (_, IntOption::Some{val}) => IntOption::Some{val},
+        _ => IntOption::None,
+    }
+}
+```
+
+### Exhaustive matches
+Ideally, each `match` expression should be checked for *exhaustiveness*: that
+is, that every possible value being matched agaisnt is covered in at least one
+case. Walrus does not yet check `match` expressions for exhaustiveness, as the
+algorithm for checking exhaustiveness is quite complex.
+
+### Irrefutable patterns
+Pattern matching can take place is several other Walrus constructs, not just the
+`match` expression. In particular, let-statements, function arguments, and
+lambda arguments all allow arbitrary patterns to be used, not just simple
+variable names. However, since these pattern-matching constructs only give one
+possible case to match agaisnt, the pattern being matched against must be
+*irrefutable* - ie it must not be possible for the pattern to fail. This means
+that literal and enum patterns are not allowed.
+
+## Types {#sec:reference:types}
+### Type Inference
