@@ -970,11 +970,8 @@ void print_int_or_float(IntOrFloat it) {
 }
 ```
 
-The combination of `enum`s and pattern matching allows two particular
-problematic features of older languages such as C or Java to be replaced by
-simple enums:
-
-### Eliminating null
+#### Enum use cases
+##### Eliminating null
 Many languages have a concept of a `null` value to represent when a value is
 missing or invalid. This often occurs in algorithms for searching and lookup.
 Consider Java's `HashMap<K, V>`{.java} (`java.util.HashMap<K, V>`{.java} to be
@@ -1068,6 +1065,38 @@ enum IntOption {
     Some{x: Int},
 }
 ```
+
+#### Error handling
+As well as potentially-missing data, algebraic datatypes can be used to
+represent potentially-erroneous data: one variant for the "correct" data, and
+one for the data representing an error:
+
+In Haskell:
+```haskell
+data Either a b = Left a | Right b
+```
+
+In Rust:
+```rust
+enum Result<T,E> {
+    Ok(T),
+    Err(E),
+}
+```
+
+The same can be expressed in Walrus, though again, because of limitations in the
+type system, each instance of `Result<T,E>` must be monomorphised:
+
+```rust
+enum IntStringResult {
+    Ok{x: Int},
+    Err{e: String},
+}
+```
+
+The `Result` enum can be used to replace *exceptions* as used in many other
+programming languages for error handling.
+TODO: advantages of `Result` over exceptions
 
 ## Pattern Matching {#sec:reference:pattern-matching}
 ## Type Inference {#sec:reference:types}
