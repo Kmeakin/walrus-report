@@ -1433,4 +1433,79 @@ enum FloatOption {
     Some{val: Int},
 }
 ```
+
 ##### No overloading
+Walrus' type system also lacks *overloading*: the ability for a single function
+(or operator) to share several implementations with the same name but different
+types. This is the mechanism that allows, for example, Java to have a single
+`toString` method which is able to convert any type to a string representation,
+where the logic to convert a datatype to a string representation may be very
+different depending on the type.
+
+Although *overloading* and *polymorphism* both allow a single function name to
+operate on different types, overloading is more flexible than polymorphism. A
+polymorphic function must have exactly the same behaviour for each type of
+argument passed to it, and it must be valid for any possible type of argument.
+In otherwords, a polymorphic function cannot perform any type-specific
+operations on its arguments: it can only shuffle them around. Thus it is
+possible to write a polymorphic identity function, or a polymorphic
+list-reversal function, but not a polymorphic `to_string` function or a
+polymorphic list-sorting function. By contrast, an overloaded function *can*
+select a different implementation according to the types of its arguments, and
+an overloaded function can only be called with types that have an overload
+defined for them.
+
+It is for these reasons that Walrus has several different `to_string` functions
+for each of the primitive datatypes, and why its operators cannot be passed
+around as first-class values. By being builtin syntactic constructs, the type
+checker can handle operators as a special, limited form of overloading, where
+some operators can be applied to more than one type, but the set of types they
+can be applied to is fixed. To allow an overloaded operator or function to be
+passed around as a value, the type-system must be able to assign a single most
+general type to overloaded functions or operators. This requires a form of
+polymorphism known as *ad-hoc polymorphism* ^[The previous, most simple form of
+polymorphism we have talked about is sometimes called *parametric-polymorphism*
+to distinguish it from other more advanced forms of polymorphism]
+
+TODO: first introduced by ??? for Haskell In a system with *ad-hoc
+polymorphism*, polymorphic functions can be additionally augmented with
+*type-constraints* - a set of requirements that a type variable must satisfy. 
+
+Consider the Rust function `max`:
+```rust
+fn max<T: Ord>(v1: T, v2: T) -> T;`
+```
+
+This function can only be called on types for which a way to compare them has
+been defined. In Rust, requirements are called *traits*, and a type fulfills the
+requirements of a trait by providing an *implementation* of the trait ^[The real
+Rust `Ord` trait has its own constraints that we will ignore for the sake of
+simplicity of this example]:
+
+```rust
+enum Ordering {
+    Less,
+    Equal,
+    Greater,
+}
+
+trait Ord<T> {
+    fn cmp(v1: T, v2: T) -> Ordering;
+}
+
+impl Ord for i32 {
+    fn cmp(v1: i32, v2: i32) -> Ordering {
+        if v1 < v2 {
+            Ordering::Less
+        } else if v2 > v1
+            Ordering::Greater
+        else {
+            Ordering::Equal
+        }
+    }
+}
+```
+
+It would be desirable to add a similar system to Walrus. However, the
+implementation of type checking for a trait system is far from simple, and so
+has been left out of the current Walrus implementation.
