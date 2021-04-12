@@ -1271,7 +1271,7 @@ arrow is right associative: that is `(Int) -> (Bool) -> Int` is the same as
 ((Int) -> Bool) -> Int // A function which takes a function from 1 Int to a Bool, and returns an Int
 ```
 
-### Inhabitants
+#### Inhabitants
 When discussing properties of certain types, it can be useful to consider the
 number of different values a type may take. These values are called the
 *inhabitants* of a type. For example, the `Bool` type has two inhabitants:
@@ -1284,7 +1284,7 @@ number of inhabitants of each variant.
 Of particular interest are types with exactly 1 inhabitant (a *unit-type*), and
 types with 0 inhabitants (an *uninhabited* or *empty-type*).
 
-#### The unit type {#sec:reference:types:unit}
+##### The unit type {#sec:reference:types:unit}
 A type is called *a unit-type* if it has exactly 1 inhabitant. In Walrus' such
 types are either the 0-tuple, `()`, or a `struct` with fields, such as
 ```rust
@@ -1321,7 +1321,7 @@ Unit types can be considered analogous to the `void` type from C, however unlike
 C's `void`, values of unit types are first class values that can be stored in
 variables, passed to and returned from functions, etc.
 
-#### The bottom type {#sec:reference:types:never}
+##### The bottom type {#sec:reference:types:never}
 A *bottom-type* is a type with 0 inhabitants: it is *uninihabited*. In Walrus'
 such types are either the primitive type `Never`, an `enum` with 0 variants:
 ```rust
@@ -1390,3 +1390,47 @@ to a context expecting a different type.
 TODO IF TIME: Curry-Howard Isomoprhism, Principle of Explosion
 
 #### Limitations {#sec:reference:types:limitations}
+##### No quantification
+The largest limitation in the current type-system of Walrus is that it is
+entirely *monomorphic*: that is, although the Walrus compiler is able to infer a
+type for every expression and function, the type must cannot *quantify* over
+other types. Therefore, we can write an identity function, but any given
+implementation will only work for one particular type of argument. We cannot
+write an identity function that works over all types; instead the function must
+be repeated for every type of argument we wish to pass to it.
+
+```rust
+fn int_identity(x: Int) -> Int {
+    x
+}
+
+fn float_identity(x: Float) -> Float {
+    x
+}
+```
+This is clearly tedious and requires the programmer to needlessly duplicate an
+indentical function. If Walrus' type system could quantify over other types, we
+could write an identity function that could be called with any argument type.
+Such functions are called *generic* in C++, Java and Rust, or *polymorphic* in
+Haskell. ^[Here we copy the generics syntax of Rust for the sake of example]:
+```rust
+fn identity<T>(x: T) -> T {
+    x
+}
+```
+
+The same problem extends to defining structs and enums. We cannot write a single
+`Option<T>` enum that can wrap any type. Instead, we must write an identical
+`enum` for each type that we wish to wrap:
+```rust
+enum IntOption {
+    None,
+    Some{val: Int},
+}
+
+enum FloatOption {
+    None,
+    Some{val: Int},
+}
+```
+##### No overloading
