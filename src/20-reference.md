@@ -4,7 +4,7 @@ monofont: 'Fira Mono'
 
 # Reference {#sec:reference}
 
-## Primitive Datatypes
+## Primitive Datatypes {#sec:reference:primitive-types}
 Walrus has 5 primitive datatypes (`Bool`, `Int`, `Float`, `Char`, `String`), with
 corresponding syntax for creating literal values.
 
@@ -725,14 +725,9 @@ fn main() {
 }
 ```
 
-A 0-tuple (also called an *empty tuple* or *unit tuple*) cannot contain any
-elements, and so carries no data at runtime. It is therefore used as a
-"placeholder" when some kind of value is needed, but no meaningful data can be
-provided. For example, assignment expressions (`x = x + 1`) return `()`, as does
-a function with no final expression in its body. It can be considered analogous
-to the `void` type from C, however unlike C's `void`, unit tuples are first
-class values that can be stored in variables, passed to and returned from
-functions, etc.
+A 0-tuple is the canonical unit type in Walrus, and is used for expressions that
+return no meaningful data, such as the assignment expression or the `print`
+function. See @sec:reference:types:unit for more information.
 
 ### Structs {#sec:reference:structs}
 Structs are similar to tuples, in that they are heterogeneous collections.
@@ -1194,5 +1189,204 @@ possible case to match against, the pattern being matched against must be
 *irrefutable* - ie it must not be possible for the pattern to fail. This means
 that literal and enum patterns are not allowed.
 
-## Types {#sec:reference:types}
-### Type Inference
+## Type System {#sec:reference:types}
+Previous sections of this reference have mentioned *types* and Walrus'
+*type-system*, but the terms have not been properly described. This section will
+define what a type and a type-system is, and how Walrus' type system in
+particular works, as well as its present limitations. 
+
+### Types and type-systems
+In every (non-trivial) programming language it is possible to express programs
+are *syntatically-correct* but nevertheless *semantically-incorrect*: that is,
+the program text is parsed by the compiler/interpreter to form a valid abstract
+syntax tree, but the program represented by the abstract syntax tree produces
+some sort of error at runtime, whether an error may be a fatal condition that
+causes execution to abort, or worse, causes the program to silently calculate an
+incorrect value. 
+
+As programmers, we would like to be assured that our programs are in fact
+semantically-correct before we run them, so that we can detect errors and
+correct them at development-time, rather than after the program has been
+deployed. The field of *formal-methods* describes several methods for checking
+the correctness of programs, such as automated-theorem provers, model-checkers,
+and Hoare logic. The most widespread method for checking correctness is to use a
+*type-system*. *Types and Programming Languages*, widely regarded
+as the definitive textbook on type-systems and thier use in programming
+languages, describes a type system as:
+
+> a tractable syntactic method for proving the absence of certain program
+> behaviors by classifying phrases according to the kinds of values they
+> compute.
+
+That is, each value has an associated *type*, which describes (amongst other
+properties) the valid operations that may be performed on values of that type.
+For example, it is meaningful to attempt to divide one rational number by
+another, but it is not meaningful to attempt the same operation on two strings.
+The *type-system* of a particular programming-language is the set of rules that
+describe what operations may be performed on which types, how types are assigned
+to values, and how simpler types may be combined to form more complex types.
+
+#### Static vs Dynamic type systems
+Type-systems may be classified as either *static* or *dynamic*. In a
+*dynamically-typed* language, each value carries around a *type-tag* at runtime
+to indicate its type, whilst in a *statically-typed* language, the type of value
+produced by each expression is known *statically* (that is, before the program
+is run). Some people call dynamically-typed languages such as Python or
+Javascript "untyped", but this is a misnomer: these languages still have rules
+about what is and is not a valid operation on certain classes of values - the
+checking that the program conforms to these rules is simply deferred to runtime.
+
+
+TODO: benefits of static type systems over dynamic type systems
+
+### The Walrus Type System
+The Walrus type system is largely inspired by that of Rust, with several
+simplifications and features missed out due to time constraints (see
+@sec:reference:types:limitations).
+
+#### Forming types
+Types in Walrus are either one of the primitive types, a new abstract type
+introduced by the `struct` or `enum` types, or a combination of already existing
+types into functions or tuples.
+
+#### Primitive types
+As described in @sec:reference:primitive-types, each primitive datatype has an
+associated type (`Bool`, `Int`, `Float`, `Char` and `String`). The `Never` type
+is also a primitive type, but it has no associated values (see
+@sec:reference:types:never).
+
+#### Function types
+Function types describe the types of functions, in terms of the types of
+parameters they accept, and the type of the value returned. The syntax of
+function types is simply the types of each parameter to the left of an arrow,
+and the type of the value returned to the right of the arrow. Note that the
+arrow is right associative: that is `(Int) -> (Bool) -> Int` is the same as
+`(Int) -> ((Bool) -> Int)`, which are both distinct from `((Int) -> Bool) -> Int`:
+```rust
+() -> () // A function taking 0 parameters, and returning nothing (the empty tuple)
+(Int) -> Int // A function taking 1 Int and returning an Int
+(Int, Bool) -> Int // A function taking 1 Int and 1 Bool, and returning an Int
+(Int) -> (Bool) -> Int // A function taking 1 Int and returning a function which in turn takes 1 Bool and returns an Int
+(Int) -> ((Bool) -> Int) // The same type, with explicit parentheses to indicate associativity of `->`
+((Int) -> Bool) -> Int // A function which takes a function from 1 Int to a Bool, and returns an Int
+```
+
+### Inhabitants
+When discussing properties of certain types, it can be useful to consider the
+number of different values a type may take. These values are called the
+*inhabitants* of a type. For example, the `Bool` type has two inhabitants:
+`true` and `false`; the `Int` type has $2^32$ inhabitants (the integers in the
+range $-2^-31$ and $2^31-1$ inclusive). The number of inhabitants of aggregate
+types can be computed recursively: for tuples and structs, it is the product of
+the number of inhabitants of each fields, and for enums, it is the sum of the
+number of inhabitants of each variant.
+
+Of particular interest are types with exactly 1 inhabitant (a *unit-type*), and
+types with 0 inhabitants (an *uninhabited* or *empty-type*).
+
+#### The unit type {#sec:reference:types:unit}
+A type is called *a unit-type* if it has exactly 1 inhabitant. In Walrus' such
+types are either the 0-tuple, `()`, or a `struct` with fields, such as
+```rust
+struct UnitStruct {}
+```
+or an `enum` with exactly 1 variant which has 0 fields:
+```rust
+enum UnitEnum {
+    A{}
+}
+```
+
+Types with 1 inhabitant may also be constructed by combining other unit types:
+```rust
+struct AlsoAUnit {
+    a: (),
+    b: ((), ()),
+    c: UnitStruct,
+}
+```
+
+Since all these types have only one inhabitant, it is useful to pick one to be
+*the* unit type, and consider all others as *isomorphic* ^[That is, each unit
+type can be safely converted to *the* unit type without any loss of information]
+to it. In Walrus, the cannonical unit type is the 0-tuple, `()`. For this
+reason, `()` is also sometimes called "*the* unit type" or "the unit tuple".
+
+Since any unit type has exactly 1 possible value, it carries no information at
+runtime: that is, it can be represented by zero bits. This makes unit types
+natural placeholders for when some type is needed, but no information is
+returned. It is for this reason that functions with empty bodies/no terminating
+expression return `()`, and assignment expression expressions evaluate to `()`.
+Unit types can be considered analogous to the `void` type from C, however unlike
+C's `void`, values of unit types are first class values that can be stored in
+variables, passed to and returned from functions, etc.
+
+#### The bottom type {#sec:reference:types:never}
+A *bottom-type* is a type with 0 inhabitants: it is *uninihabited*. In Walrus'
+such types are either the primitive type `Never`, an `enum` with 0 variants:
+```rust
+enum EmptyEnum {}
+```
+or combinations thereof, such as a tuple or struct where any field has 0
+inhabitants:
+```rust
+struct UnihabitedStruct {
+    a: Never,
+    b: (Never, ()),
+}
+```
+Just as `()` is *the* canonical unit-type, `Never` is *the* canonical bottom
+type in Walrus.
+
+Since any bottom-type has 0 possible values, it carries even less information
+than a unit type: a value of a bottom-type cannot even exist at runtime! This
+allows meaningful types to be given to expressions that never return flow of
+control back to the enclosing scope after they are evaluated. For example, a
+`loop` expression with no `breaks` inside it will never terminate, and so has
+type `Never`: such a loop will never produce any value. Similarly, the builtin
+function `exit` returns `Never`: once the `exit` function is called, the process
+executing the program exits, and so the enclosing context will never recieve a
+value. Perhaps more strangely, all the control flow altering expressions,
+`return`, `break`, `continue` also have type `Never`. This is because, like
+`exit`, when such an expression is evaluated, the enclosing scope is exited and
+control is transferred to elsewhere in the program. Note that althoug the
+`return` and `break` expressions themselves have type `Never`, they alter the
+return type of their enclosing function/loop: the return type of the enclosing
+function becomes the type of the argument to `return`, or `()` if it has no
+argument, and the same for the enclosing `loop` in the case of `break`.
+
+TODO: c++ `[[noreturn]]`
+
+Another useful property of bottom types is that they may be *coereced* to any
+other type. Suppose a programmer wishes to write an `assert` function, which
+checks that the condition passed to it is true, or else aborts the program:
+```rust
+fn assert(cond: Bool) {
+    if cond {
+        // do nothing
+    } else {
+        print("assertion failed");
+        exit(1);
+    }
+}
+```
+In the case where the condition is true, `assert` simply does nothing. If the
+condition is false, it prints an error and calls the builtin `exit`. Since the
+type of the false branch is `Never`, it automatically coerces to the type of the
+other branch, in this case `()`, and thus the type of the whole function body
+satisfies the `()` return type of the function.
+
+This behaviour may seem confusing, but it is in fact perfectly valid. Since a
+value of a bottom-type cannot exist, we are free to promise that it could take
+the role expected of it by any other type - since such a value is impossible, we
+will never be asked to make good on our promise.
+
+This behaviour also describes why such types are called "bottom types": in a
+type-system with subtyping, a bottom type is a subtype of all other types
+(including itself and all other bottom types). Note that Walrus does not in
+general have a subtyping mechanism: `Never` is the only type that may be passed
+to a context expecting a different type.
+
+TODO IF TIME: Curry-Howard Isomoprhism, Principle of Explosion
+
+#### Limitations {#sec:reference:types:limitations}
