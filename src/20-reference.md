@@ -1,7 +1,3 @@
----
-monofont: 'Fira Mono'
----
-
 # Reference {#sec:reference}
 
 ## Primitive Datatypes {#sec:reference:primitive-types}
