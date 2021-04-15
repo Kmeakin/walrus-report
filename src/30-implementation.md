@@ -1,6 +1,7 @@
 # Implementation
 
 ## The pipeline
+TODO: a nice diagram of information flow
 
 ## Lexing
 Before the text of a program can be parsed into a parse tree, it must be first
@@ -59,6 +60,53 @@ of glue code to drive the lexer and attatch start and end indicies to each
 token. See @sec:appendix:lexer for the full implementation of the Walrus lexer.
 
 ## Parsing
+Once a flat stream of tokens has been produced, they must be assembled into a
+more structured tree-like structure, where each syntatic construct is a child of
+its enclosing construct (with a whole file forming the root node). For example,
+this Walrus file 
+```rust
+fn square(x: Int) -> Int {
+    x * x
+}
+```
+would then produce this parse tree:
+```{.graphviz}
+digraph {
+    1 [label="SourceFile"]
+    2 [label="FnDef"]
+    3 [label="KwFn"]
+    4 [label="Ident"]
+
+    5 [label="ParamList"]
+    6 [label="LParen"]
+    7 [label="Param"]
+    8 [label="VarPat"]
+    9 [label="Colon"]
+    10 [label="VarType"]
+    11 [label="RParen"]
+
+    12 [label="RetType"]
+    13 [label="ThinArrow"]
+    14 [label="VarType"]
+
+    15 [label="BlockExpr"]
+    16 [label="LCurly"]
+    17 [label="BinopExpr"]
+    18 [label="VarExpr"]
+    19 [label="Mul"]
+    20 [label="VarExpr"]
+    21 [label="RCurly"]
+
+    1 -> 2
+    2 -> {3, 4, 5, 12, 15}
+    5 -> {6, 7, 11}
+    7 -> {8, 9, 10}
+    12 -> {13, 14}
+    15 -> {16, 17, 21}
+    17 -> {18, 19, 20}
+}
+```
+
 
 ## Lowering
 
@@ -69,3 +117,5 @@ token. See @sec:appendix:lexer for the full implementation of the Walrus lexer.
 ## Codegen
 
 ### Runtime value representation
+
+## Command-line interface

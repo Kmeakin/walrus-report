@@ -8,8 +8,9 @@ all:
 	--number-sections \
 	--pdf-engine=xelatex \
 	--filter pandoc-crossref \
-	-M wordcount=process-anyway \
-	--lua-filter lua-filters/wordcount/wordcount.lua
+	--lua-filter=lua-filters/diagram-generator/diagram-generator.lua \
+	--lua-filter lua-filters/wordcount/wordcount.lua \
+	-M wordcount=process-anyway
 	
 wordcount:
 	pandoc src/*.md \

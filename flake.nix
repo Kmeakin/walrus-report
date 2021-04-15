@@ -14,6 +14,8 @@
               texlive.combined.scheme-full
               haskellPackages.pandoc-crossref
               (aspellWithDicts (dicts: [ dicts.en dicts.en-computers dicts.en-science ]))
+              graphviz
+              librsvg
             ];
           };
         }
