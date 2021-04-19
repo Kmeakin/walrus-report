@@ -1267,6 +1267,9 @@ arrow is right associative: that is `(Int) -> (Bool) -> Int` is the same as
 ((Int) -> Bool) -> Int // A function which takes a function from 1 Int to a Bool, and returns an Int
 ```
 
+#### Type inference
+TODO
+
 #### Inhabitants
 When discussing properties of certain types, it can be useful to consider the
 number of different values a type may take. These values are called the
@@ -1463,11 +1466,11 @@ polymorphism known as *ad-hoc polymorphism* ^[The previous, most simple form of
 polymorphism we have talked about is sometimes called *parametric-polymorphism*
 to distinguish it from other more advanced forms of polymorphism]
 
-TODO: first introduced by ??? for Haskell In a system with *ad-hoc
-polymorphism*, polymorphic functions can be additionally augmented with
-*type-constraints* - a set of requirements that a type variable must satisfy. 
+TODO: first introduced by ??? for Haskell 
 
-Consider the Rust function `max`:
+In a system with *ad-hoc polymorphism*, polymorphic functions can be
+additionally augmented with *type-constraints* - a set of requirements that a
+type variable must satisfy. Consider the Rust function `max`:
 ```rust
 fn max<T: Ord>(v1: T, v2: T) -> T;`
 ```
