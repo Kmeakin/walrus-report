@@ -254,10 +254,64 @@ there is no way of abstracting over the "parse a comma separated list of
 elements between two parentheses" part and substituting in the element of the
 tuple to be parsed. In other words, we need *higher-order* rules: functions that
 take in one rule and produce another rule. Hence I abandoned PEGs in favour of
-parser-combinators.
+parser combinators.
 
 #### Parser combinators {#sec:impl:parser:parser-combinators}
-TODO Parser-combinators were first introduced by ??? in ???
+Parser combinators may be considered as functional programming applied to the
+traditional imperative recursive-descent parser. Parser combinators were first
+introduced for Haskell by Phil Wadler in 1995 as a demonstration of the power of
+monads for functional programming ^[TODO: citation], and have since been adapted
+to many other programming languages. 
+
+In Rust,a parser is any type that provides a way to parse an input, `I`, into an
+`Option<(I, O)>`, where `None` represents the parser failing, and `Some(I, O)`
+represents the parser succeeding and returning the rest of the input to be
+parsed, along with some output (such as a new node in the parse tree)
+
+```rust
+trait Parser<I, O> {
+    fn parse(&mut self, input: I) -> Option<(I, O)>;
+}
+```
+
+As well as primitive parsers to parse single characters, strings, or tokens,
+there are *parser-combinators*, higher order functions that return new parsers,
+such as `many0` to attempt to parse the input as many times as possible, or
+`opt`, to attempt to parse the input 0 or 1 times. Since combinators are normal
+functions, the user is free to write their own arbitrarily complex parsers. For
+example, here is the `tuple` combinator from the Walrus parser, which wraps a
+parser `p` into a parser that parses a tuple of `Element`s:
+
+```rust
+fn tuple<P, Element>(p: P) -> impl Parser<Tokens, Tuple<Element>> 
+where
+    P: Parser<Tokens, Element>
+{
+    |input| {
+        let (input, lparen) = lparen.parse(input)?;
+        let (input, elements) = p.then(comma.then(p).many0()).opt()?;
+        let (input, trailing_comma) = comma.opt.parse()?;
+        let (input, rparen) = rparen.parse(input)?;
+        Some((input, Tuple{lparen, elements, trailing_comma, rparen}))
+    }
+}
+```
+
+Of the 4 approaches I have explored in writing the Walrus parser, I find parser
+combinators to be the most satisfactory: they are nearly as declarative as
+Parsing Expression Grammars, whilst still allowing the programmer to use the
+full abstraction capabilities of the normal implementation language, as in
+hand-written recursive descent. However, the implementation is still far from
+satisfactory: it provides neither error reporting nor error recovery. Since
+parser combinators do not distingush between failure to parse due to a syntax
+error, or failure to parse because another alternative rule needs to be
+attempted, the precise location of a syntax error cannot easily be detected -
+the only indication that a syntax error was encountered was that the whole input
+string was not consumed. Therefore, the Walrus parser will simply abort if the
+entire input file is not consumed, without any indication of where the first
+syntax error occurred. Error-reporting and error-recovering parser-combinators
+would be one of my first priorities if I were to continue working on the
+compiler.
 
 ## Lowering
 
