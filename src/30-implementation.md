@@ -431,7 +431,7 @@ corresponding `Denotation`s as new definitions are introduced, and emitting an
 error if a variable is introduced that is already defined in the same scope.
 Lexical scope is achieved by entering a new `Scope` at every construct that
 introduces new local variables (let statements, function parameter lists, lambda
-expression parameter lists, `match` cases)
+expression parameter lists, `match` cases). 
 
 For example, this program
 ```rust
@@ -456,7 +456,13 @@ produces the following scope tree:
 ```{.graphviz}
 digraph {
     rankdir = BT;
-    0
+0 [xlabel="0", label="S: Struct(0),\lf: Fn(1),\lmain: Fn(0)"]
+1 [xlabel="1", label=""]
+2 [xlabel="2", label="x: Local(1)"]
+3 [xlabel="3", label="s: Local(9),\lx: Local(11)"]
+4 [xlabel="4", label="x: Local(14)"]
+5 [xlabel="5", label="x: Local(15)"]
+6 [xlabel="6", label="s: Local(16)"]
     1 -> 0
     2 -> 1
     3 -> 0
@@ -465,7 +471,46 @@ digraph {
     6 -> 5
 }
 ```
+It may be more help to see the source program annotated with the extent of each
+scope:
+```rust
+// start of scope 0
+fn main(/*start of scope 1*/) {
+    let x = 5; // start of scope 2 
+    f(S{x: x + x}, x);
+    // end of scope 2
+    // end of scope 1
+}
+ 
+fn f(/*start of scope 3*/ s: S, x: Int) -> S {
+    let x = 5; // start of scope 4
+    let x = 0; // start of scope 5
+    {
+        let s = x; // start of 6
+        // end of scope 6
+    }
+    s
+    // end of scope 5
+    // end of scope 4
+    // end of scope 3
+}
+ 
+struct S {x: Int}
+// end of scope 0
+```
 
+Once a scope tree has been built, names can be resolved by later passes. Each
+variable is mapped to its scope by using a `HashMap<VarId, ScopeId>`{.rust}.
+Resolving variables is then done by performing the following search up the scope
+tree:
+
+* **step 1**: get the `Var`'s enclosing `Scope`
+* **step 2**: lookup the `Var` in the `Scope`'s denotations
+* **step 3**: if the `Scope` has no parent, check if there is a builtin function
+  or type with the same name. 
+  * If there If there is, return the builtin, 
+  * else emit an unbound variable error 
+* **step 4**: if the `Scope` has a parent, repeat from **step 2**
 
 ### Type inference
 
