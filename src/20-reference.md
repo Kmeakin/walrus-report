@@ -290,6 +290,9 @@ As in standard mathematical notation, parentheses bind tighter than any
 operators, and so can be used to override the normal operator precedence:
 `(1 + 2) * (3 - 4)`{.rust}
 
+### L-values {#sec:reference:l-values}
+TODO
+
 Unlike languages such as Haskell or Ocaml, the set of operators in Walrus is
 fixed: new operators cannot be defined by the user. This simplifies parsing, but
 can make expressions which could otherwise be expressed in specialised notation
@@ -1176,7 +1179,7 @@ is, that every possible value being matched against is covered in at least one
 case. Walrus does not yet check `match` expressions for exhaustiveness, as the
 algorithm for checking exhaustiveness is quite complex.
 
-### Irrefutable patterns
+### Irrefutable patterns {#sec:reference:irrefutable-patterns}
 Pattern matching can take place is several other Walrus constructs, not just the
 `match` expression. In particular, let-statements, function arguments, and
 lambda arguments all allow arbitrary patterns to be used, not just simple
@@ -1235,10 +1238,32 @@ checking that the program conforms to these rules is simply deferred to runtime.
 
 TODO: benefits of static type systems over dynamic type systems
 
-### The Walrus Type System
-The Walrus type system is largely inspired by that of Rust, with several
-simplifications and features missed out due to time constraints (see
-@sec:reference:types:limitations).
+### The Walrus Type System {#sec:reference:type-system}
+The Walrus type system is a simplification of the Rust type system, which is
+itself an extension of the classic *Hindley-Milner* type system.
+
+The original Hindley-Milner type system, introduced in (TODO) by (TODO),
+provides a set of inferences rules for determining a single "most general type"
+for expressions in the *simply-typed-lambda-calculus*. For the purposes of this
+report, it is sufficient just to be aware that the simply-typed-lambda-calculus
+is a very primitive programming language, providing only *variables*,
+*application* (call a function with exactly one argument), *abstraction*
+(creating an anonymous function of exactly one argument) and *let-binding*
+(binding a variable to a value, and evaluating a second expression in the
+extended environment).
+
+Modern day functional programming languages use the simply-typed-lambda-calculus
+(or some other lambda-calculi) as their underlying theory, while adding
+extensions to produce a language practical for real-world development. Walrus is
+no exception: its extensions to the simply-typed lambda calculus include:
+
+* Primitive types and corresponding literals
+* Global variables
+* Algebraic datatypes and pattern matching
+* Functions and function-calls with zero or more arguments
+* *Side-effects* via assignment or builtin functions such as `print`
+* Control flow via `if`, `loop`, `return`, `break` and `continue`
+* Limited subtyping, in the form of the `Never` type
 
 #### Forming types
 Types in Walrus are either one of the primitive types, a new abstract type
