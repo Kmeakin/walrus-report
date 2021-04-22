@@ -11,7 +11,7 @@ all:
 	--lua-filter=lua-filters/diagram-generator/diagram-generator.lua \
 	--lua-filter lua-filters/wordcount/wordcount.lua \
 	-M wordcount=process-anyway
-	
+
 wordcount:
 	pandoc src/*.md \
 	--lua-filter lua-filters/wordcount/wordcount.lua
@@ -19,3 +19,8 @@ wordcount:
 spellcheck:
 	pandoc src/*.md \
 	--lua-filter lua-filters/spellcheck/spellcheck.lua
+
+clean:
+	rm -f out/*
+	rm -rf _minted-*
+	rm -rf report.*

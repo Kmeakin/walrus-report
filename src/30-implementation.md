@@ -375,6 +375,7 @@ first represents types as they appear in the surface syntax. The latter
 represents type values]. However, this is not quite correct, as this would
 hash each node based on its *value*, not its *identity*. Consider type checking
 the following snippet of code:
+
 ```rust
 fn f(x: Int) {
     let x = x + x;
@@ -390,9 +391,81 @@ location for reporting errors, and may potentially have a different inferred
 type as new variables shadow old ones). The solution is to use an
 *arena-allocation strategy*: the HIR nodes themselves are stored in `Vec`
 (Rust's dynamic array type), and the index of the node into the arena is used to
-provide identity semantics.
+provide identity semantics. The `Vec` that holds each type of HIR node is
+refered to as the *arena*, and the index into the arena is the node's *ID*:
 
-### Scopes
+```rust
+struct Id<T> {
+    index: usize,
+    ty: PhantomData<T>,
+}
+
+type ExprId = Id<Expr>;
+```
+
+### Name resolution {#sec:impl:scopes}
+Any non-trivial semantic analysis over the HIR will require us to be able to
+*resolve-names*: lookup the entity (if any) that a variable name refers to in a
+given scope. Since a variable can refer to one of many different named entities
+(local variables, functions, structs, enums, builtin types and builtin
+functions), we say that a variable name has a corresponding *denotation*, since
+this name is more general than *value*, which could refer simply to runtime
+values.
+
+```rust
+pub enum Denotation {
+    Local(VarId),
+    Fn(FnDefId),
+    Struct(StructDefId),
+    Enum(EnumDefId),
+    Builtin(Builtin),
+}
+```
+
+Name resolution is performed by calculating the set of nested *scopes* for the
+whole program. Each `Scope` contains a `HashMap<String, Denotation>`{.rust}
+mapping each variable to its corresponding denotation, and an optional pointer
+to its parent `Scope` (the root scope has no parent). The tree of scopes is then
+calculated by performing a depth-first walk over the HIR tree, inserting
+corresponding `Denotation`s as new definitions are introduced, and emitting an
+error if a variable is introduced that is already defined in the same scope.
+Lexical scope is achieved by entering a new `Scope` at every construct that
+introduces new local variables (let statements, function parameter lists, lambda
+expression parameter lists, `match` cases)
+
+For example, this program
+```rust
+fn main() {
+    let x = 5;
+    f(S{x: x + x}, x);
+}
+ 
+fn f(s: S, x: Int) -> S {
+    let x = 5;
+    let x = 0;
+    {
+        let s = x;
+    }
+    s
+}
+ 
+struct S {x: Int}
+```
+
+produces the following scope tree:
+```{.graphviz}
+digraph {
+    rankdir = BT;
+    0
+    1 -> 0
+    2 -> 1
+    3 -> 0
+    4 -> 3
+    5 -> 4
+    6 -> 5
+}
+```
+
 
 ### Type inference
 
