@@ -565,6 +565,9 @@ fn sign(x: Int) -> String {
 ```
 
 ### Loops {
+A loop-expression simply repeats its body until it encounters a `break`
+expression:
+```rust
     loop {
         if x == 0 {
             break;
@@ -635,7 +638,7 @@ the last expression in a function body obviates most of the need for `return`,
 it may still be useful in situations where a function cannot easily be
 expressed with a single exit point.
 
-TODO: example use of early return
+TODO: example of early return
 
 ## Aggregate datatypes {#sec:reference:aggregates}
 All datatypes we have dealt with so far have been so-called

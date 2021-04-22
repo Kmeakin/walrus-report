@@ -516,7 +516,7 @@ tree:
   * else emit an unbound variable error 
 * **step 4**: if the `Scope` has a parent, repeat from **step 2**
 
-### Type Inference
+### Type Inference {#sec:impl:types}
 Once we have a scope tree, we can now perform type inference. The type inference
 pass produces an `InferenceResult` mapping each HIR entity to its inferred type:
 
@@ -578,20 +578,76 @@ based type systems is simple:
 * **Step 3**: Solve the system of constraints via *unification* to get a
   *substitution* mapping each type-variable to a type
 
-This is conceptually the same process that the Walrus type checker follows.
-However, it interleaves **step 2** and **step 3** by performing unification on
-demand. This allows for better error-reporting: messages about unification
-errors can refer to the HIR node that was being visited when the unification
-failed. If unification fails, the type of the node is assumed to be
-`Type::Unknown` and inference can continue over the rest of the program,
-providing better error-recovery.
+TODO: typing rules in appendix?
+
+Consider the following Walrus program:
+```rust
+fn main() -> _ {
+    (p) => if p(1) {2} else {3}
+}
+```
+
+First, we generate a fresh type-variable for each HIR node. Type variables are
+represented simply as an integer which is incremented to generate a fresh variable:
+```{.graphviz}
+digraph {
+    MainFn      [xlabel="t0", label="FnDef"]
+    BlockExpr   [xlabel="t1", label="BlockExpr"]
+    LambdaExpr  [xlabel="t2", label="LambdaExpr"]
+    VarPat      [xlabel="t3", label="VarPat"]
+    IfExpr      [xlabel="t4", label="IfExpr"]
+    CallExpr    [xlabel="t5", label="CallExpr"]
+    VarExpr     [xlabel="t6", label="VarExpr"]
+    IntLit1     [xlabel="t7", label="LitExpr(Int(1))"]
+    IntLit2     [xlabel="t8", label="LitExpr(Int(2))"]
+    IntLit3     [xlabel="t9", label="LitExpr(Int(3))"]
+    RetTy       [xlabel="t10", label="RetType"]
+
+    MainFn -> BlockExpr
+    MainFn -> RetTy
+
+    BlockExpr -> LambdaExpr
+
+    LambdaExpr -> VarPat
+    LambdaExpr -> IfExpr
+
+    IfExpr -> CallExpr
+    IfExpr -> IntLit2
+    IfExpr -> IntLit3
+
+    CallExpr -> VarExpr
+    CallExpr -> IntLit1
+}
+```
+
+Now we traverse the HIR to generate a set of equality constraints:
+
+| Constraint                   | Rule applied
+|------------------------------|--------------
+| $t_{0} = () \to t_{10}$      |
+| $t_{1} = t_{2}$              |
+| $t_{2} = (t_{3}) \to t_{4}$  |
+| $t_{5} = Bool$               |
+| $t_{4} = t_{8}$              |
+| $t_{4} = t_{9}$              |
+| $t_{6} = (t_{7}) \to t_{5}$  |
+| $t_{7} = Int$                |
+| $t_{8} = Int$                |
+| $t_{9} = Int$                |
+
+The Walrus type-checker conceptually performs the same steps, however it
+interleaves **step 2** and **step 3** by performing unification on demand. This
+allows for better error-reporting: messages about unification errors can refer
+to the HIR node that was being visited when the unification failed. If
+unification fails, the type of the node is assumed to be `Type::Unknown` and
+inference can continue over the rest of the program, providing better
+error-recovery.
 
 ### Semantic checks
 The type checker pass also checks various other properties of the program as it
 traverses the HIR which are difficult to express as equality constraints:
 
 * Every occurence of `break` or `continue` must be within a `loop`
-* Functions must be called with the correct number of arguments
 * The left-hand side of an assignment expression must be an *l-value* (see
   @sec:reference:l-values)
 * The l-value being assigned to must have been declared mutable with the `mut`
