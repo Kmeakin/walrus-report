@@ -104,3 +104,253 @@ pub fn lex(src: &str) -> impl Iterator<Item = Token> {
     })
 }
 ```
+
+
+## HIR {#sec:appendex:hir}
+```rust
+pub type VarId = Idx<Var>;
+pub type FnDefId = Idx<FnDef>;
+pub type StructDefId = Idx<StructDef>;
+pub type EnumDefId = Idx<EnumDef>;
+pub type ExprId = Idx<Expr>;
+pub type TypeId = Idx<Type>;
+pub type PatId = Idx<Pat>;
+
+pub struct Program {
+    pub decls: Vec<Decl>,
+    pub hir: HirData,
+    pub source: ProgramSource,
+    pub diagnostics: Vec<Diagnostic>,
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct HirData {
+    pub vars: Arena<Var>,
+    pub fn_defs: Arena<FnDef>,
+    pub struct_defs: Arena<StructDef>,
+    pub enum_defs: Arena<EnumDef>,
+    pub exprs: Arena<Expr>,
+    pub types: Arena<Type>,
+    pub pats: Arena<Pat>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct ModuleSource {
+    pub vars: HashMap<VarId, syntax::Var>,
+    pub fn_defs: HashMap<FnDefId, syntax::FnDef>,
+    pub struct_defs: HashMap<StructDefId, syntax::StructDef>,
+    pub enum_defs: HashMap<EnumDefId, syntax::EnumDef>,
+    pub exprs: HashMap<ExprId, syntax::Expr>,
+    pub types: HashMap<TypeId, syntax::Type>,
+    pub pats: HashMap<PatId, syntax::Pat>,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Decl {
+    Fn(FnDefId),
+    Struct(StructDefId),
+    Enum(EnumDefId),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct FnDef {
+    pub name: VarId,
+    pub params: Vec<Param>,
+    pub ret_type: Option<TypeId>,
+    pub expr: ExprId,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct Param {
+    pub pat: PatId,
+    pub ty: Option<TypeId>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct StructDef {
+    pub name: VarId,
+    pub fields: Vec<StructField>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct EnumDef {
+    pub name: VarId,
+    pub variants: Vec<EnumVariant>,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct StructField {
+    pub name: VarId,
+    pub ty: TypeId,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct EnumVariant {
+    pub name: VarId,
+    pub fields: Vec<StructField>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Expr {
+    Lit(Lit),
+    Var(VarId),
+    Tuple(Vec<ExprId>),
+    Field {
+        expr: ExprId,
+        field: Field,
+    },
+    Struct {
+        name: VarId,
+        fields: Vec<FieldInit>,
+    },
+    Enum {
+        name: VarId,
+        variant: VarId,
+        fields: Vec<FieldInit>,
+    },
+    Unop {
+        op: Unop,
+        expr: ExprId,
+    },
+    Binop {
+        lhs: ExprId,
+        op: Binop,
+        rhs: ExprId,
+    },
+    Call {
+        func: ExprId,
+        args: Vec<ExprId>,
+    },
+    Block {
+        stmts: Vec<Stmt>,
+        expr: Option<ExprId>,
+    },
+    Loop(ExprId),
+    If {
+        test: ExprId,
+        then_branch: ExprId,
+        else_branch: Option<ExprId>,
+    },
+    Match {
+        test: ExprId,
+        cases: Vec<MatchCase>,
+    },
+    Break(Option<ExprId>),
+    Return(Option<ExprId>),
+    Continue,
+    Lambda {
+        params: Vec<Param>,
+        expr: ExprId,
+    },
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct MatchCase {
+    pub pat: PatId,
+    pub expr: ExprId,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct FieldInit {
+    pub name: VarId,
+    pub val: Option<ExprId>,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Field {
+    Tuple(u32),
+    Named(VarId),
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Unop {
+    Not,
+    Add,
+    Sub,
+}
+
+#[derive(Debug, Display, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Binop {
+    Lazy(LazyBinop),
+    Arithmetic(ArithmeticBinop),
+    Cmp(CmpBinop),
+    Assign,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum LazyBinop {
+    Or,
+    And,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum ArithmeticBinop {
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum CmpBinop {
+    Eq,
+    NotEq,
+    Less,
+    LessEq,
+    Greater,
+    GreaterEq,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum Stmt {
+    Let {
+        pat: PatId,
+        ty: Option<TypeId>,
+        expr: ExprId,
+    },
+    Expr(ExprId),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Lit {
+    Bool(bool),
+    Int(u32),
+    Float(f32),
+    Char(char),
+    String(SmolStr),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Pat {
+    Lit(Lit),
+    Var {
+        is_mut: bool,
+        var: VarId,
+    },
+    Ignore,
+    Tuple(Vec<PatId>),
+    Struct {
+        name: VarId,
+        fields: Vec<FieldPat>,
+    },
+    Enum {
+        name: VarId,
+        variant: VarId,
+        fields: Vec<FieldPat>,
+    },
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct FieldPat {
+    pub name: VarId,
+    pub pat: Option<PatId>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum Type {
+    Var(VarId),
+    Infer,
+    Tuple(Vec<TypeId>),
+    Fn { params: Vec<TypeId>, ret: TypeId },
+}
+```
