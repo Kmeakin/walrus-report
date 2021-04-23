@@ -388,11 +388,49 @@ pub enum Type {
 
 \inferrule [LambdaExpr] 
 {\Gamma \vdash p_{0} : \tau_{0} \dots \Gamma \vdash p_{n} : \tau_{n} \\
- \Gamma \vdash e: \tau'}
-{\Gamma \vdash (p_{0}, \dots, p_{n}) \Rightarrow e : (\tau_{0}, \dots, \tau_{n}) \to \tau'}
+ \Gamma \vdash e: \tau
+}
+{\Gamma \vdash (p_{0}, \dots, p_{n}) \Rightarrow e : (\tau_{0}, \dots, \tau_{n}) \to \tau}
 
 \inferrule [CallExpr] 
-{\Gamma \vdash e' : (\tau_{0}, \dots, \tau_{n}) \to \tau' \\ 
- \Gamma \vdash e_{0} : \tau_{0} \dots \Gamma \vdash e_{n} : \tau_{n}}
-{\Gamma \vdash e'(e_{0}, \dots, e_{n}) : \tau'}
+{\Gamma \vdash e' : (\tau_{0}, \dots, \tau_{n}) \to \tau \\ 
+ \Gamma \vdash e_{0} : \tau_{0} \dots \Gamma \vdash e_{n} : \tau_{n}
+}
+{\Gamma \vdash e'(e_{0}, \dots, e_{n}) : \tau}
+
+\inferrule [IfThenElseExpr] 
+{\Gamma \vdash e_{1} : Bool \\ 
+ \Gamma \vdash be_{1} : \tau \\
+ \Gamma \vdash be_{2} : \tau
+}
+{\Gamma \vdash \texttt{if} \ e_{1} \ be_{1} \ \texttt{else} \ be_{2} : \tau}
+
+\inferrule [IfThenExpr] 
+{\Gamma \vdash e_{1} : Bool \\ 
+ \Gamma \vdash be_{1} : () \\
+}
+{\Gamma \vdash \texttt{if} \ e_{1} \ be_{1} : ()}
+
+\inferrule [NonterminatingLoopExpr] 
+{\Gamma \vdash be_{1} : \tau \\
+ \text{\texttt{break} e does not occur in $be_{1}$}
+}
+{\Gamma \vdash \texttt{loop} \ e_{1} \ be_{1} : Never}
+
+\inferrule [TerminatingLoopExpr] 
+{\Gamma \vdash be_{1} : \tau' \\
+ \Gamma \vdash e_{1}: \tau \dots \Gamma \vdash e_{n}: \tau \\
+ \text{\texttt{break} $e_{1}$ \dots \ \texttt{break} $e_{n}$ occur in $be_{1}$}
+}
+{\Gamma \vdash \texttt{loop} \ e_{1} \ be_{1} : \tau}
+
+\inferrule [BreakExpr] 
+{\Gamma \vdash e_{1} : \tau \\
+ \text{\texttt{break} \ $e_{1}$ occurs in a \texttt{loop}}
+}
+{\Gamma \vdash \texttt{break} \ e_{1} : Never}
+
+
+
+
 \end{mathpar}
