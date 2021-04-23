@@ -457,26 +457,27 @@ struct S {x: Int}
 ```
 
 produces the following scope tree:
-```{.graphviz}
-digraph {
-    rankdir = BT;
-0 [xlabel="0", label="S: Struct(0),\lf: Fn(1),\lmain: Fn(0)"]
-1 [xlabel="1", label=""]
-2 [xlabel="2", label="x: Local(1)"]
-3 [xlabel="3", label="s: Local(9),\lx: Local(11)"]
-4 [xlabel="4", label="x: Local(14)"]
-5 [xlabel="5", label="x: Local(15)"]
-6 [xlabel="6", label="s: Local(16)"]
-    1 -> 0
-    2 -> 1
-    3 -> 0
-    4 -> 3
-    5 -> 4
-    6 -> 5
-}
-```
-It may be more help to see the source program annotated with the extent of each
-scope:
+\begin{tikzpicture}
+% Nodes
+\node (Scope0)                          {\makecell[l]{s: Struct(0),\\f: Fn(1),\\main: Fn(0)}};  \node[right=1pt of Scope0] {$scope_{0}$};
+\node (Scope1) [below left=of Scope0]   {};                                                     \node[right=1pt of Scope1] {$scope_{1}$};
+\node (Scope2) [below=of Scope1]        {\makecell[l]{x: Local(1)}};                            \node[right=1pt of Scope2] {$scope_{2}$};
+\node (Scope3) [below right=of Scope0]  {\makecell[l]{s: Local(9), \\x: Local(11)}};            \node[right=1pt of Scope3] {$scope_{3}$};
+\node (Scope4) [below=of Scope3]        {\makecell[l]{x: Local(14)}};                           \node[right=1pt of Scope4] {$scope_{4}$};
+\node (Scope5) [below=of Scope4]        {\makecell[l]{x: Local(15)}};                           \node[right=1pt of Scope5] {$scope_{5}$};
+\node (Scope6) [below=of Scope5]        {\makecell[l]{s: Local(16)}};                           \node[right=1pt of Scope6] {$scope_{6}$};
+
+% Edges
+\draw[->] (Scope1) -- (Scope0);
+\draw[->] (Scope2) -- (Scope1);
+\draw[->] (Scope3) -- (Scope0);
+\draw[->] (Scope4) -- (Scope3);
+\draw[->] (Scope5) -- (Scope4);
+\draw[->] (Scope6) -- (Scope5);
+\end{tikzpicture}
+
+It may be more helpful to see the source program annotated with the extent of
+each scope:
 ```rust
 // start of scope 0
 fn main(/*start of scope 1*/) {
@@ -588,37 +589,35 @@ fn main() -> _ {
 ```
 
 First, we generate a fresh type-variable for each HIR node. Type variables are
-represented simply as an integer which is incremented to generate a fresh variable:
-```{.graphviz}
-digraph {
-    MainFn      [xlabel="t0", label="FnDef"]
-    BlockExpr   [xlabel="t1", label="BlockExpr"]
-    LambdaExpr  [xlabel="t2", label="LambdaExpr"]
-    VarPat      [xlabel="t3", label="VarPat"]
-    IfExpr      [xlabel="t4", label="IfExpr"]
-    CallExpr    [xlabel="t5", label="CallExpr"]
-    VarExpr     [xlabel="t6", label="VarExpr"]
-    IntLit1     [xlabel="t7", label="LitExpr(Int(1))"]
-    IntLit2     [xlabel="t8", label="LitExpr(Int(2))"]
-    IntLit3     [xlabel="t9", label="LitExpr(Int(3))"]
-    RetTy       [xlabel="t10", label="RetType"]
+represented simply as an integer which is incremented to generate a fresh
+variable:
 
-    MainFn -> BlockExpr
-    MainFn -> RetTy
+\begin{tikzpicture}
+% Nodes
+\node (FnDef)                                   {FnDef};      \node[right=1pt of FnDef]      {$t_{0}$};
+\node (BlockExpr)   [below left=of FnDef]       {BlockExpr};  \node[right=1pt of BlockExpr]  {$t_{1}$};
+\node (RetType)     [below right=of FnDef]      {RetType};    \node[right=1pt of RetType]    {$t_{2}$};
+\node (LambdaExpr)  [below=of BlockExpr]        {LambdaExpr}; \node[right=1pt of LambdaExpr] {$t_{3}$};
+\node (VarPat)      [below left=of LambdaExpr]  {VarPat};     \node[right=1pt of VarPat]     {$t_{4}$};
+\node (IfExpr)      [below right=of LambdaExpr] {IfExpr};     \node[right=1pt of IfExpr]     {$t_{5}$};
+\node (CallExpr)    [below left=of IfExpr]      {CallExpr};   \node[right=1pt of CallExpr]   {$t_{6}$};
+\node (VarExpr)     [below left=of CallExpr]    {VarExpr};    \node[right=1pt of VarExpr]    {$t_{7}$};
+\node (IntLit1)     [below right=of CallExpr]   {IntLit};     \node[right=1pt of IntLit1]    {$t_{8}$};
+\node (IntLit2)     [below=of IfExpr]           {IntLit};     \node[right=1pt of IntLit2]    {$t_{9}$};
+\node (IntLit3)     [below right=of IfExpr]     {IntLit};     \node[right=1pt of IntLit3]    {$t_{10}$};
 
-    BlockExpr -> LambdaExpr
-
-    LambdaExpr -> VarPat
-    LambdaExpr -> IfExpr
-
-    IfExpr -> CallExpr
-    IfExpr -> IntLit2
-    IfExpr -> IntLit3
-
-    CallExpr -> VarExpr
-    CallExpr -> IntLit1
-}
-```
+% Edges
+\draw[->] (FnDef) -- (BlockExpr);
+\draw[->] (FnDef) -- (RetType);
+\draw[->] (BlockExpr) -- (LambdaExpr);
+\draw[->] (LambdaExpr) -- (VarPat);
+\draw[->] (LambdaExpr) -- (IfExpr);
+\draw[->] (IfExpr) -- (CallExpr);
+\draw[->] (IfExpr) -- (IntLit2);
+\draw[->] (IfExpr) -- (IntLit3);
+\draw[->] (CallExpr) -- (VarExpr);
+\draw[->] (CallExpr) -- (IntLit1);
+\end{tikzpicture}
 
 Now we traverse the HIR to generate a set of equality constraints:
 
