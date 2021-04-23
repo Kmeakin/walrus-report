@@ -400,37 +400,52 @@ pub enum Type {
 
 \inferrule [IfThenElseExpr] 
 {\Gamma \vdash e_{1} : Bool \\ 
- \Gamma \vdash be_{1} : \tau \\
- \Gamma \vdash be_{2} : \tau
+ \Gamma \vdash e_{2} : \tau \\
+ \Gamma \vdash e_{3} : \tau
 }
-{\Gamma \vdash \texttt{if} \ e_{1} \ be_{1} \ \texttt{else} \ be_{2} : \tau}
+{\Gamma \vdash \texttt{if} \ e_{1} \ e_{2} \ \texttt{else} \ e_{3} : \tau}
 
 \inferrule [IfThenExpr] 
 {\Gamma \vdash e_{1} : Bool \\ 
- \Gamma \vdash be_{1} : () \\
+ \Gamma \vdash e_{2} : () \\
 }
-{\Gamma \vdash \texttt{if} \ e_{1} \ be_{1} : ()}
+{\Gamma \vdash \texttt{if} \ e_{1} \ e_{2} : ()}
 
 \inferrule [NonterminatingLoopExpr] 
-{\Gamma \vdash be_{1} : \tau \\
- \text{\texttt{break} e does not occur in $be_{1}$}
+{\Gamma \vdash e' : \tau \\
+ \text{\texttt{break} $e'$ does not occur in e}
 }
-{\Gamma \vdash \texttt{loop} \ e_{1} \ be_{1} : Never}
+{\Gamma \vdash \texttt{loop} \ e : Never}
 
 \inferrule [TerminatingLoopExpr] 
-{\Gamma \vdash be_{1} : \tau' \\
+{\Gamma \vdash e : \tau' \\
  \Gamma \vdash e_{1}: \tau \dots \Gamma \vdash e_{n}: \tau \\
- \text{\texttt{break} $e_{1}$ \dots \ \texttt{break} $e_{n}$ occur in $be_{1}$}
+ \text{\texttt{break} $e_{1}$ \dots \ \texttt{break} $e_{n}$ occur in $e_{1}$}
 }
-{\Gamma \vdash \texttt{loop} \ e_{1} \ be_{1} : \tau}
+{\Gamma \vdash \texttt{loop} \ e : \tau}
 
 \inferrule [BreakExpr] 
-{\Gamma \vdash e_{1} : \tau \\
- \text{\texttt{break} \ $e_{1}$ occurs in a \texttt{loop}}
+{\Gamma \vdash e : \tau \\
+ \text{\texttt{break} \ e occurs in a \texttt{loop}}
 }
-{\Gamma \vdash \texttt{break} \ e_{1} : Never}
+{\Gamma \vdash \texttt{break} \ e : Never}
 
+\inferrule [ContinueExpr] 
+{\text{\texttt{continue} occurs in a \texttt{loop}}}
+{\Gamma \vdash \texttt{continue} : Never}
 
+\inferrule [ReturnExpr] 
+{\Gamma \vdash e_{1} : \tau \\
+ \text{\texttt{return} \ e occurs in a function or lambda expr}
+}
+{\Gamma \vdash \texttt{return} \ e : Never}
 
+\inferrule [BlockExpr] 
+{\Gamma \vdash e : \tau}
+{\Gamma \vdash \{ stmt_{0}; \dots; stmt_{n}; \ e \} : \tau }
+
+\inferrule [BlockNoExpr] 
+{ }
+{\Gamma \vdash \{ stmt_{0}; \dots; stmt_{n}; \} : () }
 
 \end{mathpar}
