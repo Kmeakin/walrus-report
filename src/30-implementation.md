@@ -6,7 +6,7 @@ TODO: a nice diagram of information flow
 ## Lexing
 Before the text of a program can be parsed into a parse tree, it must be first
 split into a flat stream of *tokens*: chunks of text with a label classifying
-their role in parsing, such as `whitespce`, `identifier`, `string literal`.
+their role in parsing, such as `Whitespce`, `Identifier`, or `StringLit`.
 
 For example, the Walrus code
 ```rust
@@ -17,21 +17,8 @@ fn main() {
 
 would be lexed as:
 ```
-KwFn
-Whitespace
-Ident
-LParen
-RParen
-Whitespace
-LCurly
-Whitespace
-Ident
-LParen
-String
-RCurly
-Semicolon
-Whitespace
-RCurly
+KwFn Whitespace Ident LParen RParen Whitespace LCurly Whitespace Ident
+LParen String RCurly Semicolon Whitespace RCurly
 ```
 
 The tokens of a programming language are often simple enough to be expressed as

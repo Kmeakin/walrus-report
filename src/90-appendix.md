@@ -354,3 +354,45 @@ pub enum Type {
     Fn { params: Vec<TypeId>, ret: TypeId },
 }
 ```
+
+## Typing rules {#sec:appendix:type-rules}
+
+\begin{mathpar}
+\inferrule [BoolLit]
+{ }
+{\Gamma \vdash b : Bool} 
+
+\inferrule [IntLit]
+{ }
+{\Gamma \vdash i: Int} 
+
+\inferrule [FloatLit]
+{ }
+{\Gamma \vdash f: Float} 
+
+\inferrule [CharLit]
+{ }
+{\Gamma \vdash c: Char} 
+
+\inferrule [StringLit]
+{ }
+{\Gamma \vdash s: String} 
+
+\inferrule [VarExpr]
+{v: \tau \in \Gamma}
+{\Gamma \vdash v: \tau} 
+
+\inferrule [TupleExpr]
+{\Gamma \vdash e_{0} : \tau_{0} \dots \Gamma \vdash e_{n} : \tau_{n}}
+{\Gamma \vdash (e_{0}, \dots, e_{n}) : (\tau_{0}, \dots, \tau_{n})}
+
+\inferrule [LambdaExpr] 
+{\Gamma \vdash p_{0} : \tau_{0} \dots \Gamma \vdash p_{n} : \tau_{n} \\
+ \Gamma \vdash e: \tau'}
+{\Gamma \vdash (p_{0}, \dots, p_{n}) \Rightarrow e : (\tau_{0}, \dots, \tau_{n}) \to \tau'}
+
+\inferrule [CallExpr] 
+{\Gamma \vdash e' : (\tau_{0}, \dots, \tau_{n}) \to \tau' \\ 
+ \Gamma \vdash e_{0} : \tau_{0} \dots \Gamma \vdash e_{n} : \tau_{n}}
+{\Gamma \vdash e'(e_{0}, \dots, e_{n}) : \tau'}
+\end{mathpar}
