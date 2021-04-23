@@ -566,8 +566,6 @@ based type systems is simple:
 * **Step 3**: Solve the system of constraints via *unification* to get a
   *substitution* mapping each type-variable to a type
 
-TODO: typing rules in appendix?
-
 Consider the following Walrus program:
 ```rust
 fn main() -> _ {
@@ -581,22 +579,20 @@ variable:
 
 \begin{tikzpicture}
 % Nodes
-\node (FnDef)                                   {FnDef};      \node[right=1pt of FnDef]      {$t_{0}$};
-\node (BlockExpr)   [below left=of FnDef]       {BlockExpr};  \node[right=1pt of BlockExpr]  {$t_{1}$};
-\node (RetType)     [below right=of FnDef]      {RetType};    \node[right=1pt of RetType]    {$t_{2}$};
-\node (LambdaExpr)  [below=of BlockExpr]        {LambdaExpr}; \node[right=1pt of LambdaExpr] {$t_{3}$};
-\node (VarPat)      [below left=of LambdaExpr]  {VarPat};     \node[right=1pt of VarPat]     {$t_{4}$};
-\node (IfExpr)      [below right=of LambdaExpr] {IfExpr};     \node[right=1pt of IfExpr]     {$t_{5}$};
-\node (CallExpr)    [below left=of IfExpr]      {CallExpr};   \node[right=1pt of CallExpr]   {$t_{6}$};
-\node (VarExpr)     [below left=of CallExpr]    {VarExpr};    \node[right=1pt of VarExpr]    {$t_{7}$};
-\node (IntLit1)     [below right=of CallExpr]   {IntLit};     \node[right=1pt of IntLit1]    {$t_{8}$};
-\node (IntLit2)     [below=of IfExpr]           {IntLit};     \node[right=1pt of IntLit2]    {$t_{9}$};
-\node (IntLit3)     [below right=of IfExpr]     {IntLit};     \node[right=1pt of IntLit3]    {$t_{10}$};
+\node (FnDef)                                   {FnDef};      \node[right=1pt of FnDef]      {$\tau_{0}$};
+\node (RetType)     [below right=of FnDef]      {RetType};    \node[right=1pt of RetType]    {$\tau_{9}$};
+\node (LambdaExpr)  [below left=of FnDef]       {LambdaExpr}; \node[right=1pt of LambdaExpr] {$\tau_{1}$};
+\node (VarPat)      [below left=of LambdaExpr]  {VarPat};     \node[right=1pt of VarPat]     {$\tau_{2}$};
+\node (IfExpr)      [below right=of LambdaExpr] {IfExpr};     \node[right=1pt of IfExpr]     {$\tau_{3}$};
+\node (CallExpr)    [below left=of IfExpr]      {CallExpr};   \node[right=1pt of CallExpr]   {$\tau_{4}$};
+\node (VarExpr)     [below left=of CallExpr]    {VarExpr};    \node[right=1pt of VarExpr]    {$\tau_{5}$};
+\node (IntLit1)     [below right=of CallExpr]   {IntLit};     \node[right=1pt of IntLit1]    {$\tau_{6}$};
+\node (IntLit2)     [below=of IfExpr]           {IntLit};     \node[right=1pt of IntLit2]    {$\tau_{7}$};
+\node (IntLit3)     [below right=of IfExpr]     {IntLit};     \node[right=1pt of IntLit3]    {$\tau_{8}$};
 
 % Edges
-\draw[->] (FnDef) -- (BlockExpr);
+\draw[->] (FnDef) -- (LambdaExpr);
 \draw[->] (FnDef) -- (RetType);
-\draw[->] (BlockExpr) -- (LambdaExpr);
 \draw[->] (LambdaExpr) -- (VarPat);
 \draw[->] (LambdaExpr) -- (IfExpr);
 \draw[->] (IfExpr) -- (CallExpr);
@@ -606,20 +602,63 @@ variable:
 \draw[->] (CallExpr) -- (IntLit1);
 \end{tikzpicture}
 
-Now we traverse the HIR to generate a set of equality constraints:
+Then we traverse the HIR to produce a set of equality constraints:
+TODO: do I need to explain the typing rules?
 
-| Constraint                   | Rule applied
-|------------------------------|--------------
-| $t_{0} = () \to t_{10}$      |
-| $t_{1} = t_{2}$              |
-| $t_{2} = (t_{3}) \to t_{4}$  |
-| $t_{5} = Bool$               |
-| $t_{4} = t_{8}$              |
-| $t_{4} = t_{9}$              |
-| $t_{6} = (t_{7}) \to t_{5}$  |
-| $t_{7} = Int$                |
-| $t_{8} = Int$                |
-| $t_{9} = Int$                |
+\begin{mathpar}
+
+\inferrule [IntLit]
+{ }
+{\Gamma \vdash i: Int} 
+
+\inferrule [VarExpr]
+{v: \tau \in \Gamma}
+{\Gamma \vdash v: \tau} 
+
+\inferrule [IfThenElseExpr] 
+{\Gamma \vdash e_{1} : Bool \\ 
+ \Gamma \vdash e_{2} : \tau \\
+ \Gamma \vdash e_{3} : \tau}
+{\Gamma \vdash \texttt{if} \ e_{1} \ e_{2} \ \texttt{else} \ e_{3} : \tau}
+
+\inferrule [LambdaExpr] 
+{\Gamma \vdash p_{0} : \tau_{0} \dots \Gamma \vdash p_{n} : \tau_{n} \\
+ \Gamma \vdash e: \tau}
+{\Gamma \vdash (p_{0}, \dots, p_{n}) \Rightarrow e : (\tau_{0}, \dots, \tau_{n}) \to \tau}
+
+\inferrule [CallExpr] 
+{\Gamma \vdash e' : (\tau_{0}, \dots, \tau_{n}) \to \tau \\ 
+ \Gamma \vdash e_{0} : \tau_{0} \dots \Gamma \vdash e_{n} : \tau_{n}}
+{\Gamma \vdash e'(e_{0}, \dots, e_{n}) : \tau}
+
+\inferrule [FnDef] 
+{
+ \Gamma \vdash e : \tau \\
+ \Gamma \vdash t : \tau' \\
+ \Gamma \vdash p_{0} : \tau_{0} \dots \Gamma \vdash p_{n} : \tau_{n} \\
+ \text{$v$ refers to a function of the form $\texttt{fn} \ v(p_{0}, \dots,
+ p_{n}) \to t \ e$} \\
+ }
+{\Gamma \vdash v : (\tau_{0}, \dots, \tau_{n}) \to \tau'}
+
+\end{mathpar}
+
+| Constraint                            | Rule applied
+|---------------------------------------|--------------
+| $\tau_{0} = () \to \tau_{1}$          | FnDef
+| $\tau_{1} = \tau_{9}$                 | FnDef
+| $\tau_{1} = (\tau_{2}) \to \tau_{3}$  | LambdaExpr
+| $\tau_{4} = Bool$                     | IfThenElseExpr
+| $\tau_{3} = \tau_{7}$                 | IfThenElseExpr
+| $\tau_{3} = \tau_{8}$                 | IfThenElseExpr
+| $\tau_{5} = (\tau_{6}) \to \tau_{4}$  | CallExpr
+| $\tau_{5} = \tau_{2}$                 | VarExpr
+| $\tau_{6} = Int$                      | IntLit
+| $\tau_{7} = Int$                      | IntLit
+| $\tau_{8} = Int$                      | IntLit
+
+
+TODO: unification
 
 The Walrus type-checker conceptually performs the same steps, however it
 interleaves **step 2** and **step 3** by performing unification on demand. This
