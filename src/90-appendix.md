@@ -1,4 +1,7 @@
 # Appendix {#sec:appendix}
+## Grammar
+TODO
+
 ## Lexer {#sec:appendix:lexer}
 
 ```rust
@@ -356,7 +359,6 @@ pub enum Type {
 ```
 
 ## Typing rules {#sec:appendix:type-rules}
-
 \begin{mathpar}
 \inferrule [BoolLit]
 { }
@@ -387,15 +389,13 @@ pub enum Type {
 {\Gamma \vdash (e_{0}, \dots, e_{n}) : (\tau_{0}, \dots, \tau_{n})}
 
 \inferrule [LambdaExpr] 
-{\Gamma \vdash p_{0} : \tau_{0} \dots \Gamma \vdash p_{n} : \tau_{n} \\
- \Gamma \vdash e: \tau
-}
-{\Gamma \vdash (p_{0}, \dots, p_{n}) \Rightarrow e : (\tau_{0}, \dots, \tau_{n}) \to \tau}
+{\Gamma \vdash param_{0} : \tau_{0} \dots \Gamma \vdash param_{n} : \tau_{n} \\
+ \Gamma \vdash e: \tau}
+{\Gamma \vdash (param_{0}, \dots, param_{n}) \Rightarrow e : (\tau_{0}, \dots, \tau_{n}) \to \tau}
 
 \inferrule [CallExpr] 
 {\Gamma \vdash e' : (\tau_{0}, \dots, \tau_{n}) \to \tau \\ 
- \Gamma \vdash e_{0} : \tau_{0} \dots \Gamma \vdash e_{n} : \tau_{n}
-}
+ \Gamma \vdash e_{0} : \tau_{0} \ \dots \ \Gamma \vdash e_{n} : \tau_{n}}
 {\Gamma \vdash e'(e_{0}, \dots, e_{n}) : \tau}
 
 \inferrule [IfThenElseExpr] 
@@ -448,4 +448,16 @@ pub enum Type {
 { }
 {\Gamma \vdash \{ stmt_{0}; \dots; stmt_{n}; \} : () }
 
+\inferrule [FnDef] 
+{
+ \Gamma, param_{0}: \tau_{0} \vdash e : \tau' \\
+ \Gamma \vdash t : \tau' \\
+ \Gamma \vdash param_{0} : \tau_{0} \ \dots \ \Gamma \vdash param_{n} : \tau_{n} \\
+ \text{There is a function definition of the form $\texttt{fn} \ v(param_{0}, \dots,
+ param_{n}) \to t \  \{ e \} $} \\
+ }
+{\Gamma \vdash v : (\tau_{0}, \dots, \tau_{n}) \to \tau'}
 \end{mathpar}
+
+If the premise of a rule refers to "occurs", this rule only applies to that
+instance of the expression

@@ -622,22 +622,22 @@ TODO: do I need to explain the typing rules?
 {\Gamma \vdash \texttt{if} \ e_{1} \ e_{2} \ \texttt{else} \ e_{3} : \tau}
 
 \inferrule [LambdaExpr] 
-{\Gamma \vdash p_{0} : \tau_{0} \dots \Gamma \vdash p_{n} : \tau_{n} \\
+{\Gamma \vdash param_{0} : \tau_{0} \dots \Gamma \vdash param_{n} : \tau_{n} \\
  \Gamma \vdash e: \tau}
-{\Gamma \vdash (p_{0}, \dots, p_{n}) \Rightarrow e : (\tau_{0}, \dots, \tau_{n}) \to \tau}
+{\Gamma \vdash (param_{0}, \dots, param_{n}) \Rightarrow e : (\tau_{0}, \dots, \tau_{n}) \to \tau}
 
 \inferrule [CallExpr] 
 {\Gamma \vdash e' : (\tau_{0}, \dots, \tau_{n}) \to \tau \\ 
- \Gamma \vdash e_{0} : \tau_{0} \dots \Gamma \vdash e_{n} : \tau_{n}}
+ \Gamma \vdash e_{0} : \tau_{0} \ \dots \ \Gamma \vdash e_{n} : \tau_{n}}
 {\Gamma \vdash e'(e_{0}, \dots, e_{n}) : \tau}
 
 \inferrule [FnDef] 
 {
  \Gamma \vdash e : \tau \\
  \Gamma \vdash t : \tau' \\
- \Gamma \vdash p_{0} : \tau_{0} \dots \Gamma \vdash p_{n} : \tau_{n} \\
- \text{$v$ refers to a function of the form $\texttt{fn} \ v(p_{0}, \dots,
- p_{n}) \to t \ e$} \\
+ \Gamma \vdash param_{0} : \tau_{0} \ \dots \ \Gamma \vdash param_{n} : \tau_{n} \\
+ \text{$v$ refers to a function of the form $\texttt{fn} \ v(param_{0}, \dots,
+ param_{n}) \to t \ e$} \\
  }
 {\Gamma \vdash v : (\tau_{0}, \dots, \tau_{n}) \to \tau'}
 
@@ -658,7 +658,49 @@ TODO: do I need to explain the typing rules?
 | $\tau_{8} = Int$                      | IntLit
 
 
-TODO: unification
+Finally, we solve the set of contraints via *unification*. Unification is the
+process of solving a system of symbolic equations by finding a *substitution* a
+mapping variables to their values. The unification algorithm required for our
+type inference algorithm is relatively simple, since we are only dealing with
+equality constraints (symbolic equations of the form $x = y$):
+
+```rust
+fn unify(cons: &[Constraint]) -> Subst {
+    match &cons[..] {
+        [] => Subst::new(),
+        [first_constraint, rest_constraints @ ..] => {
+            let first_subst = unify1(first_constraint);
+            let rest_constraints = "replace all type variables in rest_constaints by thier values in first_subst";
+            let rest_subst = unify(rest_constraints);
+            "replace all type variables in first_subst by thier values in rest_subst"
+        }
+    }
+}
+
+fn unify1(ty1: Type, ty2: Type) -> Subst {
+    "if ty1 and ty2 are both the same primitive type, return the empty substitution"
+    "else if ty1 is a type variable, unify_var(ty1, ty2)"
+    "else if ty2 is a type variable, unify_var(ty2, ty1)"
+    "else if ty1 and ty2 both have the same type constructor, equate the corresponding subtypes of ty1 and ty2 to each other and unify them"
+    "else, the two types could not be unified, return an error"
+}
+
+fn unify_var(ty: Type, var: TypeVar) -> Subst {
+    "if ty is a type var"
+        "if ty and var are the same type variable, return the empty subst"
+        "else, return a singleton subst, {var: ty}"
+    "else if var occurs as a variable in ty, return an error"
+    "else return a singleton subst, {var: ty}"
+}
+```
+
+The so-called *occurs-check* in `unify_var` is required to prevent attempting to
+construct an infinite type. Consider trying to type check the expression `(f) =>
+f(f)`{.rust}. This would generate a constraint of the form $\tau_1 = (\tau_1) \to
+\tau_1$, which has no finite solution: attempts to unify the solution would
+attempt to construct an infinite type $\tau_1 \to (\tau_1) \to \dots \to
+\tau_1$, and cause the unifier to either loop forever or eventually crash due to
+a stack overflow, depending on the implementation.
 
 The Walrus type-checker conceptually performs the same steps, however it
 interleaves **step 2** and **step 3** by performing unification on demand. This
@@ -684,6 +726,10 @@ traverses the HIR which are difficult to express as equality constraints:
   *irrefutable* (see @sec:reference:irrefutable-patterns)
 
 ## Codegen
+Once we have finished type inference, we have all the information needed to
+generate valid LLVM IR (assuming no fatal errors were produced by the semantic
+analysis phase).
+
 ### Runtime value representation
 
 ## Command-line interface
