@@ -602,6 +602,8 @@ variable:
 \draw[->] (CallExpr) -- (IntLit1);
 \end{tikzpicture}
 
+TODO: explain how to read the type rules
+
 Then we traverse the HIR to produce a set of equality constraints:
 | Constraint                            | Rule applied
 |---------------------------------------|--------------
@@ -617,7 +619,6 @@ Then we traverse the HIR to produce a set of equality constraints:
 | $\tau_{7} = Int$                      | IntLit
 | $\tau_{8} = Int$                      | IntLit
 
-
 Finally, we solve the set of contraints via *unification*. Unification is the
 process of solving a system of symbolic equations by finding a *substitution* a
 mapping variables to their values. The unification algorithm required for our
@@ -630,7 +631,7 @@ fn unify(constraints: Constraint list) -> Substition {
     else
         let first_constraint :: rest_constraints = constraints;
         let first_subst = unify1(first_constraint)
-        let rest_constraints = replace all type in rest_constaints by thier values
+        let rest_constraints = replace all variables in rest_constaints by thier values
             in first_subst
         let rest_subst = unify(rest_constraints)
         replace all type in first_subst by thier values in rest_subst
@@ -661,6 +662,13 @@ f(f)`{.rust}. This would generate a constraint of the form $\tau_1 = (\tau_1) \t
 attempt to construct an infinite type $\tau_1 \to (\tau_1) \to \dots \to
 \tau_1$, and cause the unifier to either loop forever or eventually crash due to
 a stack overflow, depending on the implementation.
+
+Consider solving the constraint set generated above. We start with an empty
+substitution, and remove the first constraint, $\tau_0 = () \to \tau_1$. Since
+the left-hand side of the constraint is a type-variable, we add $\tau_0 = ()
+\to \tau_1$ to the substitution, and replace all occurences of
+$\tau_0$ in the remaining constraints by $() \to \tau_1$ (there are none, so the
+constraint set remains unchanged). TODO: repeat this to conclusion in the appendix?
 
 The Walrus type-checker conceptually performs the same steps, however it
 interleaves **step 2** and **step 3** by performing unification on demand. This
