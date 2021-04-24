@@ -603,46 +603,6 @@ variable:
 \end{tikzpicture}
 
 Then we traverse the HIR to produce a set of equality constraints:
-TODO: do I need to explain the typing rules?
-
-\begin{mathpar}
-
-\inferrule [IntLit]
-{ }
-{\Gamma \vdash i: Int} 
-
-\inferrule [VarExpr]
-{v: \tau \in \Gamma}
-{\Gamma \vdash v: \tau} 
-
-\inferrule [IfThenElseExpr] 
-{\Gamma \vdash e_{1} : Bool \\ 
- \Gamma \vdash e_{2} : \tau \\
- \Gamma \vdash e_{3} : \tau}
-{\Gamma \vdash \texttt{if} \ e_{1} \ e_{2} \ \texttt{else} \ e_{3} : \tau}
-
-\inferrule [LambdaExpr] 
-{\Gamma \vdash param_{0} : \tau_{0} \dots \Gamma \vdash param_{n} : \tau_{n} \\
- \Gamma \vdash e: \tau}
-{\Gamma \vdash (param_{0}, \dots, param_{n}) \Rightarrow e : (\tau_{0}, \dots, \tau_{n}) \to \tau}
-
-\inferrule [CallExpr] 
-{\Gamma \vdash e' : (\tau_{0}, \dots, \tau_{n}) \to \tau \\ 
- \Gamma \vdash e_{0} : \tau_{0} \ \dots \ \Gamma \vdash e_{n} : \tau_{n}}
-{\Gamma \vdash e'(e_{0}, \dots, e_{n}) : \tau}
-
-\inferrule [FnDef] 
-{
- \Gamma \vdash e : \tau \\
- \Gamma \vdash t : \tau' \\
- \Gamma \vdash param_{0} : \tau_{0} \ \dots \ \Gamma \vdash param_{n} : \tau_{n} \\
- \text{$v$ refers to a function of the form $\texttt{fn} \ v(param_{0}, \dots,
- param_{n}) \to t \ e$} \\
- }
-{\Gamma \vdash v : (\tau_{0}, \dots, \tau_{n}) \to \tau'}
-
-\end{mathpar}
-
 | Constraint                            | Rule applied
 |---------------------------------------|--------------
 | $\tau_{0} = () \to \tau_{1}$          | FnDef
