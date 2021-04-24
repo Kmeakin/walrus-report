@@ -360,95 +360,95 @@ pub enum Type {
 
 ## Typing rules {#sec:appendix:type-rules}
 \begin{mathpar}
-\inferrule [BoolLit]
+\inferrule*[right=BoolLit]
 { }
-{\Gamma \vdash b : Bool} 
+{\Gamma \vdash b : \textbf{Bool}} 
 
-\inferrule [IntLit]
+\inferrule*[right=IntLit]
 { }
-{\Gamma \vdash i: Int} 
+{\Gamma \vdash i: \textbf{Int}} 
 
-\inferrule [FloatLit]
+\inferrule*[right=FloatLit]
 { }
-{\Gamma \vdash f: Float} 
+{\Gamma \vdash f: \textbf{Float}} 
 
-\inferrule [CharLit]
+\inferrule*[right=CharLit]
 { }
-{\Gamma \vdash c: Char} 
+{\Gamma \vdash c: \textbf{Char}} 
 
-\inferrule [StringLit]
+\inferrule*[right=StringLit]
 { }
-{\Gamma \vdash s: String} 
+{\Gamma \vdash s: \textbf{String}} 
 
-\inferrule [VarExpr]
+\inferrule*[right=VarExpr]
 {v: \tau \in \Gamma}
 {\Gamma \vdash v: \tau} 
 
-\inferrule [TupleExpr]
+\inferrule*[right=TupleExpr]
 {\Gamma \vdash e_{0} : \tau_{0} \dots \Gamma \vdash e_{n} : \tau_{n}}
 {\Gamma \vdash (e_{0}, \dots, e_{n}) : (\tau_{0}, \dots, \tau_{n})}
 
-\inferrule [LambdaExpr] 
+\inferrule*[right=LambdaExpr] 
 {\Gamma \vdash param_{0} : \tau_{0} \dots \Gamma \vdash param_{n} : \tau_{n} \\
  \Gamma \vdash e: \tau}
 {\Gamma \vdash (param_{0}, \dots, param_{n}) \Rightarrow e : (\tau_{0}, \dots, \tau_{n}) \to \tau}
 
-\inferrule [CallExpr] 
+\inferrule*[right=CallExpr] 
 {\Gamma \vdash e' : (\tau_{0}, \dots, \tau_{n}) \to \tau \\ 
  \Gamma \vdash e_{0} : \tau_{0} \ \dots \ \Gamma \vdash e_{n} : \tau_{n}}
 {\Gamma \vdash e'(e_{0}, \dots, e_{n}) : \tau}
 
-\inferrule [IfThenElseExpr] 
-{\Gamma \vdash e_{1} : Bool \\ 
+\inferrule*[right=IfThenElseExpr] 
+{\Gamma \vdash e_{1} : \textbf{Bool} \\ 
  \Gamma \vdash e_{2} : \tau \\
  \Gamma \vdash e_{3} : \tau
 }
 {\Gamma \vdash \texttt{if} \ e_{1} \ e_{2} \ \texttt{else} \ e_{3} : \tau}
 
-\inferrule [IfThenExpr] 
-{\Gamma \vdash e_{1} : Bool \\ 
+\inferrule*[right=IfThenExpr] 
+{\Gamma \vdash e_{1} : \textbf{Bool} \\ 
  \Gamma \vdash e_{2} : () \\
 }
 {\Gamma \vdash \texttt{if} \ e_{1} \ e_{2} : ()}
 
-\inferrule [NonterminatingLoopExpr] 
+\inferrule*[right=NonterminatingLoopExpr] 
 {\Gamma \vdash e' : \tau \\
- \text{\texttt{break} $e'$ does not occur in e}
+ \text{\texttt{break} $e'$ does not occur in $e$}
 }
-{\Gamma \vdash \texttt{loop} \ e : Never}
+{\Gamma \vdash \texttt{loop} \ e : \textbf{Never}}
 
-\inferrule [TerminatingLoopExpr] 
+\inferrule*[right=TerminatingLoopExpr] 
 {\Gamma \vdash e : \tau' \\
  \Gamma \vdash e_{1}: \tau \dots \Gamma \vdash e_{n}: \tau \\
  \text{\texttt{break} $e_{1}$ \dots \ \texttt{break} $e_{n}$ occur in $e_{1}$}
 }
 {\Gamma \vdash \texttt{loop} \ e : \tau}
 
-\inferrule [BreakExpr] 
+\inferrule*[right=BreakExpr] 
 {\Gamma \vdash e : \tau \\
- \text{\texttt{break} \ e occurs in a \texttt{loop}}
+ \text{\texttt{break} $e$ occurs in a \texttt{loop}}
 }
-{\Gamma \vdash \texttt{break} \ e : Never}
+{\Gamma \vdash \texttt{break} \ e : \textbf{Never}}
 
-\inferrule [ContinueExpr] 
+\inferrule*[Right=ContinueExpr] 
 {\text{\texttt{continue} occurs in a \texttt{loop}}}
-{\Gamma \vdash \texttt{continue} : Never}
+{\Gamma \vdash \texttt{continue} : \textbf{Never}}
 
-\inferrule [ReturnExpr] 
+\inferrule*[right=ReturnExpr] 
 {\Gamma \vdash e_{1} : \tau \\
- \text{\texttt{return} \ e occurs in a function or lambda expr}
+ \text{\texttt{return} $e$ occurs in a function or lambda expr}
 }
-{\Gamma \vdash \texttt{return} \ e : Never}
+{\Gamma \vdash \texttt{return} \ e : \textbf{Never}}
 
-\inferrule [BlockExpr] 
+\inferrule*[right=BlockExpr] 
 {\Gamma \vdash e : \tau}
 {\Gamma \vdash \{ stmt_{0}; \dots; stmt_{n}; \ e \} : \tau }
 
-\inferrule [BlockNoExpr] 
+\inferrule*[right=BlockNoExpr] 
 { }
 {\Gamma \vdash \{ stmt_{0}; \dots; stmt_{n}; \} : () }
 
-\inferrule [FnDef] 
+\inferrule*[right=FnDef] 
 {
  \Gamma, param_{0}: \tau_{0} \vdash e : \tau' \\
  \Gamma \vdash t : \tau' \\
