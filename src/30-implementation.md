@@ -705,10 +705,13 @@ a stack overflow, depending on the implementation.
 The Walrus type-checker conceptually performs the same steps, however it
 interleaves **step 2** and **step 3** by performing unification on demand. This
 allows for better error-reporting: messages about unification errors can refer
-to the HIR node that was being visited when the unification failed. If
-unification fails, the type of the node is assumed to be `Type::Unknown` and
-inference can continue over the rest of the program, providing better
-error-recovery.
+to the HIR node that was being visited when the unification failed, and be
+specialised according to the node: for example, if we discover that the type of
+the function in a function-call expression is infact not a function, we can emit
+an error of the form "attempted to call a non-function", rather than a more
+generic "type mismatch" error. If unification fails, the type of the node is
+assumed to be `Type::Unknown` and inference can continue over the rest of the
+program, providing better error-recovery.
 
 ### Semantic checks
 The type checker pass also checks various other properties of the program as it
