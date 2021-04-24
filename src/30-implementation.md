@@ -664,33 +664,33 @@ mapping variables to their values. The unification algorithm required for our
 type inference algorithm is relatively simple, since we are only dealing with
 equality constraints (symbolic equations of the form $x = y$):
 
-```rust
-fn unify(cons: &[Constraint]) -> Subst {
-    match &cons[..] {
-        [] => Subst::new(),
-        [first_constraint, rest_constraints @ ..] => {
-            let first_subst = unify1(first_constraint);
-            let rest_constraints = "replace all type variables in rest_constaints by thier values in first_subst";
-            let rest_subst = unify(rest_constraints);
-            "replace all type variables in first_subst by thier values in rest_subst"
-        }
-    }
+```text
+fn unify(constraints: Constraint list) -> Substition {
+    if cons is empty, return the empty substitution
+    else
+        let first_constraint :: rest_constraints = constraints;
+        let first_subst = unify1(first_constraint)
+        let rest_constraints = replace all type in rest_constaints by thier values
+            in first_subst
+        let rest_subst = unify(rest_constraints)
+        replace all type in first_subst by thier values in rest_subst
 }
 
-fn unify1(ty1: Type, ty2: Type) -> Subst {
-    "if ty1 and ty2 are both the same primitive type, return the empty substitution"
-    "else if ty1 is a type variable, unify_var(ty1, ty2)"
-    "else if ty2 is a type variable, unify_var(ty2, ty1)"
-    "else if ty1 and ty2 both have the same type constructor, equate the corresponding subtypes of ty1 and ty2 to each other and unify them"
-    "else, the two types could not be unified, return an error"
+fn unify1(ty1: Type, ty2: Type) -> Substition {
+    if ty1 and ty2 are both the same primitive type, return the empty substitution
+    else if ty1 is a type variable, unify_var(ty1, ty2)
+    else if ty2 is a type variable, unify_var(ty2, ty1)
+    else if ty1 and ty2 both have the same type constructor, 
+        equate the corresponding subtypes of ty1 and ty2 to each other and unify them
+    else the two types could not be unified, return an error
 }
 
-fn unify_var(ty: Type, var: TypeVar) -> Subst {
-    "if ty is a type var"
-        "if ty and var are the same type variable, return the empty subst"
-        "else, return a singleton subst, {var: ty}"
-    "else if var occurs as a variable in ty, return an error"
-    "else return a singleton subst, {var: ty}"
+fn unify_var(ty: Type, var: TypeVar) -> Substition {
+    if ty is a type variable
+        if ty and var are the same type variable, return the empty substituion
+        else return a singleton substution, {var: ty}
+    else if var occurs as a variable in ty, return an error
+    else return a singleton substution, {var: ty}
 }
 ```
 
