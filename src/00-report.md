@@ -1,4 +1,5 @@
 ---
+geometry: margin=1cm
 monofont: 'Fira Mono'
 header-includes: |
     \usepackage{tikz}
