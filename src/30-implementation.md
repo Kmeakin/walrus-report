@@ -935,6 +935,15 @@ they have been marked with the `mut` keyword. As before, we rely on the LLVM
 optimizer to alleviate any performance loss due to our naive codegen strategy.
 
 ##### Builtin functions
+We could have implemented Walrus' library of builtin functions (see
+@sec:reference:builtins) using handwritten LLVM IR appended to the output LLVM
+IR of every program. However, writing complex functions in LLVM IR by hand is
+tedious and error prone. Instead, we implement our builtins in a single C file
+of around 125 lines, and then statically both the C builtins and the LLVM IR of
+the user's program together into a single executable using Clang. We would like
+to investigate writing our builtins in Rust in the future, however this would
+take some effort to implement as Rust has no stable ABI and a significantly more
+complex build process than C.
 
 ##### Closures
 Closures are significantly more complex to codegen. Since a closure can capture
@@ -991,7 +1000,7 @@ lambda.entry:
 }
 ```
 
-#### Wrapping toplevel and builtin functions
+##### Wrapping toplevel and builtin functions
 Since we want to be able to treat toplevel functions, builtin functions and
 lambda expressions interchangably as first class values, function values must
 have the same in memory-representation. Therefore toplevel and builtin functions
