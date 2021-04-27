@@ -761,7 +761,7 @@ format, and occupy 4 bytes of memory. The builtin arithmetic and comparison
 operators on `Float`s map directly to LLVM `fadd`, `fsub`, `fcmp` etc
 instructions.
 
-#### `Char`s {#sec:impl:llvm:chars}
+##### `Char`s {#sec:impl:llvm:chars}
 Each single `Char` is a 'Unicode Scalar Value': that is any 'Unicode Code Point'
 except for high and low surrogates, which are only needed in UTF-8 encodings. In
 terms of memory representation, this corresponds to any integer value between
@@ -770,7 +770,7 @@ that, like `Int`s, `Char`s are represented as LLVM `i32` integers. A consequence
 of this representation is that every `Char` value occupies 4 bytes in memory,
 even if it is an ASCII character that could fit within 1 byte.
 
-#### `String`s {#sec:impl:llvm:strings}
+##### `String`s {#sec:impl:llvm:strings}
 Unlike `Bool`, `Int`, `Float` and `Char`, LLVM does not provide a builtin string
 type. We must decide for ourselves how to represent the contents of a `String`
 in memory. Recall that Walrus `String`s can represent any valid sequence of
@@ -815,8 +815,8 @@ bytes, and then store a pointer to the global variable in the `bytes` field.
 When converting to machine-code, LLVM will place these global arrays in a
 section of the executable for global, readonly data (such as the `.rodata`
 section in ELF executables). As a further optimiastion, we *deduplicate* string
-literals: identical string literal contents will be mapped to the same global
-byte array. Thus the following program:
+literals: during codegen we maintain a `HashMap<String, PointerValue>` mapping
+each string literal contents to a global pointer. Thus the following program:
 
 ```rust
 fn main() {
@@ -874,7 +874,69 @@ builtin datatypes to their string representations.
 [^NullTruncated]: For example, the C code `printf("Hello\0world!\n")` will
 output `Hello` to the terminal.
 
+#### Variables and mutation
+Local variables introduced by let-statements, function/lambda arguments or
+pattern matching, are represented as stack-allocated memory. LLVM provides a
+special purpose instruction for allocating data on the stack: `alloca` allocates
+a region of memory on the stack, which wil automatically be popped off the stack
+when the current function returns. Reading from a variable is done with the
+`load` instruction; initializing or mutating the variable is then achieved by
+the `store` instruction:
+
+```rust
+let mut x = 5;
+x = x + 1;
+```
+
+becomes
+```
+%x.alloca = alloca i32, align 4
+store i32 5, i32* %x.alloca, align 4
+%x = load i32, i32* %x.alloca, align 4
+%Int.add = add i32 %x, 1
+store i32 %Int.add, i32* %x.alloca, align 4
+```
+
+The reader may be concerned that storing all local variables on the stack, even
+when they do not need to be (if they are never mutated) will lead to variables
+being stored on the stack when they could be stored in machine registers.
+However, this is beauty of the LLVM framework: we can generate fairly naive LLVM
+IR, and rely on the LLVM optimizer to do the hard work of register allocation
+for us.
+
+#### Functions and closures
+Top-level functions map very simply onto LLVM IR functions. We simply declare a
+function with the correct type, and then generate the body.
+
+```rust
+fn add(x: Int, y: Int) -> Int {
+    x + y
+}
+```
+becomes
+
+```
+define i32 @add(i32 %add.params.0, i32 %add.params.1) {
+add.entry:
+  %x.alloca = alloca i32, align 4
+  store i32 %add.params.0, i32* %x.alloca, align 4
+  %y.alloca = alloca i32, align 4
+  store i32 %add.params.1, i32* %y.alloca, align 4
+  %x = load i32, i32* %x.alloca, align 4
+  %y = load i32, i32* %y.alloca, align 4
+  %Int.add = add i32 %x, %y
+  ret i32 %Int.add
+}
+```
+
+Note that we immediatly allocate stack space for each parameter passed in,
+because function parameters can be mutated just like let-bound variables, if
+they have been marked with the `mut` keyword. As before, we rely on the LLVM
+optimizer to alleviate any performance loss due to our naive codegen strategy.
+
 #### Builtin functions
-#### Structs and enums
+#### Control flow
+#### Aggregate datatypes
+#### Pattern matching
 
 ## Command-line interface
