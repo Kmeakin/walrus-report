@@ -1215,7 +1215,7 @@ main.entry:
 Code-generation of struct values is nearly identical to that of tuple values,
 since structs are simply tuples with named fields. The only distinction is that
 we generate a distinct, named type for each struct type to allow for
-cyclic types (see @sec:impl:llvm:cyclic-types):
+recursive types (see @sec:impl:llvm:recurisve-types):
 
 ```rust
 struct S {
@@ -1308,7 +1308,46 @@ err.entry:
 }
 ```
 
-##### Cyclic types
+##### Recursive types {#sec:impl:llvm:recurisve-types}
+The ability to have named types, in the form of structs and enums, introduces a
+complication to our naive scheme of layout out fields inline on the stack. This
+is because programmers can define *self-referential* types - types that contain
+themselves as one of thier fields. Consider this inductive definition of a list
+of `Int`s:
+
+```rust
+enum List {
+    Nil{},
+    Cons{head: Int, tail: List},
+}
+```
+
+If we were to lay out the fields of the `List` inline, we would have to allocate
+an infinite amount of memory on the stack, because enum values are as big as
+their largest variant, and the `Cons` variant contains another `List` - the
+size would be the result of the infinite sum $4 + 4 + ...$. The solution is to
+store these self-referential fields on the heap, and only store a word-sized
+pointer to the heap on the stack. However, selecting which field to store on the
+heap is also non-trivial. Consider two mutually recursive types:
+
+```rust
+enum A {
+    X{b: B},
+    Y{},
+}
+
+enum B {
+    X{},
+    Y{a: A},
+}
+```
+
+Without requiring further annotations from the user, as Rust does, we cannot
+reasonably decide between `A::X.b` and `B::Y.a` which to store on the heap, and
+which to keep on the stack. Therefore we make the simplifying design decision to
+store all fields with struct or enum type on the heap. This is unfortunate, as
+it introduces needless overhead in the case of non-recursive types, and would
+certainly warrant further investigation if more time were available.
 
 #### Pattern matching
 
