@@ -735,7 +735,6 @@ by a recursive traversal of the function's HIR. The LLVM library provides a
 convenient builder API for generating LLVM IR programmatically, rather than
 having to format strings with the correct syntax.
 
-### Expressions
 #### Literals
 ##### `Bool`s {#sec:impl:llvm:bools}
 Since there are only 2 possible `Bool` values, `true` and `false`, a `Bool`
@@ -905,6 +904,7 @@ IR, and rely on the LLVM optimizer to do the hard work of register allocation
 for us.
 
 #### Functions and closures
+##### Toplevel functions
 Top-level functions map very simply onto LLVM IR functions. We simply declare a
 function with the correct type, and then generate the body.
 
@@ -934,7 +934,130 @@ because function parameters can be mutated just like let-bound variables, if
 they have been marked with the `mut` keyword. As before, we rely on the LLVM
 optimizer to alleviate any performance loss due to our naive codegen strategy.
 
-#### Builtin functions
+##### Builtin functions
+
+##### Closures
+Closures are significantly more complex to codegen. Since a closure can capture
+variables from its environment, we need to include the captured values in
+whatever runtime representation we select for closures. We chose to implement
+closures using a method known as *closure-conversion*. The body of each closure
+is represented as a top-level function, and closure values become a pair of a
+pointer to the closure's function and a pointer to the closure's environment.
+The closure's environment is allocated on the heap, via `malloc`, as the
+environemnt can *escape* from the current stack-frame if the closure is returned
+from a function - therefore if it were allocated on the stack, it would be
+deallocated before the function returns. When calling a closure, the environment
+pointer is passed to the top-level function, which then extracts the captured
+values from the environment.
+
+```rust
+fn main() -> Int {
+    let k = 5;
+    let f = () => k;
+    f()
+}
+```
+
+becomes
+```
+define i32 @main() {
+main.entry:
+  %k.alloca = alloca i32, align 4
+  store i32 5, i32* %k.alloca, align 4
+  %closure.alloca = alloca { i32 (i8*)*, i8* }, align 8
+  %closure.code = getelementptr inbounds { i32 (i8*)*, i8* }, { i32 (i8*)*, i8* }* %closure.alloca, i32 0, i32 0
+  store i32 (i8*)* @lambda, i32 (i8*)** %closure.code, align 8
+  %closure.env = getelementptr inbounds { i32 (i8*)*, i8* }, { i32 (i8*)*, i8* }* %closure.alloca, i32 0, i32 1
+  %malloccall = tail call i8* @malloc(i32 0)
+  %env.malloc = bitcast i8* %malloccall to {}*
+  %env = bitcast {}* %env.malloc to i8*
+  store i8* %env, i8** %closure.env, align 8
+  %closure = load { i32 (i8*)*, i8* }, { i32 (i8*)*, i8* }* %closure.alloca, align 8
+  %f.alloca = alloca { i32 (i8*)*, i8* }, align 8
+  store { i32 (i8*)*, i8* } %closure, { i32 (i8*)*, i8* }* %f.alloca, align 8
+  %f = load { i32 (i8*)*, i8* }, { i32 (i8*)*, i8* }* %f.alloca, align 8
+  %closure.code1 = extractvalue { i32 (i8*)*, i8* } %f, 0
+  %closure.env2 = extractvalue { i32 (i8*)*, i8* } %f, 1
+  %lambda.call = call i32 %closure.code1(i8* %closure.env2)
+  ret i32 %lambda.call
+}
+
+define i32 @lambda(i8* %env_ptr) {
+lambda.entry:
+  %env_ptr1 = bitcast i8* %env_ptr to {i32}*
+  %env = load {i32}, {i32}* %env_ptr1, align 1
+  %k = extractvalue {i32} %env, 0
+  ret i32 %k
+}
+```
+
+#### Wrapping toplevel and builtin functions
+Since we want to be able to treat toplevel functions, builtin functions and
+lambda expressions interchangably as first class values, function values must
+have the same in memory-representation. Therefore toplevel and builtin functions
+are wrapped in a closure with an empty environment, represented by the null
+pointer. It is safe to use the null pointer, since the top-level/builtin
+function will ignore the extra argument on the stack and never attempt to
+dereference it.
+
+```rust
+fn main() -> _ { 
+    let f = get_five;
+    f()
+}
+
+fn get_five() -> _ {5}
+```
+becomes
+
+```
+define i32 @main() {
+main.entry:
+  %f.alloca = alloca { i32 (i8*)*, i8* }, align 8
+  store { i32 (i8*)*, i8* } { i32 (i8*)* bitcast (i32 ()* @get_five to i32 (i8*)*), i8* null }, { i32 (i8*)*, i8* }* %f.alloca, align 8
+  %f = load { i32 (i8*)*, i8* }, { i32 (i8*)*, i8* }* %f.alloca, align 8
+  %closure.code = extractvalue { i32 (i8*)*, i8* } %f, 0
+  %closure.env = extractvalue { i32 (i8*)*, i8* } %f, 1
+  %lambda.call = call i32 %closure.code(i8* %closure.env)
+  ret i32 %lambda.call
+}
+
+define i32 @get_five() {
+get_five.entry:
+  ret i32 5
+}
+```
+
+Because it would be excessively wasteful (and make the resulting LLVM IR much
+harder to understand when trying to debug the codegen pass) to wrap every
+toplevel or builtin function in an empty closure before immediatly unwrapping
+the closure to call it, we apply another optimisation: calls to variables, where
+the variable is known to refer to a toplevel or builtin function, skip the
+unneccesary closure wrapping and unwrapping, and just call the function
+directly:
+
+```rust
+fn main() -> _ { 
+    get_five()
+}
+
+fn get_five() -> _ {5}
+```
+
+becomes
+```
+define i32 @main() {
+main.entry:
+    %get_five.call = call i32 @get_five()
+    ret i32 %get_five.call
+}
+
+define i32 @get_five() {
+get_five.entry:
+  ret i32 5
+}
+```
+
 #### Control flow
 #### Aggregate datatypes
 #### Pattern matching
