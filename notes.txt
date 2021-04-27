@@ -1,0 +1,13 @@
+eval:
+what youd do differently
+did you achieve your goals
+
+intro:
+your goals
+inspirations/prior work
+what is a compiler etc
+
+type rules:
+can be given in simpler cases, as below
+we omit the more complex cases: conceptually similar, but lots of detail
+add spacing for to dots between repeated premises

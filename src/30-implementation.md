@@ -358,10 +358,10 @@ The approach we have chosen is to store auxiallary data in *side-tables* (eg a
 inside the tree data structure. For example, as a first attempt, we could create
 a `HashMap<hir::Expr, types::Type>`{.rust}, for mapping each `Expr` to its
 inferred `Type` ^[`hir::Type`, should not be confused with `types::Type`. The
-first represents types as they appear in the surface syntax. The latter
-represents type values]. However, this is not quite correct, as this would
-hash each node based on its *value*, not its *identity*. Consider type checking
-the following snippet of code:
+first represents types as they appear in the abstract syntax. The latter
+represents type values]. However, this is not quite correct, as this would hash
+each node based on its *value*, not its *identity*. Consider type checking the
+following snippet of code:
 
 ```rust
 fn f(x: Int) {
@@ -554,7 +554,7 @@ inferred, either due to some form of semantic error (such as an unbound
 variable), or when there is not enough information available to infer a concrete
 type.
 
-### The algorithm
+#### The algorithm
 As explained in @sec:reference:type-system, Walrus' type system is an extension
 of the classic Hindley-Milner type system. Type inference for Hindley-Milner
 based type systems is simple:
@@ -605,6 +605,7 @@ variable:
 TODO: explain how to read the type rules
 
 Then we traverse the HIR to produce a set of equality constraints:
+
 | Constraint                            | Rule applied
 |---------------------------------------|--------------
 | $\tau_{0} = () \to \tau_{1}$          | FnDef
@@ -681,7 +682,7 @@ generic "type mismatch" error. If unification fails, the type of the node is
 assumed to be `Type::Unknown` and inference can continue over the rest of the
 program, providing better error-recovery.
 
-### Semantic checks
+#### Semantic checks
 The type checker pass also checks various other properties of the program as it
 traverses the HIR which are difficult to express as equality constraints:
 
@@ -800,6 +801,8 @@ memory on the stack, regardless of its contents. The runtime representation of
 @sec:impl:llvm:builtins):
 
 ```c
+typedef int32_t Int;
+typedef uint8_t Byte;
 typedef struct {
   Int len;
   const Byte *const bytes;
@@ -814,7 +817,7 @@ bytes, and then store a pointer to the global variable in the `bytes` field.
 When converting to machine-code, LLVM will place these global arrays in a
 section of the executable for global, readonly data (such as the `.rodata`
 section in ELF executables). As a further optimiastion, we *deduplicate* string
-literals: during codegen we maintain a `HashMap<String, PointerValue>` mapping
+literals: during codegen we maintain a `HashMap<String, PointerValue>`{.rust} mapping
 each string literal contents to a global pointer. Thus the following program:
 
 ```rust
@@ -833,12 +836,12 @@ will only generate 3 global byte arrays, instead of 4:
 ```
 
 This choice of representation differs from that used by C. In C, a string value
-is simply a pointer to a single `char` in memory. Since string values do not
+is simply a pointer to a single `char` in memory. Since `char` pointers do not
 carry around their length, the *null-character* acts as a *sentinel value* to
-mark the end of a string. (for this reason, C-style strings are also known as
-*null-terminated strings*) This choice of representation was chosen due to the
+mark the end of a string (for this reason, C-style strings are also known as
+*null-terminated strings*). This choice of representation was chosen due to the
 memory constraints of the 1970s: computer memories were measured in kilobytes
-and an extra integer per string value was considered an un-affordable luxury. 
+and an extra integer per string value was considered an un-affordable luxury.
 This memory-saving trick has a number of disadvantages compared to storing the
 length alongside the contents-pointer:
 
@@ -934,7 +937,7 @@ because function parameters can be mutated just like let-bound variables, if
 they have been marked with the `mut` keyword. As before, we rely on the LLVM
 optimizer to alleviate any performance loss due to our naive codegen strategy.
 
-##### Builtin functions
+##### Builtin functions {#sec:impl:llvm:builtins}
 We could have implemented Walrus' library of builtin functions (see
 @sec:reference:builtins) using handwritten LLVM IR appended to the output LLVM
 IR of every program. However, writing complex functions in LLVM IR by hand is
