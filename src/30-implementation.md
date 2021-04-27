@@ -697,10 +697,184 @@ traverses the HIR which are difficult to express as equality constraints:
   *irrefutable* (see @sec:reference:irrefutable-patterns)
 
 ## Codegen
-Once we have finished type inference, we have all the information needed to
-generate valid LLVM IR (assuming no fatal errors were produced by the semantic
-analysis phase).
+Once we have finished type inference, we have successfully detected all semantic
+errors that could occur in the program, and are ready to generate an executable
+file that can be run. For this task we will defer to the LLVM framework. LLVM
+handles the intricacies of generating instructions appropriate to the hardware
+architecture the progrmam is compiled on and the Application Binary Interface
+mandated by the operating system being used. All that we need to do is to
+generate *LLVM-IR*. 
 
-### Runtime value representation
+### LLVM IR
+The LLVM intermediate representation is both low-level enough to allow language
+creators fine-grained control over memory layout and language semantics, but
+also high-level enough to abstract away platform-specific considerations such as
+instruction-set and application-binary-interface (ABI). 
+
+To achieve this, the LLVM IR resembles an assembly programming language, with
+the addition of abstractions for compound datatypes, global variables, stack
+allocation, and functions. Each LLVM program consists of a series of global
+variable definitions, type definitions and function definitions. Unlike
+platform-specific programming languges - where the only datatype is a
+machine-words (and floating-point types, if the processor supports them) and the
+same machines word can be freely reinterpreted as a pointer, an integer, a
+character, a boolean, etc by each instruction - LLVM is strongly-typed: each
+value has a type, each instruction operates on specified types, and values must
+be explictly converted between types. 
+
+Each function body consists of a flat stream of assembly instructions, split
+into *basic-blocks* - a continious sequence of instructions, terminated by a
+branch or return). Instructions must be in *static single assignment form*
+(SSA): each variable must be assigned to exactly once. Mutation is achieved by
+storing a value on the stack or heap and writing to the pointed-to value.
+
+### The codegen pass
+Generating LLVM IR for a program is accomplished by first generating definitions
+for structs, enums and functions, and then generating the body of each function
+by a recursive traversal of the function's HIR. The LLVM library provides a
+convenient builder API for generating LLVM IR programmatically, rather than
+having to format strings with the correct syntax.
+
+### Expressions
+#### Literals
+##### `Bool`s {#sec:impl:llvm:bools}
+Since there are only 2 possible `Bool` values, `true` and `false`, a `Bool`
+value can be represented as a single bit at runtime (with `false` mapping to `0`
+and `true` to `1`). LLVM IR allows arbitrary-width
+integer types &[That is, the width of integer type is still fixed, but is not
+restricted to powers of two. LLVM does *not* have in built support for
+*arbirary-precision* or so-called "bignum" integers, where the number of bits
+occupied by the value is not known at compile-time]. Therefore, each `Bool` can
+be represented by the LLVM `i1` type: a 1-bit integer. When translating to
+machine-code, LLVM will map this to an 8-bit byte.
+
+##### `Int`s {#sec:impl:llvm:ints}
+`Int`s are simply represented as the LLVM `i32` type as-is: no further
+processing is needed. `Int`s are stored in memory as twos-complement's integers,
+and occupy 4 bytes each. The builtin arithmetic and comparison operators on
+`Int`s map directly to LLVM `add`, `sub`, `cmp` etc instructions.
+
+##### `Float`s {#sec:impl:llvm:floats}
+`Float`s are simply represented as the LLVM `f32` type as-is: no further
+processing is needed. `Float`s are stored in memory according to the binary32
+format, and occupy 4 bytes of memory. The builtin arithmetic and comparison
+operators on `Float`s map directly to LLVM `fadd`, `fsub`, `fcmp` etc
+instructions.
+
+#### `Char`s {#sec:impl:llvm:chars}
+Each single `Char` is a 'Unicode Scalar Value': that is any 'Unicode Code Point'
+except for high and low surrogates, which are only needed in UTF-8 encodings. In
+terms of memory representation, this corresponds to any integer value between
+$0$ and $D7FF_{16}$ or $E000_{16}$ and $10FFFF_{16}$, inclusive. This means
+that, like `Int`s, `Char`s are represented as LLVM `i32` integers. A consequence
+of this representation is that every `Char` value occupies 4 bytes in memory,
+even if it is an ASCII character that could fit within 1 byte.
+
+#### `String`s {#sec:impl:llvm:strings}
+Unlike `Bool`, `Int`, `Float` and `Char`, LLVM does not provide a builtin string
+type. We must decide for ourselves how to represent the contents of a `String`
+in memory. Recall that Walrus `String`s can represent any valid sequence of
+Unicode characters (see @sec:reference:strings), and so we must choose a scheme
+for translating 32-bit Unicode Code Points into a series of 8-bit bytes.
+
+There are 3 possible schemes, depending on the size of each Code Unit. UTF-32
+encodes each Code Point as a single 32-bit Code Unit, even if it could fit in a
+single byte. UTF-16 encodes each Code Point as 1 or more 16-bit Code Units, and
+suffers from the same problem as UTF-16, in that ASCII characters that could be
+optimally represented as a single byte occupy 2 bytes. Only UTF-8 does not have
+this overhead: ASCII characters are stored exactly as they would be in a legacy
+ASCII string. Only Code Points greater than $FF_{16}$ will be encoded as
+multiple 8-bit Code Units. For this reason, Walrus uses UTF-8 for its `String`
+encoding.
+
+A `String`'s representation in memory is more complex than the other datatypes:
+while all other primitive datatypes occupy a fixed amount of space that can be
+known ahead of time, `String`s whose size cannot be known at compile-time can be
+created by concatenating two existing `String`s together [^StringConcat], or by
+converting another datatype to a human-readable representation [^ToString].
+Therefore `String`s are represented as a struct containing an 32-bit integer
+representing the `String`s 'length' (the number of bytes occupied by the
+`String`'s characters), and a pointer to the `String`'s UTF-8 encoded contents.
+This pointer indirection allows each `String` to occupy the same amount of
+memory on the stack, regardless of its contents. The runtime representation of
+`String` is actually defined in C, not in LLVM IR, for ease of maintenance (see
+@sec:impl:llvm:builtins):
+
+```c
+typedef struct {
+  Int len;
+  const Byte *const bytes;
+} String;
+```
+
+The contents of each `String` is allocated on the heap, via the `malloc` library
+function provided by C, unless the `String` value is a literal, in which case we
+can apply a minor optimisation: since the contents of `String` literals are
+known at compile-time, we can store the contents as a constant global array of
+bytes, and then store a pointer to the global variable in the `bytes` field.
+When converting to machine-code, LLVM will place these global arrays in a
+section of the executable for global, readonly data (such as the `.rodata`
+section in ELF executables). As a further optimiastion, we *deduplicate* string
+literals: identical string literal contents will be mapped to the same global
+byte array. Thus the following program:
+
+```rust
+fn main() {
+    let s1 = "hello" + "world";
+    let s2 = "goodbye" + "world";
+}
+```
+
+will only generate 3 global byte arrays, instead of 4:
+
+```
+@String.lit = global [5 x i8] c"hello"
+@String.lit.1 = global [5 x i8] c"world"
+@String.lit.2 = global [7 x i8] c"goodbye"
+```
+
+This choice of representation differs from that used by C. In C, a string value
+is simply a pointer to a single `char` in memory. Since string values do not
+carry around their length, the *null-character* acts as a *sentinel value* to
+mark the end of a string. (for this reason, C-style strings are also known as
+*null-terminated strings*) This choice of representation was chosen due to the
+memory constraints of the 1970s: computer memories were measured in kilobytes
+and an extra integer per string value was considered an un-affordable luxury. 
+This memory-saving trick has a number of disadvantages compared to storing the
+length alongside the contents-pointer:
+
+* **Time complexity**: Calculating the length of a null-terminated string takes
+  $O(n)$ time (ie time proportional to the length of the string): the string
+  must be scanned left to right, starting at the first character, until a null
+  character is found. By contrast, storing the string's length alongside its
+  contents-pointer allows the length to be simply looked-up in $O(1)$ time (ie
+  constant time) instead of calculated. A little extra book-keeping is required to
+  update the length field after each operation that modifies or creates a new
+  string, but this is usually simple.
+* **Flexibility**: Null-terminated strings are unable to represent strings
+  containing a null-character, since a null-character by definition marks the
+  end of the null-terminated string. Attempts to insert a null-character into
+  the middle of a null-terminated string will simply truncate the string to the 
+  first occurrence of a null-character [^NullTruncated]. However, the null-
+  character is a Unicode character in its own right ($U+0000$), and a string
+  representation that cannot contain null-characters cannot faithfully represent
+  every possible Unicode string.
+ **Safety**: If the terminating null-character is omitted, attempts to
+  calculate the string's length will blindly continue searching past the end of
+  the string and either return an overestimate of the string's length (if a null
+  character belonging to a nearby object in memory is found), or else cause a
+  memory protection fault if the search crosses over into privileged or
+  un-mapped memory. Since a primary aim of Walrus is that it should be
+  impossible for normal code to produce undefined behaviour or violate memory
+  safety, this makes null-terminated strings an unacceptable representation.
+
+[^StringConcat]: See @sec:reference:operators
+[^ToString]: See @sec:reference:builtin-functions for a list of functions that convert
+builtin datatypes to their string representations.
+[^NullTruncated]: For example, the C code `printf("Hello\0world!\n")` will
+output `Hello` to the terminal.
+
+#### Builtin functions
+#### Structs and enums
 
 ## Command-line interface

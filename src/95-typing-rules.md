@@ -1,4 +1,6 @@
 ## Typing rules {#sec:appendix:type-rules}
+TODO: finish
+
 \begin{mathpar}
 \inferrule*[right=BoolLit]
 { }

@@ -6,13 +6,11 @@ corresponding syntax for creating literal values.
 
 ### `Bool`s {#sec:reference:bools}
 The `Bool` datatype represents the logical values of Boolean Algebra: `true` and
-`false`. Since there are only 2 possible values of this datatype, each `Bool`
-value occupies one byte of memory.
+`false`. 
 
 ### `Int`s {#sec:reference:ints}
 The `Int` datatype represents signed 32-bit integers: that is, integers between
 $-2^{-31}$ ($-2,147,483,648$) and $2^{31}-1$  ($2,147,483,657$) inclusive. 
-`Int`s are stored in memory as twos-complement's integers, and occupy 4 bytes each.
 
 `Int` literals may be given in either decimal, binary or hexadecimal notation.
 Underscores may be used to enhance the readability of long literals. Note that
@@ -39,8 +37,7 @@ The `Float` datatype represents (approximations of) real numbers: the binary32
 format specified in IEEE-754-2008. This allows representing rational numbers
 between $-3.40282347 \times 10^{38}$ and $3.40282347 \times 10^{38}$, as well as
 positive and negative zero, positive and negative infinity, and various NaN
-values. `Float`s are stored in memory according to the binary32 format, and
-occupy 4 bytes of memory.
+values. 
 
 `Float` literals are given in decimal notation, with a decimal point separating
 the integral and fractional parts. Scientific notation, such as `1.0e6` for one
@@ -62,13 +59,6 @@ unlike the `char` datatype in C, which may represent a 7-bit ASCII character, a
 16-bit UTF-16 code-unit, or a 8-bit UTF-8 code-unit depending on the platform,
 Walrus' `Char`s are always capable of representing any Unicode character, and
 have the same representation on every platform.
-
-Each single `Char` is a 'Unicode Scalar Value': that is any 'Unicode Code Point'
-except for high and low surrogates, which are only needed in UTF-8 encodings.
-In terms of memory representation, this corresponds to any integer value between
-$0$ and $D7FF_{16}$ or $E000_{16}$ and $10FFFF_{16}$, inclusive. A consequence
-of this representation is that every `Char` value occupies 4 bytes in memory,
-even if it is an ASCII character that could fit within 1 byte.
 
 `Char` literals are given by enclosing the literal character within
 single-quotes, or by specifying the exact Unicode Scalar Value if a difficult 
@@ -97,63 +87,6 @@ The `String` datatype represents textual data. Unlike `Char`s, which represent a
 single character, `String`s may represent several characters (or none). As with
 `Char`s, `String`s may represent any possible sequence of Unicode characters.
 
-When storing a series of Unicode characters, there are 3 potential schemes for
-translating a series of 32-bit Unicode Code Points into a series of 8-bit bytes,
-depending on the size of each Code Unit. UTF-32 encodes each Code Point as a single
-32-bit Code Unit, even if it could fit in a single byte. UTF-16 encodes each
-Code Point as 1 or more 16-bit Code Units, and suffers from the same problem as
-UTF-16, in that ASCII characters that could be optimally represented as a single
-byte occupy 2 bytes. Only UTF-8 does not have this overhead: ASCII characters
-are stored exactly as they would be in a legacy ASCII string. Only Code Points
-greater than $FF_{16}$ will be encoded as multiple 8-bit Code Units. For this
-reason, Walrus uses UTF-8 for its `String` encoding.
-
-A `String`'s representation in memory is more complex than the other datatypes:
-while all other primitive datatypes occupy a fixed amount of space that can be
-known ahead of time, `String`s whose size cannot be known at compile-time can be
-created by concatenating two existing `String`s together [^StringConcat], or by converting
-another datatype to a human-readable representation [^ToString]. Therefore
-`String`s are represented as a pair of a 32-bit integer representing the `String`s
-'length' (the number of bytes occupied by the `String`'s characters), and a
-pointer to the `String`'s UTF-8 encoded contents. This pointer indirection
-allows each `String` to occupy the same amount of memory on the stack,
-regardless of its contents.
-
-This choice of representation differs from that used by C. In C, a string value
-is simple a pointer to a single `char` in memory. Since string values do not
-carry around their length, the *null-character* acts as a *sentinel value* to
-mark the end of a string. (for this reason, C-style strings are also known as
-*null-terminated strings*) This choice of representation was chosen due to the
-memory constraints of the 1970s: computer memories were measured in kilobytes
-and an extra integer per string value was considered an un-affordable luxury. 
-This memory-saving trick has a number of disadvantages compared to storing the
-length alongside the contents-pointer:
-
-* **Time complexity**: Calculating the length of a null-terminated string takes
-  $O(n)$ time (ie time proportional to the length of the string): the string
-  must be scanned left to right, starting at the first character, until a null
-  character is found. By contrast, storing the string's length alongside its
-  contents-pointer allows the length to be simply looked-up in $O(1)$ time (ie
-  constant time) instead of calculated. A little extra book-keeping is required to
-  update the length field after each operation that modifies or creates a new
-  string, but this is usually simple.
-* **Flexibility**: Null-terminated strings are unable to represent strings
-  containing a null-character, since a null-character by definition marks the
-  end of the null-terminated string. Attempts to insert a null-character into
-  the middle of a null-terminated string will simply truncate the string to the 
-  first occurrence of a null-character [^NullTruncated]. However, the null-
-  character is a Unicode character in its own right ($U+0000$), and a string
-  representation that cannot contain null-characters cannot faithfully represent
-  every possible Unicode string.
-* **Safety**: If the terminating null-character is omitted, attempts to
-  calculate the string's length will blindly continue searching past the end of
-  the string and either return an overestimate of the string's length (if a null
-  character belonging to a nearby object in memory is found), or else cause a
-  memory protection fault if the search crosses over into privileged or
-  un-mapped memory. Since a primary aim of Walrus is that it should be
-  impossible for normal code to produce undefined behaviour or violate memory
-  safety, this makes null-terminated strings an unacceptable representation.
-
 String literals are given by enclosing the text within double-quotes. As with
 `Char` literals, the contents may be entered verbatim, by giving the Unicode
 Code Point, or by using the backslash shorthand:
@@ -163,12 +96,6 @@ Code Point, or by using the backslash shorthand:
 "Hello,\u{20}world!\u{0A}" // The same greeting, with Unicode Code Points
 "Γειά σου Κόσμε!\n"        // The same greeing, in Greek
 ```
-
-[^StringConcat]: See @sec:reference:operators
-[^ToString]: See @sec:reference:builtin-functions for a list of functions that convert
-builtin datatypes to their string representations.
-[^NullTruncated]: For example, the C code `printf("Hello\0world!\n")` will
-output `Hello` to the terminal.
 
 ## Identifiers {#sec:reference:identifiers}
 Identifiers are used in Walrus to signify any entity that requires a name: local
@@ -498,6 +425,7 @@ Walrus has a small collection of built-in functions provided by the compiler:
 
 |Name             |Type                 |Description                      |
 |-----------------|---------------------|---------------------------------|
+|`read_line`      | `() -> String`      | Read a line from standard-input |
 |`print`          | `(String) -> ()`    | Print to standard-output        |
 |`print_error`    | `(String) -> ()`    | Print to standard-error         |
 |`string_length`  | `(String) -> Int`   | Get the length of a `String`    |
@@ -605,24 +533,21 @@ fn login() -> Int {
         print("password: ");
         let line = read_line();
         if line == "" {
-            print("Password cannot be empty\n");
+            print_error("Password cannot be empty\n");
             continue;
         }
         if string_length(line) > max_length {
-            print("Password is too long\n");
+            print_error("Password is too long\n");
             continue;
         }
         if line != password {
-            print("Incorrect password\n");
+            print_error("Incorrect password\n");
             continue;
         }
         break secret;
     }
 }
 ```
-
-[^NoReadLine]: Assume for the sake of this example that a builtin function
-`read_line: () -> String` exists
 
 #### Non-terminating loops
 A loop-expression with no `break` expression inside its body will never
