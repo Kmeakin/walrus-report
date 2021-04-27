@@ -1342,7 +1342,8 @@ enum B {
 }
 ```
 
-Without requiring further annotations from the user, as Rust does, we cannot
+Without requiring further annotations from the user ^[Rust does, which
+requires one of the fields to be stored in a `Box<T>`] we cannot
 reasonably decide between `A::X.b` and `B::Y.a` which to store on the heap, and
 which to keep on the stack. Therefore we make the simplifying design decision to
 store all fields with struct or enum type on the heap. This is unfortunate, as
@@ -1350,6 +1351,7 @@ it introduces needless overhead in the case of non-recursive types, and would
 certainly warrant further investigation if more time were available.
 
 #### Pattern matching
+TODO
 
 ## Command-line interface
 TODO
