@@ -1175,11 +1175,45 @@ declare {} @builtin_print(%String)
 ```
 
 ##### Loop expressions
+TODO
 
 #### Aggregate datatypes
 ##### Tuples
+Code-generation of tuple-values is simple. Tuple values consist merely of the
+values of thier elements stored one after another in contigious memory (and it
+follows from this that 0-tuples occupy no memory at runtime). Since LLVM IR
+includes anonymous struct types, we don't even need to declare a struct type
+before constructing one. We simply construct an anonymous struct with the
+correct fields in the correct order. Since LLVM doesnt allow constructing a
+struct in one go (unless all the fields are constant expressions, which will not
+be true in the general case), we have to stack allocate the struct, and then
+initialize each field individually:
+
+```rust
+fn main() -> _ {
+        (3.0, false, 1)
+}
+```
+
+becomes
+```
+define { float, i1, i32 } @main() {
+main.entry:
+  %tuple.alloca = alloca { float, i1, i32 }, align 8
+  %tuple.0.gep = getelementptr inbounds { float, i1, i32 }, { float, i1, i32 }* %tuple.alloca, i32 0, i32 0
+  store float 3.000000e+00, float* %tuple.0.gep, align 4
+  %tuple.1.gep = getelementptr inbounds { float, i1, i32 }, { float, i1, i32 }* %tuple.alloca, i32 0, i32 1
+  store i1 false, i1* %tuple.1.gep, align 1
+  %tuple.2.gep = getelementptr inbounds { float, i1, i32 }, { float, i1, i32 }* %tuple.alloca, i32 0, i32 2
+  store i32 1, i32* %tuple.2.gep, align 4
+  %tuple = load { float, i1, i32 }, { float, i1, i32 }* %tuple.alloca, align 4
+  ret { float, i1, i32 } %tuple
+}
+```
+
 ##### Structs
 ##### Enums
+##### Self-referential types
 
 #### Pattern matching
 
