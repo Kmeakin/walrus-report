@@ -1212,8 +1212,43 @@ main.entry:
 ```
 
 ##### Structs
+Code-generation of struct values is nearly identical to that of tuple values,
+since structs are simply tuples with named fields. The only distinction is that
+we generate a distinct, named type for each struct type to allow for
+cyclic types (see @sec:impl:llvm:cyclic-types):
+
+```rust
+struct S {
+    x: Float,
+    y: Bool,
+    z: Int,
+}
+
+fn main() -> _ {
+        S {x: 3.0, y: false, z: 1}
+}
+```
+
+becomes
+```
+%S = type { float, i1, i32 }
+
+define %S @main() {
+main.entry:
+  %S.alloca = alloca %S, align 8
+  %S.x.gep = getelementptr inbounds %S, %S* %S.alloca, i32 0, i32 0
+  store float 3.000000e+00, float* %S.x.gep, align 4
+  %S.y.gep = getelementptr inbounds %S, %S* %S.alloca, i32 0, i32 1
+  store i1 false, i1* %S.y.gep, align 1
+  %S.z.gep = getelementptr inbounds %S, %S* %S.alloca, i32 0, i32 2
+  store i32 1, i32* %S.z.gep, align 4
+  %S = load %S, %S* %S.alloca, align 4
+  ret %S %S
+}
+```
+
 ##### Enums
-##### Self-referential types
+##### Cyclic types
 
 #### Pattern matching
 
