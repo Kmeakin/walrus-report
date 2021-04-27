@@ -1251,52 +1251,60 @@ main.entry:
 Code-generation of enum values is more complicated: this is because an enum can
 take on one of many different variants at different points in the program. Which
 particular variant the enum is currently occupying is tracked by the enum's
-*tag* or *discriminant*: an integer of appropriate bitwidth to represent all
-possible variants, where $width = log_{256} (num\_variants)$ (in the case of 0 or 1
-variants, the discriminant is represented by a 0-typle, `{}`, as LLVM does not
-have an `i0` type). The enum value must occupy enough memory to be able to
-accomodate all possible variants, so the enum type is defined to LLVM as a pair
-of the tag-integer and an anonymous struct representing the fields of the
+*tag* or *discriminant*: an integer of appropriate bitwidth ^[in the case of 0
+or 1 variants, the discriminant is represented by a 0-typle, `{}`, as LLVM does
+not have an `i0` type] to represent all possible variants, where $width =
+log_{256} (num\_variants)$ . The enum value must occupy enough memory to be able
+to accomodate all possible variants, so the enum type is defined to LLVM as a
+pair of the tag-integer and an anonymous struct representing the fields of the
 variant with the largest size in memory, and then we cast to other variants as
 appropriate when constructing enums or pattern matching over them.
 
 ```rust
-enum Option {
-    None{},
-    Some{val: Int},
+enum Result {
+    Ok{val: Int},
+    Err{err: String},
 }
 
-fn main() {
-    let some = Option::Some{val: 42};
-    let none = Option::None{};
+fn ok() -> Result {
+    Result::Ok{val: 42}
+}
+
+fn err() -> Result {
+    Result::Err{err: "Oh no!"}
 }
 ```
 
 becomes
 ```
-%Option = type { i8, { i32 } }
+%Result = type { i8, { %String } }
+%String = type { i32, i8* }
 
-define {} @main() {
-main.entry:
-  %Option.alloca = alloca %Option, align 8
-  %Option.discriminant.gep = getelementptr inbounds %Option, %Option* %Option.alloca, i32 0, i32 0
-  store i8 1, i8* %Option.discriminant.gep, align 1
-  %Option.payload.gep = getelementptr inbounds %Option, %Option* %Option.alloca, i32 0, i32 1
-  %"Option::Some.val.gep" = getelementptr inbounds { i32 }, { i32 }* %Option.payload.gep, i32 0, i32 0
-  store i32 42, i32* %"Option::Some.val.gep", align 4
-  %Option.load = load %Option, %Option* %Option.alloca, align 4
-  %some.alloca = alloca %Option, align 8
-  store %Option %Option.load, %Option* %some.alloca, align 4
+@String.lit = global [6 x i8] c"Oh no!"
 
-  %Option.alloca1 = alloca %Option, align 8
-  %Option.discriminant.gep2 = getelementptr inbounds %Option, %Option* %Option.alloca1, i32 0, i32 0
-  store i8 0, i8* %Option.discriminant.gep2, align 1
-  %Option.payload.gep3 = getelementptr inbounds %Option, %Option* %Option.alloca1, i32 0, i32 1
-  %Option.load4 = load %Option, %Option* %Option.alloca1, align 4
-  %none.alloca = alloca %Option, align 8
-  store %Option %Option.load4, %Option* %none.alloca, align 4
-  %none = load %Option, %Option* %none.alloca, align 4
-  ret %Option %none
+define %Result @ok() {
+ok.entry:
+  %Result.alloca = alloca %Result, align 8
+  %Result.discriminant.gep = getelementptr inbounds %Result, %Result* %Result.alloca, i32 0, i32 0
+  store i8 0, i8* %Result.discriminant.gep, align 1
+  %Result.payload.gep = getelementptr inbounds %Result, %Result* %Result.alloca, i32 0, i32 1
+  %Result.payload.gep.bitcast = bitcast { %String }* %Result.payload.gep to { i32 }*
+  %"Result::Ok.val.gep" = getelementptr inbounds { i32 }, { i32 }* %Result.payload.gep.bitcast, i32 0, i32 0
+  store i32 42, i32* %"Result::Ok.val.gep", align 4
+  %Result.load = load %Result, %Result* %Result.alloca, align 8
+  ret %Result %Result.load
+}
+
+define %Result @err() {
+err.entry:
+  %Result.alloca = alloca %Result, align 8
+  %Result.discriminant.gep = getelementptr inbounds %Result, %Result* %Result.alloca, i32 0, i32 0
+  store i8 1, i8* %Result.discriminant.gep, align 1
+  %Result.payload.gep = getelementptr inbounds %Result, %Result* %Result.alloca, i32 0, i32 1
+  %"Result::Err.err.gep" = getelementptr inbounds { %String }, { %String }* %Result.payload.gep, i32 0, i32 0
+  store %String { i32 6, i8* getelementptr inbounds ([6 x i8], [6 x i8]* @String.lit, i32 0, i32 0) }, %String* %"Result::Err.err.gep", align 8
+  %Result.load = load %Result, %Result* %Result.alloca, align 8
+  ret %Result %Result.load
 }
 ```
 
