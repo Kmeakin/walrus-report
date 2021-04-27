@@ -1351,7 +1351,114 @@ it introduces needless overhead in the case of non-recursive types, and would
 certainly warrant further investigation if more time were available.
 
 #### Pattern matching
-TODO
+To codegen a match-expression, we generate a chain of if-then-else, testing if
+the value being scruitinized matches the pattern in each case:
+
+* **Literal patterns** compare agaisnt the scrutinezed value for equality
+* **variable patterns** and **wildcard patterns** always suceed
+* **tuple patterns** and **struct patterns** simply recursive over thier sub-patterns,
+* **enum patterns** compare agaisnt the scrutinee's discriminant against the
+  expected value then recurse over the subpatterns if they are equal.
+
+If the pattern does match, we can branch to the case's right hand side. If not,
+we branch to the next case and try again. If no cases match, we fall through to
+an `unreachable` instruction, which causes instant undefined behaviour. This is
+the only way to trigger undefined behaviour in Walrus, and is a temporary
+measure until pattern-exhaustiveness checking is implemented.
+
+```rust
+enum Option {
+    None{},
+    Some{val: Int},
+}
+
+fn add_options(x: Option, y: Option) -> Option {
+    match (x, y) {
+        (Option::Some{val: x}, Option::Some{val: y}) => Option::Some{val: x + y},
+        _ => Option::None{},
+    }
+}
+```
+
+becomes 
+```
+%Option = type { i8, { i32 } }
+
+define %Option @add_options(%Option %add_options.params.0, %Option %add_options.params.1) {
+add_options.entry:
+  %x.alloca = alloca %Option, align 8
+  store %Option %add_options.params.0, %Option* %x.alloca, align 4
+  %y.alloca = alloca %Option, align 8
+  store %Option %add_options.params.1, %Option* %y.alloca, align 4
+  %tuple.alloca = alloca { %Option, %Option }, align 8
+  %x = load %Option, %Option* %x.alloca, align 4
+  %tuple.0.gep = getelementptr inbounds { %Option, %Option }, { %Option, %Option }* %tuple.alloca, i32 0, i32 0
+  store %Option %x, %Option* %tuple.0.gep, align 4
+  %y = load %Option, %Option* %y.alloca, align 4
+  %tuple.1.gep = getelementptr inbounds { %Option, %Option }, { %Option, %Option }* %tuple.alloca, i32 0, i32 1
+  store %Option %y, %Option* %tuple.1.gep, align 4
+  %tuple = load { %Option, %Option }, { %Option, %Option }* %tuple.alloca, align 4
+  br label %match.case0.test
+
+match.case0.test:                                 ; preds = %add_options.entry
+  %tuple.0 = extractvalue { %Option, %Option } %tuple, 0
+  %Option.discriminant = extractvalue %Option %tuple.0, 0
+  %"Option::Some.cmp_discriminant" = icmp eq i8 %Option.discriminant, 1
+  br i1 %"Option::Some.cmp_discriminant", label %"match.case0.Option::Some.then", label %"match.case0.Option::Some.end"
+
+"match.case0.Option::Some.then":                  ; preds = %match.case0.test
+  %Option.payload = extractvalue %Option %tuple.0, 1
+  %"Option::Some.val" = extractvalue { i32 } %Option.payload, 0
+  br label %"match.case0.Option::Some.end"
+
+"match.case1.Option::Some.end":                   ; preds = %"match.case1.Option::Some.then", %"match.case0.Option::Some.end"
+  %"match.case1.Option::Some.phi" = phi i1 [ true, %"match.case1.Option::Some.then" ], [ false, %"match.case0.Option::Some.end" ]
+  %1 = and i1 %0, %"match.case1.Option::Some.phi"
+  br i1 %1, label %match.case0.then, label %match.case1.test
+
+match.case0.then:                                 ; preds = %"match.case1.Option::Some.end"
+  %tuple.05 = extractvalue { %Option, %Option } %tuple, 0
+  %Option.payload6 = extractvalue %Option %tuple.05, 1
+  %"Option::Some.val7" = extractvalue { i32 } %Option.payload6, 0
+  %x.alloca8 = alloca i32, align 4
+  store i32 %"Option::Some.val7", i32* %x.alloca8, align 4
+  %tuple.19 = extractvalue { %Option, %Option } %tuple, 1
+  %Option.payload10 = extractvalue %Option %tuple.19, 1
+  %"Option::Some.val11" = extractvalue { i32 } %Option.payload10, 0
+  %y.alloca12 = alloca i32, align 4
+  store i32 %"Option::Some.val11", i32* %y.alloca12, align 4
+  %Option.alloca13 = alloca %Option, align 8
+  %Option.discriminant.gep14 = getelementptr inbounds %Option, %Option* %Option.alloca13, i32 0, i32 0
+  store i8 1, i8* %Option.discriminant.gep14, align 1
+  %Option.payload.gep15 = getelementptr inbounds %Option, %Option* %Option.alloca13, i32 0, i32 1
+  %x16 = load i32, i32* %x.alloca8, align 4
+  %y17 = load i32, i32* %y.alloca12, align 4
+  %Int.add = add i32 %x16, %y17
+  %"Option::Some.val.gep" = getelementptr inbounds { i32 }, { i32 }* %Option.payload.gep15, i32 0, i32 0
+  store i32 %Int.add, i32* %"Option::Some.val.gep", align 4
+  %Option.load18 = load %Option, %Option* %Option.alloca13, align 4
+  br label %match.end
+
+match.case1.test:                                 ; preds = %"match.case1.Option::Some.end"
+  br i1 true, label %match.case1.then, label %match.fail
+
+match.case1.then:                                 ; preds = %match.case1.test
+  %Option.alloca = alloca %Option, align 8
+  %Option.discriminant.gep = getelementptr inbounds %Option, %Option* %Option.alloca, i32 0, i32 0
+  store i8 0, i8* %Option.discriminant.gep, align 1
+  %Option.payload.gep = getelementptr inbounds %Option, %Option* %Option.alloca, i32 0, i32 1
+  %Option.payload.gep.bitcast = bitcast { i32 }* %Option.payload.gep to {}*
+  %Option.load = load %Option, %Option* %Option.alloca, align 4
+  br label %match.end
+
+match.fail:                                       ; preds = %match.case1.test
+  unreachable
+
+match.end:                                        ; preds = %match.case0.then, %match.case1.then
+  %match.phi = phi %Option [ %Option.load, %match.case1.then ], [ %Option.load18, %match.case0.then ]
+  ret %Option %match.phi
+}
+```
 
 ## Command-line interface
 TODO
