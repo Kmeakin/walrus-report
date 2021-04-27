@@ -715,7 +715,7 @@ class Person {
 
 By contrast, the corresponding Walrus function will either successfully return a
 fully initialised person, or else return an error which must be handled by the
-caller ^[See @sec:reference:enum and @sec:reference:pattern_matching for a
+caller ^[See @sec:reference:enums and @sec:reference:pattern-matching for a
 description of the `enum` and `match` keywords]:
 ```rust
 enum PersonResult {
@@ -725,8 +725,8 @@ enum PersonResult {
 
 fn new_person(name: String, birth_year: Int, weight: Float) -> PersonResult {
     let current_year = match get_current_year() {
-        YearResult::Ok(year) => year,
-        YearResult::Err(err) => return PersonResult::Err{err},
+        YearResult::Ok{year} => year,
+        YearResult::Err{err} => return PersonResult::Err{err},
     };
     PersonResult::Ok{p: Person{name, weight, age: current_year - birth_year}}
 }
@@ -744,22 +744,20 @@ different meanings to get confused:
 fn print_event(date: (Int, Int, Int), position: (Int, Int, Int), description: String) {
     let (day, month, year) = date;
     let (x, y, z) = position;
-    print("On " + int_to_string(day) + "/" + int_to_string(month) + "/" + int_to_string(year)
-          + ", at coordinates (" + int_to_string(z) ", " + int_to_string(y) + ", " + int_to_string(z) 
-          + "), " + description
-    )
+    print(...)
 }
 
 fn main() {
     let date = (01, 01, 1970);
     let position = (0, 0, 0);
     let description = "something happened";
-    print_event(date, position, description); // Order of arguments is incorrect, but no error is indicated
+    print_event(date, position, description); // Order of arguments is incorrect, 
+                                              // but no error is indicated
 }
 ```
 
 If instead structs were used, it would be impossible to accidentally pass the
-arguments to `print_event` in the wrong order:
+arguments to `print_event`{.rust} in the wrong order:
 ```rust
 struct Position {
     x: Int,
@@ -816,7 +814,7 @@ runtime. Instead, the enum must be pattern-matched over ^[See
 fn print_int_or_float(it: IntOrFloat) {
     match it {
         IntOrFloat::Int{x} => print("Its an Int: " + int_to_string(x)),
-        IntOrFloat::Float{y => print("Its a Float: " + float_to_string(x)),
+        IntOrFloat::Float{y} => print("Its a Float: " + float_to_string(y)),
     }
 }
 ```
@@ -867,26 +865,26 @@ pattern in C, except in C the burden is still on the programmer to check the tag
 before accessing the fields:
 
 ```c
-enum IntOrFloatTag {
+typedef enum {
     INT,
     FLOAT,
-}
+} IntOrFloatTag;
 
-typedef struct IntOrFloat {
+typedef struct {
     IntOrFloatTag tag;
     union {
         int x;
         float y;
-    }
-}
+    };
+} IntOrFloat;
 
 void print_int_or_float(IntOrFloat it) {
    switch (it.tag) {
        case INT:
         printf("its an Int: %d\n", it.x);
         break;
-       case INT:
-        printf("its a Float: %f\n", it.x);
+       case FLOAT:
+        printf("its a Float: %f\n", it.y);
         break;
    }
 }
@@ -948,8 +946,9 @@ Here are just some of the symptoms of those billion dollars of pain and damage:
   missing entry: for example `java.util.Arrays.binarySearch`{.java} returns an
   `int` representing the 0-based position in an array that a key was found at,
   or else a negative integer to indicate that no such key was found. However,
-  not every primitive type has such a "dummy" value: what would be a dummy value
-  for `boolean`, for example?
+  not every primitive type has such a "dummy" value: if a function needs to
+  return either `true`, `false` or a sentinal value the indicate no return
+  value, there is no third value in `boolean` that can be used as the dummy value.
   
 The solution is to do away entirely with `null`, and introduce an algebraic
 datatype with 2 variants: one for when the value is present, and one for when it
@@ -1052,7 +1051,8 @@ fn is_zero(x: Int) -> Bool {
     match x {
         0 => true,
         y => {
-            print("x is not zero: its " + int_to_string(y));
+            print("x is not zero: it is " + int_to_string(y));
+            false
         }
     }
 }
@@ -1172,18 +1172,18 @@ itself an extension of the classic *Hindley-Milner* type system.
 
 The original Hindley-Milner type system, introduced in (TODO) by (TODO),
 provides a set of inferences rules for determining a single "most general type"
-for expressions in the *simply-typed-lambda-calculus*. For the purposes of this
-report, it is sufficient just to be aware that the simply-typed-lambda-calculus
+for expressions in the *simply-typed λ-calculus*. For the purposes of this
+report, it is sufficient just to be aware that the simply-typed *λ*-calculus
 is a very primitive programming language, providing only *variables*,
 *application* (call a function with exactly one argument), *abstraction*
 (creating an anonymous function of exactly one argument) and *let-binding*
 (binding a variable to a value, and evaluating a second expression in the
 extended environment).
 
-Modern day functional programming languages use the simply-typed-lambda-calculus
-(or some other lambda-calculi) as their underlying theory, while adding
+Modern day functional programming languages use the simply-typed *λ*-calculus
+(or some other *λ*-calculi) as their underlying theory, while adding
 extensions to produce a language practical for real-world development. Walrus is
-no exception: its extensions to the simply-typed lambda calculus include:
+no exception: its extensions to the simply-typed *λ*-calculus include:
 
 * Primitive types and corresponding literals
 * Global variables
@@ -1212,12 +1212,20 @@ and the type of the value returned to the right of the arrow. Note that the
 arrow is right associative: that is `(Int) -> (Bool) -> Int` is the same as
 `(Int) -> ((Bool) -> Int)`, which are both distinct from `((Int) -> Bool) -> Int`:
 ```rust
-() -> () // A function taking 0 parameters, and returning nothing (the empty tuple)
-(Int) -> Int // A function taking 1 Int and returning an Int
-(Int, Bool) -> Int // A function taking 1 Int and 1 Bool, and returning an Int
-(Int) -> (Bool) -> Int // A function taking 1 Int and returning a function which in turn takes 1 Bool and returns an Int
-(Int) -> ((Bool) -> Int) // The same type, with explicit parentheses to indicate associativity of `->`
-((Int) -> Bool) -> Int // A function which takes a function from 1 Int to a Bool, and returns an Int
+() -> ()                 // A function taking 0 parameters, and returning nothing (the empty tuple)
+
+(Int) -> Int             // A function taking 1 Int and returning an Int
+
+(Int, Bool) -> Int       // A function taking 1 Int and 1 Bool, and returning an Int
+
+(Int) -> (Bool) -> Int   // A function taking 1 Int and returning a function 
+                         // which in turn takes 1 Bool and returns an Int
+
+(Int) -> ((Bool) -> Int) // The same type, with explicit parentheses to 
+                         // indicate associativity of `->`
+
+((Int) -> Bool) -> Int   // A function which takes a function from 1 Int to a Bool, 
+                         // and returns an Int
 ```
 
 #### Type inference
@@ -1237,8 +1245,9 @@ Of particular interest are types with exactly 1 inhabitant (a *unit-type*), and
 types with 0 inhabitants (an *uninhabited* or *empty-type*).
 
 ##### The unit type {#sec:reference:types:unit}
-A type is called *a unit-type* if it has exactly 1 inhabitant. In Walrus' such
-types are either the 0-tuple, `()`, or a `struct` with fields, such as
+
+A type is called *a unit-type* if it has exactly 1 inhabitant. In Walrus such
+types are either the 0-tuple, `()`, or a `struct` with 0 fields, such as
 ```rust
 struct UnitStruct {}
 ```
@@ -1255,6 +1264,7 @@ struct AlsoAUnit {
     a: (),
     b: ((), ()),
     c: UnitStruct,
+    d: UnitEnum,
 }
 ```
 
@@ -1267,13 +1277,14 @@ reason, `()` is also sometimes called "*the* unit type" or "the unit tuple".
 Since any unit type has exactly 1 possible value, it carries no information at
 runtime: that is, it can be represented by zero bits. This makes unit types
 natural placeholders for when some type is needed, but no information is
-returned. It is for this reason that functions with empty bodies/no terminating
+returned. It is for this reason that functions with empty bodies/no trailing
 expression return `()`, and assignment expression expressions evaluate to `()`.
 Unit types can be considered analogous to the `void` type from C, however unlike
 C's `void`, values of unit types are first class values that can be stored in
 variables, passed to and returned from functions, etc.
 
 ##### The bottom type {#sec:reference:types:never}
+
 A *bottom-type* is a type with 0 inhabitants: it is *uninihabited*. In Walrus'
 such types are either the primitive type `Never`, an `enum` with 0 variants:
 ```rust
@@ -1283,8 +1294,9 @@ or combinations thereof, such as a tuple or struct where any field has 0
 inhabitants:
 ```rust
 struct UnihabitedStruct {
-    a: Never,
-    b: (Never, ()),
+    a: Int,
+    b: Int,
+    c: (Never, ()),
 }
 ```
 Just as `()` is *the* canonical unit-type, `Never` is *the* canonical bottom
@@ -1301,7 +1313,7 @@ executing the program exits, and so the enclosing context will never recieve a
 value. Perhaps more strangely, all the control flow altering expressions,
 `return`, `break`, `continue` also have type `Never`. This is because, like
 `exit`, when such an expression is evaluated, the enclosing scope is exited and
-control is transferred to elsewhere in the program. Note that althoug the
+control is transferred to elsewhere in the program. Note that although the
 `return` and `break` expressions themselves have type `Never`, they alter the
 return type of their enclosing function/loop: the return type of the enclosing
 function becomes the type of the argument to `return`, or `()` if it has no
@@ -1309,9 +1321,9 @@ argument, and the same for the enclosing `loop` in the case of `break`.
 
 TODO: c++ `[[noreturn]]`
 
-Another useful property of bottom types is that they may be *coereced* to any
-other type. Suppose a programmer wishes to write an `assert` function, which
-checks that the condition passed to it is true, or else aborts the program:
+A useful property of `Never` is that it may be *coereced* to any other
+type. Suppose a programmer wishes to write an `assert` function, which checks
+that the condition passed to it is true, or else aborts the program:
 ```rust
 fn assert(cond: Bool) {
     if cond {
@@ -1335,9 +1347,9 @@ will never be asked to make good on our promise.
 
 This behaviour also describes why such types are called "bottom types": in a
 type-system with subtyping, a bottom type is a subtype of all other types
-(including itself and all other bottom types). Note that Walrus does not in
-general have a subtyping mechanism: `Never` is the only type that may be passed
-to a context expecting a different type.
+(including itself and all other bottom types). Note that Walrus does not have a
+subtyping mechanism: `Never` is the only type that may be passed to a context
+expecting a different type.
 
 TODO IF TIME: Curry-Howard Isomoprhism, Principle of Explosion
 
@@ -1364,7 +1376,7 @@ This is clearly tedious and requires the programmer to needlessly duplicate an
 indentical function. If Walrus' type system could quantify over other types, we
 could write an identity function that could be called with any argument type.
 Such functions are called *generic* in C++, Java and Rust, or *polymorphic* in
-Haskell. ^[Here we copy the generics syntax of Rust for the sake of example]:
+Haskell ^[Here we copy the generics syntax of Rust for the sake of example]:
 ```rust
 fn identity<T>(x: T) -> T {
     x

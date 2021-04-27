@@ -7,4 +7,6 @@ header-includes: |
     \usepackage{proof}
     \usepackage{makecell}
     \usetikzlibrary{positioning}
+
+    \setmainfont{CMU Serif}
 ---
