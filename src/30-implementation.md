@@ -6,7 +6,7 @@ TODO: a nice diagram of information flow
 ## Lexing
 Before the text of a program can be parsed into a parse tree, it must be first
 split into a flat stream of *tokens*: chunks of text with a label classifying
-their role in parsing, such as `Whitespce`, `Identifier`, or `StringLit`.
+their role in parsing, such as `Whitespace`, `Identifier`, or `StringLit`.
 
 For example, the Walrus code
 ```rust
@@ -17,8 +17,8 @@ fn main() {
 
 would be lexed as:
 ```
-KwFn Whitespace Ident LParen RParen Whitespace LCurly Whitespace Ident
-LParen String RCurly Semicolon Whitespace RCurly
+KwFn("fn") Whitespace(" ") Ident("main") LParen("(") RParen(")") Whitespace(" ") LCurly("{") Whitespace("\n\t") Ident("print)
+LParen("(") String("\Hello, world!\\n\"") RParen(")") Semicolon(";") Whitespace("\n") RCurly("}")
 ```
 
 The tokens of a programming language are often simple enough to be expressed as
@@ -44,7 +44,7 @@ we can keep the implementation of the lexer small and easy to maintain, whilst
 still getting a lexer that is just as fast as an optimised hand-written
 implementation. All that the compiler writer need provide is a few dozen lines
 of glue code to drive the lexer and attatch start and end indicies to each
-token. See @sec:appendix:lexer for the full implementation of the Walrus lexer.
+token.
 
 ## Parsing
 Once a flat stream of tokens has been produced, they must be assembled into a
@@ -358,10 +358,10 @@ The approach we have chosen is to store auxiallary data in *side-tables* (eg a
 inside the tree data structure. For example, as a first attempt, we could create
 a `HashMap<hir::Expr, types::Type>`{.rust}, for mapping each `Expr` to its
 inferred `Type` ^[`hir::Type`, should not be confused with `types::Type`. The
-first represents types as they appear in the abstract syntax. The latter
-represents type values]. However, this is not quite correct, as this would hash
-each node based on its *value*, not its *identity*. Consider type checking the
-following snippet of code:
+first represents types as they appear in the HIR. The latter represents type
+values]. However, this is not quite correct, as this would hash each node based
+on its *value*, not its *identity*. Consider type checking the following snippet
+of code:
 
 ```rust
 fn f(x: Int) {
