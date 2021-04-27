@@ -1067,8 +1067,117 @@ get_five.entry:
 }
 ```
 
-#### Control flow
+#### Control flow 
+
+##### If expressions
+Branching in LLVM IR is achieved by means of the `br` instruction, which either
+selects between two basic-blocks to jump to based on the value of an `i1`, or
+jumps unconditionally to a single basic block, depending on the syntax used.
+Note that LLVM conditional branches must specify a branch for both the true and
+the false cases - control does not "fall though" to the next basic block, as it
+does in real assembly languages. To get the value of the branch taken, we use
+the `phi` instruction, which selects between two values according to the
+basic-block that control flow has arrived from.
+
+```rust
+fn main() -> _ {
+    min(5, 10)
+}
+
+fn min(x: Int, y: Int) -> Int {
+    if x < y { x } else { y }
+}
+```
+
+becomes
+```
+define i32 @main() {
+main.entry:
+  %min.call = call i32 @min(i32 5, i32 10)
+  ret i32 %min.call
+}
+
+define i32 @min(i32 %min.params.0, i32 %min.params.1) {
+min.entry:
+  %x.alloca = alloca i32, align 4
+  store i32 %min.params.0, i32* %x.alloca, align 4
+  %y.alloca = alloca i32, align 4
+  store i32 %min.params.1, i32* %y.alloca, align 4
+  %x = load i32, i32* %x.alloca, align 4
+  %y = load i32, i32* %y.alloca, align 4
+  %Int.less = icmp slt i32 %x, %y
+  br i1 %Int.less, label %if.then, label %if.else
+
+if.then:                                          ; preds = %min.entry
+  %x1 = load i32, i32* %x.alloca, align 4
+  br label %if.end
+
+if.else:                                          ; preds = %min.entry
+  %y2 = load i32, i32* %y.alloca, align 4
+  br label %if.end
+
+if.end:                                           ; preds = %if.else, %if.then
+  %if.merge = phi i32 [ %x1, %if.then ], [ %y2, %if.else ]
+  ret i32 %if.merge
+}
+```
+
+When generating code for an if-expression without an else-branch, we simply
+discard the result of the if branch and return the unit tuple:
+
+```rust
+fn main() {
+    inspect(50);
+}
+
+fn inspect(x: Int) {
+    if x == 42 {
+        print("This number is special");
+    }
+}
+```
+
+becomes
+```
+%String = type { i32, i8* }
+
+@String.lit = global [22 x i8] c"This number is special"
+
+define {} @main() {
+main.entry:
+  %inspect.call = call {} @inspect(i32 50)
+  ret {} zeroinitializer
+}
+
+define {} @inspect(i32 %inspect.params.0) {
+inspect.entry:
+  %x.alloca = alloca i32, align 4
+  store i32 %inspect.params.0, i32* %x.alloca, align 4
+  %x = load i32, i32* %x.alloca, align 4
+  %Int.eq = icmp eq i32 %x, 42
+  br i1 %Int.eq, label %if.then, label %if.else
+
+if.then:                                          ; preds = %inspect.entry
+  %print.call = call {} @builtin_print(%String { i32 22, i8* getelementptr inbounds ([22 x i8], [22 x i8]* @String.lit, i32 0, i32 0) })
+  br label %if.end
+
+if.else:                                          ; preds = %inspect.entry
+  br label %if.end
+
+if.end:                                           ; preds = %if.else, %if.then
+  ret {} zeroinitializer
+}
+
+declare {} @builtin_print(%String)
+```
+
+##### Loop expressions
+
 #### Aggregate datatypes
+##### Tuples
+##### Structs
+##### Enums
+
 #### Pattern matching
 
 ## Command-line interface
