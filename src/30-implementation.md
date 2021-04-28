@@ -1,13 +1,90 @@
 # Implementation
 
-## The pipeline
-TODO: a nice diagram of information flow
-
 ## Choice of implementation language
 TODO: why i used rust
 
-## Command-line interface
-TODO: CLI
+## The pipeline
+The Walrus compiler is implemented as a traditional *pipeline* of *passes*. Each
+pass takes in the output of previous passes, performs some analysis on them, and
+provides the result as the input for future passes. These passes can be grouped
+into three *stages*: front, middle and back end.
+
+* **Front end**:
+  * Command line interface
+  * Lexer (lexical analysis)
+  * Parser (syntax analysis)
+* **Middle end** (semantic analysis):
+  * HIR generation
+  * Scope generation
+  * Type inference
+* **Back end**
+  * LLVM IR generation
+  * Machine code generation via `clang`
+
+This diagram illustrates the flow of information through the pipeline:
+```{.graphviz}
+digraph {
+  CLI [label="Command line interface"]
+  Lexer [label="Lexer"]
+  Parser [label="Parser"]
+  HIRGen [label="HIR generation"]
+  ScopeGen [label="Scope generation"]
+  TypeInf [label="Type inference"]
+  LLVMGen [label="LLVM IR generation"]
+  Clang [label="Clang"]
+  Errors [label="Error printing"]
+
+  CLI -> Lexer [label="Source"]
+  Lexer -> Parser [label="Tokens"]
+  Parser -> HIRGen [label="Parse tree"]
+
+  HIRGen -> ScopeGen [label="HIR"]
+  ScopeGen -> TypeInf [label="Scopes"]
+  HIRGen -> TypeInf [label="HIR"]
+
+  HIRGen -> LLVMGen [label="HIR"]
+  TypeInf -> LLVMGen [label="Types"]
+  LLVMGen -> Clang [label="LLVM IR"]
+  Clang -> Executable [label="Assembly"]
+
+  HIRGen -> Errors [label="Errors"]
+  ScopeGen -> Errors [label="Errors"]
+  TypeInf -> Errors [label="Errors"]
+}
+```
+
+Alternatives to this "batch processing" model do exist, and are growing in
+prominance as programmers start to demand more advanced features of thier
+Integrated Development Environments (IDEs). For example, `rust-analyzer`,
+provides IDE features such as code completion, error highlighting and code
+navigation. To do this it must replicate the front and middle ends of the
+traditional batch `rustc` compiler. However, `rust-analyzer` runs in the
+background and responds to queries from the IDE; it would be too unresponsible
+to run the batch processing pipeline over the whole codebase for every queriy.
+Instead, queries are cached and the intermediate representation is carefully
+designed so that small changes to the program text do not invalidate the whole
+cache.
+
+This query-based architecture would be an interesting part of the design space
+to explore. However, it significantly complicates the implementation of the
+compiler and is not yet well established in the literature or learning
+resources. I therefore decided that I would stick with the simpler design for my
+first attempt at compiler construction.
+
+## Command line interface
+The command line interface parses command line arguments and orchestrates the
+passing of data to each pass. The programmer passes in the filename of the
+program and specifies the amount of processing to perform on the program: 
+
+* **check**: Check the program from errors, but do not compile it
+* **build**: Compile the program into an executable, but do not run it
+* **run**: Compile the program into an executable and run it
+
+The programmer can also specify an optimisation level (`-O0` to `-O3`) as in
+standard C compilers.
+
+The command line interface terminates the compilation pipeline before LLVM IR
+generation if any fatal errors were produced by the midend.
 
 ## Lexing
 Before the text of a program can be parsed into a parse tree, it must be first
@@ -402,7 +479,7 @@ type ExprId = Id<Expr>;
 
 ### Name resolution {#sec:impl:scopes}
 Any non-trivial semantic analysis over the HIR will require us to be able to
-*resolve-names*: lookup the entity (if any) that a variable name refers to in a
+*resolve names*: lookup the entity (if any) that a variable name refers to in a
 given scope. Since a variable can refer to one of many different named entities
 (local variables, functions, structs, enums, builtin types and builtin
 functions), we say that a variable name has a corresponding *denotation*, since
@@ -797,7 +874,7 @@ error message referring to it (we want to avoid a situation where errors exist
 but no error message about them is emitted). Just like design of error messages,
 deciding which error messages to emit and which to omit is an art, not a science.
 
-## Codegen
+## LLVM IR generation
 Once we have finished type inference, we have successfully detected all semantic
 errors that could occur in the program, and are ready to generate an executable
 file that can be run. For this task we will defer to the LLVM framework. LLVM
