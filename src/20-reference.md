@@ -1229,8 +1229,7 @@ Javascript "untyped", but this is a misnomer: these languages still have rules
 about what is and is not a valid operation on certain classes of values - the
 checking that the program conforms to these rules is simply deferred to runtime.
 
-
-TODO: benefits of static type systems over dynamic type systems
+TODO: why static is better than dynamic
 
 ### The Walrus Type System {#sec:reference:type-system}
 The Walrus type system is a simplification of the Rust type system, which is
@@ -1433,7 +1432,24 @@ control back to the enclosing scope after they are evaluated. For example, a
 type `Never`: such a loop will never produce any value. Similarly, the builtin
 function `exit` returns `Never`: once the `exit` function is called, the process
 executing the program exits, and so the enclosing context will never recieve a
-value. Perhaps more strangely, all the control flow altering expressions,
+value. Constrast this with the type given to
+`std::exit`^[https://en.cppreference.com/w/cpp/utility/program/exit] by C++11:
+`void exit(int)`. This type signature is less accurate than that of
+Walrus's `exit` - it implies that `std::exit` will eventually return. The
+`[[noreturn]]` attribute can be added to the declaration of `std::exit` to mark
+that the function does in fact never return, but this is not as flexible as
+encoding the non-termination of the function into its type. Since
+non-termination is a first class type in Walrus, it is trivial to write a
+function that accepts only non-terminating functions as inputs:
+
+```rust
+fn wrap_exit(f: (Int) -> Never) -> Never {
+    print("About to loop forever or stop the program\n");
+    f()
+}
+```
+
+Perhaps more strangely, all the control flow altering expressions,
 `return`, `break`, `continue` also have type `Never`. This is because, like
 `exit`, when such an expression is evaluated, the enclosing scope is exited and
 control is transferred to elsewhere in the program. Note that although the
@@ -1442,31 +1458,54 @@ return type of their enclosing function/loop: the return type of the enclosing
 function becomes the type of the argument to `return`, or `()` if it has no
 argument, and the same for the enclosing `loop` in the case of `break`.
 
-TODO: c++ `[[noreturn]]`
-
 A useful property of `Never` is that it may be *coereced* to any other
-type. Suppose a programmer wishes to write an `assert` function, which checks
-that the condition passed to it is true, or else aborts the program:
+type. Suppose the programmer has an `Option`, but is certain that at this point
+in the program it will always be `Some`, never `None`. The `unwrap` function
+will print an erorr and abort if the programmer's assumption turned out to be
+false, otherwise it will return the inner value:
+
 ```rust
-fn assert(cond: Bool) {
-    if cond {
-        // do nothing
-    } else {
-        print("assertion failed");
-        exit(1);
-    }
+enum Option {
+    None{},
+    Some{val: Int},
+}
+
+fn unwrap(opt: Option) -> Int {
+   match opt {
+       Option::Some{val} => val,
+       Option::None{} => {
+           print_err("Expected None but found Some\n");
+           exit(1)
+       }
+   } 
 }
 ```
-In the case where the condition is true, `assert` simply does nothing. If the
-condition is false, it prints an error and calls the builtin `exit`. Since the
-type of the false branch is `Never`, it automatically coerces to the type of the
-other branch, in this case `()`, and thus the type of the whole function body
-satisfies the `()` return type of the function.
+In the case where the `opt` is `Some`, `unwrap` simply returns the inner value,
+and so the type of the `Some` branch is `Int`. The type of the `None` branch is
+`Never`, since the type of `exit` is `(Int) -> Never`. However, it automatically
+coerces to the type of the other branch, in this case `Int`, and thus the type
+of the whole function body satisfies the `Int` return type of the function.
 
 This behaviour may seem confusing, but it is in fact perfectly valid. Since a
 value of a bottom-type cannot exist, we are free to promise that it could take
 the role expected of it by any other type - since such a value is impossible, we
 will never be asked to make good on our promise.
+
+This coercion behaviour can also be explained by appeal to mathematical logic.
+The *Curry-Howard correspondence*, in brief, states that a type signature is a
+proposition, and its implementation is a proof of the proposition. For example,
+the signature of the function `fn id(x: Int) -> Int {x}`{.rust} is equivalent to
+the natural deduction proposition $\forall x. x \in Int \to \exists y. y \in
+Int$, where $Int$ is the set of all signed 32-bit integers; the body of the
+function then gives a proof that it is indeed possible to produce an element of
+the $Int$ set given another (not necessarily distinct) element of $Int$
+^[Formulating rules to translate each Walrus expression to a connective of
+natural deduction would be an interesting challenge, but is not the aim of this
+project so no such attempt has been made]. Similarly, the function `fn absurd(x:
+Never) -> Int {x}`{.rust} generates the proposition $\forall x.x \in
+\emptyset \to \exists y. y \in Int$. The proposition $x \in \emptyset$ is
+a contradiction, and the *principle of explosion* states that any proposition
+can be proven from a contradiction. 
 
 This behaviour also describes why such types are called "bottom types": in a
 type-system with subtyping, a bottom type is a subtype of all other types
