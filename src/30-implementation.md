@@ -329,13 +329,13 @@ abstracted, high level representation, named unimaginatively the High-level
 Intermediate Representation. This name was inherited from the rustc compiler,
 which has several IRs, including a High-level Intermediate Representation and a
 Mid-level Intermediate Representation. ^[Some textbooks and compilers name the
-IR they perform semantic analysis over the "Abstract Syntax Tree", however I
-have chosen to avoid that name as it may be confused for the parse-tree produced
+IR they perform semantic analysis over the "Abstract Syntax", however I
+have chosen to avoid that name as it may be confused for the parse tree produced
 by a parser, which is also sometimes called an "Abstract Syntax Tree"]. The
 process of converting a parse tree to its HIR is called *lowering*.
 
 In Walrus, the HIR of a program is represented by several mutually recursive
-structs (see @sec:appendix:hir), the most important being `FnDef`, `StructDef`,
+types (see @sec:appendix:hir), the most important being `FnDef`, `StructDef`,
 `EnumDef`, `Expr`, `Pat` and `Type`. 
 
 #### HIR annotation
@@ -1275,7 +1275,52 @@ declare {} @builtin_print(%String)
 ```
 
 ##### Loop expressions
-TODO
+Loops in LLVM IR are expressed as one or more basic blocks, with a branch to the
+beginning of the loop body in place of `continue` or at the end of
+the loop; and a branch to the exit basic block in place of of `break`. The
+result value of a loop, if any, is stored in a stack allocated variable and
+updated by mutating it when encountering a `break` expression. This was easier
+to implement than attempting to add every `break` expression to a phi
+instruction at the end of the loop.
+
+```rust
+fn main() -> _ {
+  let mut x = 5;
+  loop {
+    if x == 0 {
+      break x;
+    }
+  }
+}
+```
+
+becomes
+```
+define i32 @main() {
+main.entry:
+  %x.alloca = alloca i32, align 4
+  store i32 5, i32* %x.alloca, align 4
+  %loop.result.alloca = alloca i32, align 4
+  br label %loop.body
+
+loop.body:                                        ; preds = %if.end, %main.entry
+  %x = load i32, i32* %x.alloca, align 4
+  %Int.eq = icmp eq i32 %x, 0
+  br i1 %Int.eq, label %if.then, label %if.end
+
+if.then:                                          ; preds = %loop.body
+  %x1 = load i32, i32* %x.alloca, align 4
+  store i32 %x1, i32* %loop.result.alloca, align 4
+  br label %loop.exit
+
+if.end:                                           ; preds = %loop.body
+  br label %loop.body
+
+loop.exit:                                        ; preds = %if.then
+  %loop.result = load i32, i32* %loop.result.alloca, align 4
+  ret i32 %loop.result
+}
+```
 
 #### Aggregate datatypes
 ##### Tuples
