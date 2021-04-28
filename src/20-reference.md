@@ -629,7 +629,30 @@ the last expression in a function body obviates most of the need for `return`,
 it may still be useful in situations where a function cannot easily be
 expressed with a single exit point.
 
-TODO: example of early return
+Consider a function for calculating the roots of a quadratic polynomial, $ax^2 +
+bx + c$ using the quadratic equation, $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$,
+assuming the existant of a function `sqrt(x: Float) -> Float`{.rust} that aborts
+the program if `x` is less than `0.0`:
+
+```rust
+enum Option {
+    None{},
+    Some{val: (Float, Float)},
+}
+
+fn roots(a: Float, b: Float, c: FLoat) -> Option {
+    let discriminant = b * b - 4.0 * a * c;
+    let discriminant_root = if discriminant < 0.0 {
+        return Option::None{};
+    } else {
+        sqrt(discriminant)
+    };
+    let x1 = (-b + discriminant_root) / 2.0 * a;
+    let x2 = (-b - discriminant_root) / 2.0 * a;
+    Option::Some{val: (x1, x2)}
+
+}
+```
 
 ## Aggregate datatypes {#sec:reference:aggregates}
 All datatypes we have dealt with so far have been so-called
@@ -1504,16 +1527,14 @@ natural deduction would be an interesting challenge, but is not the aim of this
 project so no such attempt has been made]. Similarly, the function `fn absurd(x:
 Never) -> Int {x}`{.rust} generates the proposition $\forall x.x \in
 \emptyset \to \exists y. y \in Int$. The proposition $x \in \emptyset$ is
-a contradiction, and the *principle of explosion* states that any proposition
+a contradiction, and the *Principle of Explosion* states that any proposition
 can be proven from a contradiction. 
 
 This behaviour also describes why such types are called "bottom types": in a
-type-system with subtyping, a bottom type is a subtype of all other types
+type system with subtyping, a bottom type is a subtype of all other types
 (including itself and all other bottom types). Note that Walrus does not have a
-subtyping mechanism: `Never` is the only type that may be passed to a context
-expecting a different type.
-
-TODO IF TIME: Curry-Howard Isomoprhism, Principle of Explosion
+generalised subtyping mechanism: `Never` is the only type that will be
+automatically coerced.
 
 #### Limitations {#sec:reference:types:limitations}
 ##### No quantification
