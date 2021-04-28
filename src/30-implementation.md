@@ -3,6 +3,9 @@
 ## The pipeline
 TODO: a nice diagram of information flow
 
+## Choice of implementation language
+TODO
+
 ## Command-line interface
 TODO
 
@@ -701,7 +704,67 @@ traverses the HIR which are difficult to express as equality constraints:
   *irrefutable* (see @sec:reference:irrefutable-patterns)
 
 ## Error reporting
-TODO
+Before we can proceed to code generation, we need to first confirm that no
+semantic errors were detected in the semantic analysis pass. We do this by
+collecting all errors emitted by the lowering, name resolution and type
+inference passes into a single `Vec` of errors. If vector is empty, we can
+proceed to the next step. If there are any errors, we abort the compilition
+process and print some (hopefully) useful error messages to the user.
+
+Both the presentational style and content of error messages can have a large
+impact on the user experience of the programmer - error messages should clearly
+indicate **where** in the program the error occurred, preferably by underlining
+the offending section of code or even highlighting it in bold colours; and
+provide an understandable explanation of **what** the error means and how it can
+be fixed. The design of error messages is more an art than a science: languages
+like Rust and Elm, which pride themselves on compiler user experience, have
+extensive developer guidelines for writing helpful error messages and will
+sometimes even go as far as to tell the user what they can type to fix the error
+^[TODO: links].
+
+Obviously a single-person project over the course of a year will not have quite
+the same level of polish attatched to the content of error messages, however I
+am very pleased with the visual presentation of error messages: each error
+message underlines and highlights the offending code. Each error is represnted
+as an `enum` indicating the kind of error (eg type mismatch, undefined variable,
+mutating an immutable variable) and the HIR nodes responsible. The corresponding
+parse tree node for each HIR node is looked-up in the `HashMap` created in the
+lowering pass to get the source locations. The codespan-reporting &[TODO: link]
+then library handles the details of printing a nicely formatted message to the
+terminal with the correct escape-sequences to display lines and coloured text.
+
+A selection of error messages is demonstrated by this erroenous program:
+```rust
+fn a() {
+    b(1, 2, 3);
+}
+
+fn b(x: Int, y: Int) -> Int {x + y}
+
+fn c() {
+    99999999999999999999999;
+    "hello \z world";
+    '\u{999999}';
+}
+
+fn d() {
+    let f = 0.5;
+    f(1);
+}
+
+fn e() {
+    let x = 5;
+    x = 6;
+}
+
+fn g() {
+    1 + "hello";
+}
+```
+
+which produces the following error messages:
+
+![](img/errors.png)
 
 ## Codegen
 Once we have finished type inference, we have successfully detected all semantic
@@ -1475,7 +1538,7 @@ Now that we have the LLVM IR representation of the program, we can write it to a
 file and pass it to `Clang` (the C compiler developed in tandem with LLVM) along
 with `walrus_builtins.c`. For example, compiling the file `hello_world.walrus`
 will result in the invocation of `clang hello_world.walrus walrus_builtins.c -o
-hello_world`. This will statically link the LLVM IR file with `walrus_builtins.c`
-- any references to builtin functions in the LLVM IR will be resolved to point
-  to their C implementations. At last, a native executable has been produced and
-  can be run!
+hello_world`. This will statically link the LLVM IR file with
+`walrus_builtins.c` - any references to builtin functions in the LLVM IR will be
+resolved to point to their C implementations. At last, a native executable has
+been produced and can be run!
