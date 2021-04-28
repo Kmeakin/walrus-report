@@ -4,15 +4,16 @@
 TODO: a nice diagram of information flow
 
 ## Choice of implementation language
-TODO
+TODO: why i used rust
 
 ## Command-line interface
-TODO
+TODO: CLI
 
 ## Lexing
 Before the text of a program can be parsed into a parse tree, it must be first
 split into a flat stream of *tokens*: chunks of text with a label classifying
-their role in parsing, such as `Whitespace`, `Identifier`, or `StringLit`.
+their role in parsing, such as `Whitespace`, `Identifier`, or `StringLit`. This
+process is called *lexical analysis*, or *lexing* for short.
 
 For example, the Walrus code
 ```rust
@@ -49,8 +50,7 @@ block-comments, which are context-free, not regular. By using a lexer-generator,
 we can keep the implementation of the lexer small and easy to maintain, whilst
 still getting a lexer that is just as fast as an optimised hand-written
 implementation. All that the compiler writer need provide is a few dozen lines
-of glue code to drive the lexer and attatch start and end indicies to each
-token.
+of glue code to drive the lexer and source locations to each token.
 
 ## Parsing
 Once a flat stream of tokens has been produced, they must be assembled into a
@@ -626,11 +626,11 @@ Then we traverse the HIR to produce a set of equality constraints:
 | $\tau_{7} = Int$                      | IntLit
 | $\tau_{8} = Int$                      | IntLit
 
-Finally, we solve the set of contraints via *unification*. Unification is the
-process of solving a system of symbolic equations by finding a *substitution* a
-mapping variables to their values. The unification algorithm required for our
-type inference algorithm is relatively simple, since we are only dealing with
-equality constraints (symbolic equations of the form $x = y$):
+Finally, we solve the set of contraints via *unification* (TODO: citation).
+Unification is the process of solving a system of symbolic equations by finding
+a *substitution* mapping variables to their values. The unification algorithm
+required for our type inference algorithm is relatively simple, since we are
+only dealing with equality constraints (symbolic equations of the form $x = y$):
 
 ```text
 fn unify(constraints: Constraint list) -> Substition {

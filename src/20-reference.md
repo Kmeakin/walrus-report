@@ -1108,8 +1108,12 @@ enum IntStringResult {
 ```
 
 The `Result` enum can be used to replace *exceptions* as used in many other
-programming languages for error handling.
-TODO: advantages of `Result` over exceptions
+programming languages for error handling. Keeping exceptions out of the Walrus
+significantly simplifies the semantics of the lanuage - instead of having extra
+language constructs for `try`, `throw`, `catch`, and `finally` expressions and
+requiring each function to include `throws` declaration alongside its type
+signature, errors are just another first-class value that the programmer can
+handle how they see fit using regular language features.
 
 ## Pattern Matching {#sec:reference:pattern-matching}
 Pattern-matching allows matching against complex, potentially nested data. First
