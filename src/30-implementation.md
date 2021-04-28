@@ -766,6 +766,37 @@ which produces the following error messages:
 
 ![](img/errors.png)
 
+One caveat of the error-resiliant compilation strategy is that in solving the
+problem of reporting too few errors, we swing too far in the opposite direction
+and report too many errors. Consider this simple 3 line program:
+
+```rust
+fn add(x, y) -> _ {
+    x + y
+}
+```
+
+Since the `+` operator can be applied to either `Int`s, `Float`s and `String`s,
+and none of the variables are annotated with a type, we do not have enough
+information to determine a unique type for `x` and `y` (the system of equality
+constraints is said to be *underconstrained*). This leads to a cascade of
+further type inference error messages, as now the type of the function body and
+all its subexpressions cannot be inferred, and each subexpression emits a new
+error message. Therefore, while idealy this program should result in just 3
+error messages (could not infer type of `x`, could not infer type of `y`, could
+not infer return type of `add`), in reality 11 error messages are produced - too
+many to even fit in one terminal screen at my normal font size:
+
+![](img/too-many-errors-1.png)
+![](img/too-many-errors-2.png)
+
+This shows some logic will be needed to decide which error messages are
+important enough to emit and which can be omitted, as they have been covered by
+other error messages, whilst ensuring that no error is left "uncovered" with no
+error message referring to it (we want to avoid a situation where errors exist
+but no error message about them is emitted). Just like design of error messages,
+deciding which error messages to emit and which to omit is an art, not a science.
+
 ## Codegen
 Once we have finished type inference, we have successfully detected all semantic
 errors that could occur in the program, and are ready to generate an executable
