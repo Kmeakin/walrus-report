@@ -1295,7 +1295,64 @@ arrow is right associative: that is `(Int) -> (Bool) -> Int` is the same as
 ```
 
 #### Type inference
-TODO
+In C and Java, every variable must be annotated with its type, despite the fact
+that in nearly all cases the type of the variable can be automatically
+calculated by the compiler. A language with *type inference* is able to
+automatically infer the correct type of any expression or variable with only
+minimal type annotations from the user - although type annotations may be added
+anyway to make the program more readable or nudge the type inference algorithm
+in the correct direction.
+
+Consider writing a function that creats a greeting given a person's name. In
+Java, we must annotate both the variable `name` and the return type of the function:
+
+```java
+public String greet(String name) {
+    return "Hello, " + name;
+}
+```
+
+By contrast, in Walrus, there is enough information for the correct types to be
+deduced automatically:
+
+```rust
+fn greet(name) -> _ {
+    "Hello, " + name
+}
+```
+
+Even in languages with type inference, it is usually considered good practice to
+annotate the input and return types of global functions, to serve as a form of
+documentation to other readers and to provide better error messages when the
+function is used in a larger program:
+
+```rust
+fn greet(name: String) -> String {
+    "Hello, " + name
+}
+```
+
+In rare occasions there is not enough information to infer a single, unambigious
+type for each variable or expression:
+
+```rust
+fn main() -> _ {
+    let id = (x) => x;
+    id
+}
+```
+
+In this case, `id` should be of the type `forall a. (a) -> a`. However, since
+Walrus does not (yet) support polymorphism, there is no single *monotype* (a type
+without quantifiers) it can pick unambigiously. In this case, more information
+is required. Suppose we intend for `id` to be of type `(Int) -> Int`. Any
+one of
+
+* `let id: (Int) -> Int = (x) => x;`{.rust}
+* `let id = (x: Int) => x;`{.rust}
+* `fn main() -> (Int) -> Int {...}`{.rust}
+
+would be sufficient to constrain `id` to have a single monotype.
 
 #### Inhabitants
 When discussing properties of certain types, it can be useful to consider the
@@ -1307,8 +1364,8 @@ types can be computed recursively: for tuples and structs, it is the product of
 the number of inhabitants of each fields, and for enums, it is the sum of the
 number of inhabitants of each variant.
 
-Of particular interest are types with exactly 1 inhabitant (a *unit-type*), and
-types with 0 inhabitants (an *uninhabited* or *empty-type*).
+Of particular interest are types with exactly 1 inhabitant (a *enit type*), and
+types with 0 inhabitants (an *uninhabited* or *empty type*).
 
 ##### The unit type {#sec:reference:types:unit}
 
