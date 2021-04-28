@@ -3,6 +3,9 @@
 ## The pipeline
 TODO: a nice diagram of information flow
 
+## Command-line interface
+TODO
+
 ## Lexing
 Before the text of a program can be parsed into a parse tree, it must be first
 split into a flat stream of *tokens*: chunks of text with a label classifying
@@ -696,6 +699,9 @@ traverses the HIR which are difficult to express as equality constraints:
 * Field expressions must not attempt to access nonexistant fields
 * Patterns in let statements, function parameters or lambda parameters must be
   *irrefutable* (see @sec:reference:irrefutable-patterns)
+
+## Error reporting
+TODO
 
 ## Codegen
 Once we have finished type inference, we have successfully detected all semantic
@@ -1460,5 +1466,16 @@ match.end:                                        ; preds = %match.case0.then, %
 }
 ```
 
-## Command-line interface
-TODO
+
+
+
+
+## Native code generation
+Now that we have the LLVM IR representation of the program, we can write it to a
+file and pass it to `Clang` (the C compiler developed in tandem with LLVM) along
+with `walrus_builtins.c`. For example, compiling the file `hello_world.walrus`
+will result in the invocation of `clang hello_world.walrus walrus_builtins.c -o
+hello_world`. This will statically link the LLVM IR file with `walrus_builtins.c`
+- any references to builtin functions in the LLVM IR will be resolved to point
+  to their C implementations. At last, a native executable has been produced and
+  can be run!
