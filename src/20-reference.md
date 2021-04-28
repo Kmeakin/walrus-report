@@ -147,6 +147,7 @@ let x = 5;
 let x = x + 1; // x is now 6, old variable is inaccessible
 ```
 
+### Mutation
 All local variables are *immutable* by default. To mutate a variable, mutability
 must be explicitly requested using the `mut` keyword: 
 ```rust
@@ -159,6 +160,7 @@ code in a functional style where new variables are produced instead of updating
 existing variables. However, the option of mutability is still available if an
 algorithm cannot easily be expressed with immutability.
 
+### Initalisation
 Local variables must be declared and initialised in the same let-statement. It
 is not possible to declare a variable without initialising it and then initialise
 it by mutating it later. For a rationale for this design, consider the following
@@ -217,9 +219,6 @@ As in standard mathematical notation, parentheses bind tighter than any
 operators, and so can be used to override the normal operator precedence:
 `(1 + 2) * (3 - 4)`{.rust}
 
-### L-values {#sec:reference:l-values}
-TODO
-
 Unlike languages such as Haskell or Ocaml, the set of operators in Walrus is
 fixed: new operators cannot be defined by the user. This simplifies parsing, but
 can make expressions which could otherwise be expressed in specialised notation
@@ -230,7 +229,28 @@ Haskell or Ocaml, where an operator can be treated as a variable by enclosing it
 in parentheses: `(+)`{.haskell} and passed to other functions: `foldr (+) 0
 xs`{.haskell}. The set of types to which each operator can be applied is also
 fixed: the user cannot provide their own implementation of an operator for other
-types. These two limitations are due to a current shortcoming in Walrus' type system, which will be explained in depth in @sec:reference:types.
+types. These two limitations are due to a current shortcoming in Walrus' type
+system, which will be explained in depth in @sec:reference:types.
+
+## Lvalues {#sec:reference:lvalues}
+Although the assignment operator, `=` can syntactically acccept an expression on
+its left-hand side, semantically it only makes sense to mutate an expression
+that refers to a location in memory: it would not make sense to attempt to
+mutate a literal expression, or a temporary result of an intermediate
+expression. Values that can be mutated are called *lvalues*, and all other
+values are called *rvalues*, for *left-hand side values* and *right-hand side
+values* respectively ^[This terminology is inherited from C. C++ extends the
+classification of values by adding more exotic categories such as *glvalues*,
+*prvalues* and *xvalues*. See
+https://en.cppreference.com/w/cpp/language/value_category for more information]
+Lvalues in Walrus are defined inductively as:
+
+* A variable expression is an lvalue
+* A parenthesised lvalue expression is an lvalue
+* A field-expression, where the expression to the left of the `.` is an lvalue,
+  is an lvalue
+
+Intuitively, this means that only variables and struct fields can be mutated.
 
 ## Functions and Closures {#sec:reference:functions}
 Functions are the primary unit of abstraction in Walrus, allowing complex
