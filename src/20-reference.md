@@ -418,7 +418,53 @@ fn main() {
 ```
 
 ## Blocks {#sec:reference:blocks}
-TODO
+A block expression allows sequencing statements. In this respect they are the
+same as *compound-statements* from C or Java, except that they evaluate to a
+final value. A statement is either a let-statement, which was described earlier
+in @sec:ref:variables, or an *expression-statement*, which is simply a normal
+expression terminated by a semicolon - this has the effect of evaluating the
+expression for its side-effects and discarding the return value. The return
+value of a bock expression is the return value of its trailing expression, or
+else `()` if no trailing expression is present. Block expressions also follow
+the rules of *lexical-scoping*: each variable defined within a block expression
+shadows and previously defined variables of the same name, and go out of scope
+at the end of the innermost block expression in which they were defined:
+
+```rust
+fn main() {
+    let x = {
+        let y = 5;
+        print("y is: " + int_to_string(y));
+        y
+    };
+    print("x is: " + int_to_string(x));
+    x
+}
+```
+
+Note that if the expression in an expression-statement ends with a `}` (that is,
+it is an if-expression, loop-expression, or block-expression), the trailing
+semicolon can be discarded. Thus
+
+```rust
+fn is_zero(x: Int) -> bool {
+    if x == 0 {
+        print("x is indeed zero");
+    }
+    x == 0
+}
+```
+
+is the same as
+
+```rust
+fn is_zero(x: Int) -> bool {
+    if x == 0 {
+        print("x is indeed zero");
+    };
+    x == 0
+}
+```
 
 ## Builtin Functions {#sec:reference:builtin-functions}
 Walrus has a small collection of built-in functions provided by the compiler:
