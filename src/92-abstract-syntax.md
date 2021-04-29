@@ -10,15 +10,16 @@ def & ::= & fn     & \\
     &     & struct & \\
     &     & enum   & \\
 \\
-fn & ::= & \texttt{fn} \ var (param_0, \dots, param_n) \to t \ \texttt{do} \ e & \text{function definition} \\
-   &   | & \texttt{fn} \ var (param_0, \dots, param_n)       \ \texttt{do} \ e &                            \\
+fn & ::= & \texttt{fn} \ v (param_0, \dots, param_n) \to t \ \texttt{do} \ e & \text{function definition} \\
+   &   | & \texttt{fn} \ v (param_0, \dots, param_n)       \ \texttt{do} \ e &                            \\
 \\
 struct & ::= & \texttt{struct} \ v \ \{ v_0: t_0, \dots, v_n: t_n \} & \text{struct definition}
 \\
-enum & ::= & \texttt{enum} \ v \ \{ 
-    v'_0 \ \{ v_0: t_0, \dots, v_n: t_n \},
-    \dots,
-    v'_n \ \{ v_0: t_0, \dots, v_n: t_n \}
+enum & ::= & \texttt{enum} \ v \ 
+\{ 
+v'_0 \ \{ v_0^0: t_0^0, \dots, v_0^{n_0}: t_0^{n_0} \},
+\dots,
+v'_n \ \{ v_n^0: t_n^0, \dots, v_n^{n_n}: t_n^{n_n} \}
 \} & \text{enum definition}
 \\
 param & ::= & p: t & \text{function parameter} \\
@@ -31,11 +32,11 @@ lit & ::= & bool   & \text{Bool literal}   \\
     &   | & string & \text{String literal} \\
 \\
 expr, e & ::= & lit                                                                 & \text{literal expression} \\
-  &   | & var                                                                       & \text{variable expression} \\
+  &   | & v & \text{variable expression} \\
   &   | & (e_0, \dots, e_n)                                                         & \text{tuple expression} \\
-  &   | & var \ \{ p_0: e_0, \dots, p_n: e_n \}                                     & \text{struct expression} \\
-  &   | & var::var' \ \{ p_0: e_0, \dots, p_n: e_n \}                               & \text{enum expression} \\
-  &   | & e.var                                                                     & \text{struct field expression} \\
+  &   | & v \ \{ v_0: e_0, \dots, v_n: e_n \}                                     & \text{struct expression} \\
+  &   | & v::v' \ \{ p_0: v_0, \dots, v_n: e_n \}                               & \text{enum expression} \\
+  &   | & e.v                                                                       & \text{struct field expression} \\
   &   | & e.n                                                                       & \text{tuple field expression} \\
   &   | & \circledast \ e                                                           & \text{unary operator expression} \\
   &   | & e_1 \circledast e_2                                                       & \text{binary operator expression} \\
@@ -52,17 +53,17 @@ expr, e & ::= & lit                                                             
   &   | & \{ stmt_0, \dots, stmt_n \}                                                 &  \\
 \\
 stmt & ::= & e                             & \text{expression statement}   \\
-     &   | & \texttt{let} \ var: t = e     & \text{let statement}          \\
-     &   | & \texttt{let} \ var = e        &                               \\
+     &   | & \texttt{let} \ v: t = e     & \text{let statement}          \\
+     &   | & \texttt{let} \ v = e        &                               \\
 \\
 pat, p & ::= & lit                                            & \text{literal pattern}    \\
-  &   | & var                                                 & \text{variable pattern}   \\
+  &   | & v                                                 & \text{variable pattern}   \\
   &   | & \_                                                  & \text{ignored pattern}    \\
   &   | & (p_0, \dots, p_n)                                   & \text{tuple pattern}      \\
   &   | & var \ \{ var_0: p_0, \dots, var_n: p_n \}           & \text{struct pattern}     \\
   &   | & var :: var' \ \{ var_0: p_0, \dots, var_n: p_n \}   & \text{enum pattern}       \\
 \\
-type, t & ::= & var                 & \text{variable type}      \\
+type, t & ::= & v                 & \text{variable type}      \\
   &   | & \_                        & \text{placeholder type}   \\
   &   | & (t_0, \dots, t_n)         & \text{tuple type}         \\
   &   | & (t_0, \dots, t_n) \to t   & \text{function type}      \\

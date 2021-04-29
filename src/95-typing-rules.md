@@ -6,9 +6,8 @@
      &   | & \textbf{Char}                      &                        \\
      &   | & \textbf{String}                    &                        \\
      &   | & \textbf{Never}                     &                        \\
-     &   | & \textbf{struct}(v \ \{ v_0: t_0, \dots, v_n: t_n \})  & \text{struct type}     \\
-     &   | & \textbf{enum}(v \ \{ v'_0 \ \{ v_0: t_0, \dots, v_n: t_n \}, \dots, v'_n \ \{ v_0: t_0, \dots, v_n: t_n \} \} ) &
-     \text{enum type}       \\
+     &   | & v \ \{ v_0: \tau_0, \dots, v_n: \tau_n \}  & \text{struct type} \\
+     &   | & v \ \{ v'_0 \ \{ v_0^0: \tau_0^0, \dots, v_0^{n_0}: \tau_0^{n_0} \}, \dots, v'_n \ \{ v_n^0: \tau_n^0, \dots, v_n^{n_n}: \tau_n^{n_n} \} \} & \text{enum type}       \\
      &   | & \alpha                             & \text{type variable}   \\
      &   | & (\tau_0, \dots, \tau_n)            & \text{tuple type}      \\
      &   | & (\tau_0, \dots, \tau_n) \to \tau   & \text{function type}   \\
@@ -55,31 +54,50 @@ instance of the expression
 \begin{mathpar}
 \inferrule*[right=BoolLit]
 { }
-{\Gamma \vdash b : \textbf{Bool}} 
+{\Gamma \vdash bool : \textbf{Bool}} 
 
 \inferrule*[right=IntLit]
 { }
-{\Gamma \vdash i: \textbf{Int}} 
+{\Gamma \vdash int: \textbf{Int}} 
 
 \inferrule*[right=FloatLit]
 { }
-{\Gamma \vdash f: \textbf{Float}} 
+{\Gamma \vdash float: \textbf{Float}} 
 
 \inferrule*[right=CharLit]
 { }
-{\Gamma \vdash c: \textbf{Char}} 
+{\Gamma \vdash char: \textbf{Char}} 
 
 \inferrule*[right=StringLit]
 { }
-{\Gamma \vdash s: \textbf{String}} 
+{\Gamma \vdash string: \textbf{String}} 
+
+\inferrule*[right=VarExpr]
+{v: \tau \in \Gamma}
+{\Gamma \vdash v: \tau} 
 
 \inferrule*[right=VarExpr]
 {v: \tau \in \Gamma}
 {\Gamma \vdash v: \tau} 
 
 \inferrule*[right=TupleExpr]
-{\Gamma \vdash e_{0} : \tau_{0} \dots \Gamma \vdash e_{n} : \tau_{n}}
+{\Gamma \vdash e_{0} : \tau_{0}\\
+\dots\\
+\Gamma \vdash e_{n} : \tau_{n}}
 {\Gamma \vdash (e_{0}, \dots, e_{n}) : (\tau_{0}, \dots, \tau_{n})}
+
+\inferrule*[right=StructExpr]
+{v: v \ \{ v_0: \tau_0, \dots, v_n: \tau_n \} \in \Gamma\\
+\Gamma \vdash e_0: \tau_0 \\ \dots \\ \Gamma \vdash e_n: \tau_n
+}
+{\Gamma \vdash v \ \{ v_0: e_0, \dots, v_n: e_n \}: v \ \{ v_0: \tau_0, \dots, v_n: \tau_n \}}
+
+\inferrule*[right=EnumExpr]
+{v: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \dots \} \in \Gamma\\
+\Gamma \vdash e_0: \tau_k^0 \\ \dots \\ \Gamma \vdash e_n: \tau_k^{n_k}
+}
+{\Gamma \vdash v::v'_k \ \{ v_k^0: e_0, \dots, v_k^n: e_{n_k} \}: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \dots \}}
+
 
 \inferrule*[right=LambdaExpr] 
 {\Gamma \vdash param_{0} : \tau_{0} \dots \Gamma \vdash param_{n} : \tau_{n} \\
