@@ -1,5 +1,6 @@
 ## Typing rules {#sec:appendix:type-rules}
-TODO: finish
+If the premise of a rule refers to "occurs", this rule only applies to that
+instance of the expression
 
 \begin{mathpar}
 \inferrule*[right=BoolLit]
@@ -101,5 +102,3 @@ TODO: finish
 {\Gamma \vdash v : (\tau_{0}, \dots, \tau_{n}) \to \tau'}
 \end{mathpar}
 
-If the premise of a rule refers to "occurs", this rule only applies to that
-instance of the expression

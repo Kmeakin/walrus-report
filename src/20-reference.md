@@ -897,7 +897,7 @@ let float = IntOrFloat::Float{y: 5.0},
 Unlike structs, the fields of an enum cannot be accessed simply by accessing the
 individual fields, since which variant the enum occupies is only known at
 runtime. Instead, the enum must be pattern-matched over ^[See
-@sec:reference:pattern_matching for more information on pattern-matching]:
+@sec:reference:pattern-matching for more information on pattern-matching]:
 
 ```rust
 fn print_int_or_float(it: IntOrFloat) {
