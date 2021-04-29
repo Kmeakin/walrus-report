@@ -51,11 +51,15 @@ expr, e & ::= & lit                                                             
   &   | & \texttt{return} \ e                                                         & \text{return expression} \\
   &   | & \texttt{break} \ e                                                          & \text{break expression} \\
   &   | & \texttt{continue}                                                           & \text{continue expression} \\
- 
 \\
-stmt & ::= & e                           & \text{expression statement}   \\
-     &   | & \texttt{let} \ v: t = e     & \text{let statement}          \\
-     &   | & \texttt{let} \ v = e        &                               \\
+op, \circledast & ::= & +, -, !                               & \text{Unary operators}  \\
+                &   | & +, -, *, /,                           & \text{Binary operators} \\
+                &   | & \equiv, \nequiv, <, \leq, >, \geq,    &                         \\
+                &   | & \land, \lor                           &                         \\
+\\
+stmt & ::= & e;                           & \text{expression statement}   \\
+     &   | & \texttt{let} \ v: t = e;     & \text{let statement}          \\
+     &   | & \texttt{let} \ v = e;        &                               \\
 \\
 pat, p & ::= & lit                                            & \text{literal pattern}    \\
   &   | & v                                                   & \text{variable pattern}   \\
