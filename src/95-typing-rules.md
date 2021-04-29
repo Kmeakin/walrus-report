@@ -279,7 +279,7 @@ v: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \
 {
 \Gamma_0 \vdash stmt_0: \tau_0, \Gamma_1 \\
 \dots \\
-\Gamma_n \vdash stmt_n: \tau_n, Gamma_{n+1} \\
+\Gamma_n \vdash stmt_n: \tau_n, \Gamma_{n+1} \\
 \Gamma_{n+1} \vdash e: \tau \\
 }
 {\Gamma_0 \vdash \{ stmt_{0}, \dots, stmt_{n}, e \}: \tau }
@@ -314,12 +314,12 @@ v: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \
 \inferrule*[right=MatchExpr] 
 {
 \Gamma \vdash e: \tau \\
-\Gamma \vdash p_0: \tau \\
+\Gamma \vdash p_0: \tau, \Gamma_0 \\
 \dots \\
-\Gamma \vdash p_n: \tau \\
-\Gamma \vdash e_0: \tau' \\
+\Gamma \vdash p_n: \tau, \Gamma_n \\
+\Gamma_0 \vdash e_0: \tau' \\
 \dots \\
-\Gamma \vdash e_n: \tau' \\
+\Gamma_n \vdash e_n: \tau' \\
 }
 {\Gamma \vdash \texttt{match} \ e \ \{ p_0 \Rightarrow e_0, \dots, p_n \Rightarrow e_n \}: \tau'}
 
