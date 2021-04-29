@@ -61,8 +61,8 @@ pat, p & ::= & lit                                            & \text{literal pa
   &   | & v                                                   & \text{variable pattern}   \\
   &   | & \_                                                  & \text{ignored pattern}    \\
   &   | & (p_0, \dots, p_n)                                   & \text{tuple pattern}      \\
-  &   | & var \ \{ var_0: p_0, \dots, var_n: p_n \}           & \text{struct pattern}     \\
-  &   | & var :: var' \ \{ var_0: p_0, \dots, var_n: p_n \}   & \text{enum pattern}       \\
+  &   | & v \ \{ v_0: p_0, \dots, v_n: p_n \}           & \text{struct pattern}     \\
+  &   | & v :: v' \ \{ v_0: p_0, \dots, v_n: p_n \}   & \text{enum pattern}       \\
 \\
 type, t & ::= & v                   & \text{variable type}      \\
   &   | & \_                        & \text{placeholder type}   \\

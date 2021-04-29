@@ -1,6 +1,6 @@
 ## Type inference {#sec:appendix:type-rules}
 
-### Type values
+### Evaluating types
 \begin{longtable}{RRLL}
 \tau & ::= & \textbf{Bool}                      & \text{primitive types} \\
      &   | & \textbf{Int}                       &                        \\
@@ -20,7 +20,7 @@
        &   | & \Gamma, var : \tau   & \text{extended environment} \\
 \end{longtable}
 
-\begin{mathpar}
+\begin{mathparpagebreakable}
 \inferrule*[right=VarType]
 {v: \tau \in \Gamma}
 {\Gamma \vdash \llbracket v \rrbracket = \tau} 
@@ -46,15 +46,25 @@
 {\Gamma \vdash \llbracket (t_0, \dots, t_n) \to t \rrbracket = (\tau_0, \dots,
 \tau_n) \to \tau} 
 \
-\end{mathpar}
+\end{mathparpagebreakable}
 
 TODO: put this somewhere else: If the premise of a rule refers to "occurs", this rule only applies to that
 instance of the expression
 
 ### Definitions
-TODO
+\begin{mathparpagebreakable}
+\inferrule*[right=FnDef] 
+{
+ \Gamma, param_{0}: \tau_{0} \vdash e : \tau' \\
+ \Gamma \vdash t : \tau' \\
+ \Gamma \vdash param_{0} : \tau_{0} \ \dots \ \Gamma \vdash param_{n} : \tau_{n} \\
+ \text{There is a function definition of the form $\texttt{fn} \ v(param_{0}, \dots,
+ param_{n}) \to t \  \{ e \} $} \\
+ }
+{\Gamma \vdash v : (\tau_{0}, \dots, \tau_{n}) \to \tau'}
+\end{mathparpagebreakable}
 
-### Expressions
+### Literals
 \begin{mathparpagebreakable}
 \inferrule*[right=BoolLit]
 { }
@@ -75,7 +85,10 @@ TODO
 \inferrule*[right=StringLit]
 { }
 {\Gamma \vdash string: \textbf{String}} 
+\end{mathparpagebreakable}
 
+### Expressions
+\begin{mathparpagebreakable}
 \inferrule*[right=VarExpr]
 {v: \tau \in \Gamma}
 {\Gamma \vdash v: \tau} 
@@ -260,15 +273,56 @@ v: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \
 \text{\texttt{return} $e$ occurs in a function or $\lambda$ expression} \\
 }
 {\Gamma \vdash \texttt{return} \ e : \textbf{Never}}
-
-\inferrule*[right=FnDef] 
-{
- \Gamma, param_{0}: \tau_{0} \vdash e : \tau' \\
- \Gamma \vdash t : \tau' \\
- \Gamma \vdash param_{0} : \tau_{0} \ \dots \ \Gamma \vdash param_{n} : \tau_{n} \\
- \text{There is a function definition of the form $\texttt{fn} \ v(param_{0}, \dots,
- param_{n}) \to t \  \{ e \} $} \\
- }
-{\Gamma \vdash v : (\tau_{0}, \dots, \tau_{n}) \to \tau'}
 \end{mathparpagebreakable}
 
+### Patterns
+\begin{mathparpagebreakable}
+\inferrule*[right=VarPat]
+{ }
+{
+\Gamma \vdash v: \alpha \\ 
+\Gamma \cup \{ v: \alpha \} 
+} 
+
+\inferrule*[right=IgnoredPat]
+{ }
+{\Gamma \vdash \_: \alpha} 
+
+\inferrule*[right=TuplePat]
+{ 
+\Gamma_0 \vdash p_0: \tau_0, \Gamma_1 \\
+\Gamma_1 \vdash p_1: \tau_1, \Gamma_2 \\
+\dots \\
+\Gamma_n \vdash p_n: \tau_n, \Gamma_{n+1} \\
+}
+{
+\Gamma_0 \vdash (p_0, \dots, p_n): (\tau_0, \dots, \tau_n) \\
+\Gamma_{n+1}
+} 
+
+\inferrule*[right=StructPat]
+{ 
+v: v \ \{ v_0: \tau_0, \dots, v_n: \tau_n \} \in \Gamma_0\\
+\Gamma_0 \vdash p_0: \tau_0, \Gamma_1 \\
+\Gamma_1 \vdash p_1: \tau_1, \Gamma_2 \\
+\dots \\
+\Gamma_n \vdash p_n: \tau_n, \Gamma_{n+1} \\
+}
+{
+\Gamma_0 \vdash v \ \{ v_0: p_0, \dots, v_n: p_n \}: v \ \{ v_0: \tau_0, \dots, v_n: \tau_n \} \\
+\Gamma_{n+1}
+} 
+
+\inferrule*[right=EnumPat]
+{ 
+v: v \{ \dots, v_k' \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \dots \} \in \Gamma_0\\
+\Gamma_0 \vdash p_0: \tau_0, \Gamma_1 \\
+\Gamma_1 \vdash p_1: \tau_1, \Gamma_2 \\
+\dots \\
+\Gamma_{n_k} \vdash p_{n_k}: \tau_{n_k}, \Gamma_{n_k+1} \\
+}
+{
+\Gamma_0 \vdash v \ \{ v_k^0: p_k^0, \dots, v_k^{n_k}: p_k^{n_k} \}: v \{ \dots, v_k' \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \dots \} \\
+\Gamma_{n_k+1}
+} 
+\end{mathparpagebreakable}
