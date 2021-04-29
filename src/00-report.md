@@ -2,6 +2,7 @@
 geometry: margin=1cm
 monofont: 'Fira Mono'
 header-includes: |
+    \usepackage{textcomp}
     \usepackage{longtable}
     \usepackage{stmaryrd}
     \usepackage{syntax}

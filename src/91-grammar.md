@@ -1,9 +1,20 @@
 ## Grammar {#sec:appendix:grammar}
+This is an Extended Backus-Naur Form presentation of the surface sytax of
+Walrus. Note that it does not encode precedence or associativity. This notation
+is interpreted according to the following rules:
+
+* Characters appearing in `monospace` font represent themselves
+* Words appearing $\langle \textit{between angle brackets} \rangle$ represent
+  either the name of a non-terminal, or a plain English description of their
+  content.
+* Concatenation is represented by juxtaposition: placing EBNF terms in order
+* Alternation is represented by the `|` binary operator
+* The postfix `?`, `*` and `+` operators represent 0-or-1 reptitions, 0-or-more
+  repititions, or 1-or-more repititons, respectively.
+* The `*` and `+` operators may be preceded by a seperator to represent a separated
+  list of 0-or-more repitions or 1-or-more repitions, respectively.
 
 \setlength{\grammarindent}{12em}
-
-TODO: explain how to interpret
-https://www.w3.org/TR/xml/#sec-notation
 
 ### Trivia
 Whitespace and comments are classified as *trivia*. All trivia tokens are

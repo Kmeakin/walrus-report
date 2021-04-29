@@ -1,5 +1,4 @@
 ## Type inference {#sec:appendix:type-rules}
-
 We define two relations. First, the relation $\llbracket t \rrbracket = \tau$
 maps the abstract syntax of a HIR type to a representation of the type after all
 named types have been resolved to either builtin types or structs/enums. The
