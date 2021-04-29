@@ -59,8 +59,8 @@ Integrated Development Environments (IDEs). For example, `rust-analyzer`,
 provides IDE features such as code completion, error highlighting and code
 navigation. To do this it must replicate the front and middle ends of the
 traditional batch `rustc` compiler. However, `rust-analyzer` runs in the
-background and responds to queries from the IDE; it would be too unresponsible
-to run the batch processing pipeline over the whole codebase for every queriy.
+background and responds to queries from the IDE; it would be too unresponsive to
+run the batch processing pipeline over the whole codebase for every query.
 Instead, queries are cached and the intermediate representation is carefully
 designed so that small changes to the program text do not invalidate the whole
 cache.
@@ -72,16 +72,15 @@ resources. I therefore decided that I would stick with the simpler design for my
 first attempt at compiler construction.
 
 ## Command line interface
-The command line interface parses command line arguments and orchestrates the
-passing of data to each pass. The programmer passes in the filename of the
-program and specifies the amount of processing to perform on the program: 
+The command line interface parses command line arguments (courtesy of the `clap`
+library) and orchestrates the passing of data to each pass. The programmer
+passes in the filename of the program and specifies the amount of processing to
+perform on the program.  The programmer can also specify an optimisation level
+(`-O0` to `-O3`) as in standard C compilers.
 
 * **check**: Check the program from errors, but do not compile it
 * **build**: Compile the program into an executable, but do not run it
 * **run**: Compile the program into an executable and run it
-
-The programmer can also specify an optimisation level (`-O0` to `-O3`) as in
-standard C compilers.
 
 The command line interface terminates the compilation pipeline before LLVM IR
 generation if any fatal errors were produced by the midend.
