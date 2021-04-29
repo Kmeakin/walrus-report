@@ -1256,7 +1256,10 @@ Javascript "untyped", but this is a misnomer: these languages still have rules
 about what is and is not a valid operation on certain classes of values - the
 checking that the program conforms to these rules is simply deferred to runtime.
 
-TODO: why static is better than dynamic
+The primary design aim of Walrus is that programs should be safe, and should
+detect as many errors as possible at compile time rather than at runtime.
+Therefore there was never any question that Walrus would have a static, not
+dynamic type system.
 
 ### The Walrus Type System {#sec:reference:type-system}
 The Walrus type system is a simplification of the Rust type system, which is
