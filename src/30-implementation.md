@@ -768,7 +768,8 @@ substitution, and remove the first constraint, $\tau_0 = () \to \tau_1$. Since
 the left-hand side of the constraint is a type-variable, we add $\tau_0 = ()
 \to \tau_1$ to the substitution, and replace all occurences of
 $\tau_0$ in the remaining constraints by $() \to \tau_1$ (there are none, so the
-constraint set remains unchanged). TODO: repeat this to conclusion in the appendix?
+constraint set remains unchanged). Repeating this for all the constraints in the
+set eventually gives this substitution: TODO.
 
 The Walrus type-checker conceptually performs the same steps, however it
 interleaves **step 2** and **step 3** by performing unification on demand. This
