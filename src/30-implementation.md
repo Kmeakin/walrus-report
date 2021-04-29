@@ -702,9 +702,8 @@ variable:
 \draw[->] (CallExpr) -- (IntLit1);
 \end{tikzpicture}
 
-TODO: explain how to read the type rules
-
-Then we traverse the HIR to produce a set of equality constraints:
+Then we traverse the HIR to produce a set of equality constraints. The type
+rules used are provided in @sec:appendix:type-rules.
 
 | Constraint                            | Rule applied
 |---------------------------------------|--------------
