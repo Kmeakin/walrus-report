@@ -6,8 +6,9 @@
      &   | & \textbf{Char}                      &                        \\
      &   | & \textbf{String}                    &                        \\
      &   | & \textbf{Never}                     &                        \\
-     &   | & \textbf{struct}(var)               & \text{struct type}     \\
-     &   | & \textbf{enum}(var)                 & \text{enum type}       \\
+     &   | & \textbf{struct}(v \ \{ v_0: t_0, \dots, v_n: t_n \})  & \text{struct type}     \\
+     &   | & \textbf{enum}(v \ \{ v'_0 \ \{ v_0: t_0, \dots, v_n: t_n \}, \dots, v'_n \ \{ v_0: t_0, \dots, v_n: t_n \} \} ) &
+     \text{enum type}       \\
      &   | & \alpha                             & \text{type variable}   \\
      &   | & (\tau_0, \dots, \tau_n)            & \text{tuple type}      \\
      &   | & (\tau_0, \dots, \tau_n) \to \tau   & \text{function type}   \\

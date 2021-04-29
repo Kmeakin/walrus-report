@@ -13,7 +13,7 @@ def & ::= & fn     & \\
 fn & ::= & \texttt{fn} \ var (param_0, \dots, param_n) \to t \ \texttt{do} \ e & \text{function definition} \\
    &   | & \texttt{fn} \ var (param_0, \dots, param_n)       \ \texttt{do} \ e &                            \\
 \\
-struct & ::= & \texttt{struct} \ var \ \{ var_0: t_0, \dots, var_n: t_n \} & \text{struct definition}
+struct & ::= & \texttt{struct} \ v \ \{ v_0: t_0, \dots, v_n: t_n \} & \text{struct definition}
 \\
 enum & ::= & \texttt{enum} \ v \ \{ 
     v'_0 \ \{ v_0: t_0, \dots, v_n: t_n \},
