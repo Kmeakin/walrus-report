@@ -210,10 +210,10 @@ v: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \
 
 \inferrule*[right=LambdaExpr] 
 {
-\Gamma \vdash param_0: \tau_0 \\
+\Gamma_0 \vdash param_0: \tau_0, \Gamma_1 \\
 \dots \\
-\Gamma \vdash param_n: \tau_n \\
-\Gamma \vdash e: \tau \\ 
+\Gamma_n \vdash param_n: \tau_n, \Gamma_{n+1} \\
+\Gamma_{n+1} \vdash e: \tau \\ 
 }
 {\Gamma \vdash \lambda(param_0, \dots, param_n) \Rightarrow e : (\tau_0, \dots, \tau_n) \to \tau}
 
@@ -311,7 +311,6 @@ v: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \
 \inferrule*[right=TuplePat]
 { 
 \Gamma_0 \vdash p_0: \tau_0, \Gamma_1 \\
-\Gamma_1 \vdash p_1: \tau_1, \Gamma_2 \\
 \dots \\
 \Gamma_n \vdash p_n: \tau_n, \Gamma_{n+1} \\
 }
@@ -324,7 +323,6 @@ v: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \
 { 
 v: v \ \{ v_0: \tau_0, \dots, v_n: \tau_n \} \in \Gamma_0\\
 \Gamma_0 \vdash p_0: \tau_0, \Gamma_1 \\
-\Gamma_1 \vdash p_1: \tau_1, \Gamma_2 \\
 \dots \\
 \Gamma_n \vdash p_n: \tau_n, \Gamma_{n+1} \\
 }
@@ -335,9 +333,8 @@ v: v \ \{ v_0: \tau_0, \dots, v_n: \tau_n \} \in \Gamma_0\\
 
 \inferrule*[right=EnumPat]
 { 
-v: v \{ \dots, v_k' \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \dots \} \in \Gamma_0\\
+v: v \ \{ \dots, v_k' \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \dots \} \in \Gamma_0\\
 \Gamma_0 \vdash p_0: \tau_0, \Gamma_1 \\
-\Gamma_1 \vdash p_1: \tau_1, \Gamma_2 \\
 \dots \\
 \Gamma_{n_k} \vdash p_{n_k}: \tau_{n_k}, \Gamma_{n_k+1} \\
 }
