@@ -1,4 +1,53 @@
-## Typing rules {#sec:appendix:type-rules}
+## Type inference {#sec:appendix:type-rules}
+\begin{longtable}{RRLL}
+\tau & ::= & \textbf{Bool}                      & \text{primitive types} \\
+     &   | & \textbf{Int}                       &                        \\
+     &   | & \textbf{Float}                     &                        \\
+     &   | & \textbf{Char}                      &                        \\
+     &   | & \textbf{String}                    &                        \\
+     &   | & \textbf{Never}                     &                        \\
+     &   | & \textbf{struct}(var)               & \text{struct type}     \\
+     &   | & \textbf{enum}(var)                 & \text{enum type}       \\
+     &   | & \alpha                             & \text{type variable}   \\
+     &   | & (\tau_0, \dots, \tau_n)            & \text{tuple type}      \\
+     &   | & (\tau_0, \dots, \tau_n) \to \tau   & \text{function type}   \\
+\\
+\Gamma & ::= & \{
+\texttt{Bool}: \textbf{Bool}, \dots, \texttt{exit}: (\textbf{Int}) \to \textbf{Never}
+\}            & \text{initial environment}    \\
+       &   | & \Gamma, var : \tau   & \text{extended environment} \\
+\end{longtable}
+
+Resolve HIR types, $t$, to their type value, $\tau$:
+
+\begin{mathpar}
+\inferrule*[right=VarType]
+{v: \tau \in \Gamma}
+{\Gamma \vdash \llbracket v \rrbracket = \tau} 
+
+\inferrule*[right=PlaceholderType]
+{ }
+{\Gamma \vdash \llbracket \_ \rrbracket = \alpha} 
+\
+
+\inferrule*[right=TupleType]
+{\Gamma \vdash \llbracket t_0 \rrbracket = \tau_0  \\
+\dots  \\
+\Gamma \vdash \llbracket t_n \rrbracket = \tau_n \\
+}
+{\Gamma \vdash \llbracket (t_0, \dots, t_n) \rrbracket = (\tau_0, \dots, \tau_n)} 
+
+\inferrule*[right=FnType]
+{\Gamma \vdash \llbracket t_0 \rrbracket = \tau_0  \\
+\dots  \\
+\Gamma \vdash \llbracket t_n \rrbracket = \tau_n \\
+\Gamma \vdash \llbracket t \rrbracket = \tau \\
+}
+{\Gamma \vdash \llbracket (t_0, \dots, t_n) \to t \rrbracket = (\tau_0, \dots,
+\tau_n) \to \tau} 
+\
+\end{mathpar}
+
 If the premise of a rule refers to "occurs", this rule only applies to that
 instance of the expression
 

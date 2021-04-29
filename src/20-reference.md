@@ -491,15 +491,15 @@ Walrus has a small collection of built-in functions provided by the compiler:
 
 |Name             |Type                 |Description                      |
 |-----------------|---------------------|---------------------------------|
-|`read_line`      | `() -> String`      | Read a line from standard-input |
 |`print`          | `(String) -> ()`    | Print to standard-output        |
 |`print_error`    | `(String) -> ()`    | Print to standard-error         |
+|`read_line`      | `() -> String`      | Read a line from standard-input |
 |`string_length`  | `(String) -> Int`   | Get the length of a `String`    |
 |`bool_to_string` | `(Bool) -> String`  | Convert a `Bool` to a `String`  |
 |`int_to_string`  | `(Int) -> String`   | Convert an `Int` to a `String`  |
 |`float_to_string`| `(Float) -> String` | Convert a `Float` to a `String` |
 |`char_to_string` | `(Char) -> String`  | Convert a `Char` to a `String`  |
-|`exit`           | `(Int) -> String`   | Immediately exit the program, returning the status to the shell |
+|`exit`           | `(Int) -> Never`    | Immediately exit the program, returning the status to the shell |
 
 These functions are implicitly in global scope, even though they are not defined
 anywhere. Unlike user-defined functions, they *can* be shadowed.
