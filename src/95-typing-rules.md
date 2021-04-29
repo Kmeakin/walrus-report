@@ -64,6 +64,26 @@ instance of the expression
 {\Gamma \vdash v : (\tau_{0}, \dots, \tau_{n}) \to \tau'}
 \end{mathparpagebreakable}
 
+### Parameters
+\begin{mathparpagebreakable}
+\inferrule*[right=AnnotatedParam] 
+{
+\Gamma \vdash p: \tau, \Gamma' \\
+\llbracket t \rrbracket = \tau \\
+}
+{
+\Gamma \vdash p: \tau \\
+\Gamma'
+}
+
+\inferrule*[right=Param] 
+{\Gamma \vdash p: \tau, \Gamma'}
+{
+\Gamma \vdash (p : t): \tau \\
+\Gamma'
+}
+\end{mathparpagebreakable}
+
 ### Literals
 \begin{mathparpagebreakable}
 \inferrule*[right=BoolLit]
