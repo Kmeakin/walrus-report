@@ -1,5 +1,15 @@
 ## Type inference {#sec:appendix:type-rules}
 
+We define two relations. First, the relation $\llbracket t \rrbracket = \tau$
+maps the abstract syntax of a HIR type to a representation of the type after all
+named types have been resolved to either builtin types or structs/enums. The
+second relation, $x: \tau$, maps various HIR nodes to thier inferred types. Some
+of the inference rules will yeild two conclusions: a type for the node being
+inspect, and a new environment. This allows passing around new environments as
+they are extended. The *environment*, $\Gamma$, maps variables to the type of
+their denotation, and is initialised such that each builtin is mapped to the
+type of its denotation.
+
 ### Evaluating types
 \begin{longtable}{RRLL}
 \tau & ::= & \textbf{Bool}                      & \text{primitive types} \\
@@ -17,7 +27,7 @@
 \Gamma & ::= & \{
 \texttt{Bool}: \textbf{Bool}, \dots, \texttt{exit}: (\textbf{Int}) \to \textbf{Never}
 \}            & \text{initial environment}    \\
-       &   | & \Gamma, var : \tau   & \text{extended environment} \\
+       &   | & \Gamma \cup \{var : \tau\}   & \text{extended environment} \\
 \end{longtable}
 
 \begin{mathparpagebreakable}
@@ -48,20 +58,54 @@
 \
 \end{mathparpagebreakable}
 
-TODO: put this somewhere else: If the premise of a rule refers to "occurs", this rule only applies to that
-instance of the expression
 
 ### Definitions
 \begin{mathparpagebreakable}
 \inferrule*[right=FnDef] 
 {
- \Gamma, param_{0}: \tau_{0} \vdash e : \tau' \\
- \Gamma \vdash t : \tau' \\
- \Gamma \vdash param_{0} : \tau_{0} \ \dots \ \Gamma \vdash param_{n} : \tau_{n} \\
- \text{There is a function definition of the form $\texttt{fn} \ v(param_{0}, \dots,
- param_{n}) \to t \  \{ e \} $} \\
- }
-{\Gamma \vdash v : (\tau_{0}, \dots, \tau_{n}) \to \tau'}
+\tau' = (\alpha_0, \dots, \alpha_n) \to \alpha \\
+\Gamma' = \Gamma \cup \{ v: \tau' \}    \\
+\Gamma' \vdash \llbracket t \rrbracket = \tau \\
+\Gamma' \vdash param_0: \tau_0, \Gamma_1 \\ 
+\dots \\
+\Gamma_n \vdash param_n: \tau_n, \Gamma_{n+1} \\ 
+\Gamma_{n+1} \vdash e : \tau \\
+}
+{
+\Gamma_0 \vdash \texttt{fn} \ v (param_0, \dots, param_n) \to t \ \texttt{do} \ e: \tau' \\
+\Gamma'
+}
+
+\inferrule*[right=StructDef] 
+{
+\tau' = v \ \{ v_0: \alpha_0, \dots, v_n: \alpha_n \} \\
+\Gamma' = \Gamma \cup \{ v: \tau' \}    \\
+\Gamma' \vdash \llbracket t_0 \rrbracket = \tau_0 \\
+\dots \\
+\Gamma' \vdash \llbracket t_n \rrbracket = \tau_n \\
+}
+{
+\Gamma_0 \vdash \texttt{struct} \ v \ \{ v_0: t_0, \dots, v_n: t_n \} : \tau' \\
+\Gamma'
+}
+
+\inferrule*[right=EnumDef] 
+{
+\tau' = v \{ v'_0 \ \{ v_0^0: \alpha_0^0, \dots, v_0^{n_0}: \alpha_0^{n_0} \}, \dots, v'_n \ \{ v_n^0: \alpha_n^0, \dots, v_n^{n_n}: \alpha_n^{n_n} \} \} \\
+\Gamma' = \Gamma \cup \{ v: \tau' \}    \\
+\Gamma' \vdash \llbracket t_0^0 \rrbracket = \tau_0^0 \\
+\dots \\
+\Gamma' \vdash \llbracket t_n^{n_n} \rrbracket = \tau_n^{n_n} \\
+}
+{
+\Gamma \vdash \texttt{enum} \ v \ 
+\{ 
+v'_0 \ \{ v_0^0: t_0^0, \dots, v_0^{n_0}: t_0^{n_0} \},
+\dots,
+v'_n \ \{ v_n^0: t_n^0, \dots, v_n^{n_n}: t_n^{n_n} \}
+\} : \tau' \\
+\Gamma'
+}
 \end{mathparpagebreakable}
 
 ### Parameters
@@ -133,7 +177,7 @@ v: v \ \{ v_0: \tau_0, \dots, v_n: \tau_n \} \in \Gamma\\
 \inferrule*[right=EnumExpr]
 {
 v: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \dots \} \in \Gamma\\
-\Gamma \vdash e_0: \tau_k^0 \\ \dots \\ \Gamma \vdash e_n: \tau_k^{n_k}
+\Gamma \vdash e_0: \tau_k^0 \\ \dots \\ \Gamma \vdash e_{n_k}: \tau_k^{n_k}
 }
 {\Gamma \vdash v::v'_k \ \{ v_k^0: e_0, \dots, v_k^n: e_{n_k} \}: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \dots \}}
 
