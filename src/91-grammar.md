@@ -2,6 +2,7 @@
 
 \setlength{\grammarindent}{12em}
 
+TODO: explain how to interpret
 https://www.w3.org/TR/xml/#sec-notation
 
 ### Trivia
@@ -26,7 +27,6 @@ stripped out of the token stream before they are consumed by the parser.
 <IdentStart> ::= <Any Unicode character with the property XID_Start>
 
 <IdentContinue> ::= <Any Unicode character with the property XID_Continue>
-
 \end{grammar}
 
 ### Definitions
@@ -89,7 +89,6 @@ stripped out of the token stream before they are consumed by the parser.
 <StringChar> ::= <Any Unicode character except \\ or ">
             \alt <EscapeChar>
             \alt <UnicodeChar>
-
 \end{grammar}
 
 ### Expressions
