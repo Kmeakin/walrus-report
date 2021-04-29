@@ -234,20 +234,39 @@ v: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \
 
 \inferrule*[right=BlockExpr] 
 {
-\Gamma \vdash stmt_0: \tau_0 \\
+\Gamma_0 \vdash stmt_0: \tau_0, \Gamma_1 \\
 \dots \\
-\Gamma \vdash stmt_n: \tau_n \\
-\Gamma \vdash e: \tau \\
+\Gamma_n \vdash stmt_n: \tau_n, Gamma_{n+1} \\
+\Gamma_{n+1} \vdash e: \tau \\
 }
 {\Gamma_0 \vdash \{ stmt_{0}, \dots, stmt_{n}, e \}: \tau }
 
 \inferrule*[right=BlockNoTrailingExpr] 
 {
-\Gamma \vdash stmt_0: \tau_0 \\
+\Gamma_0 \vdash stmt_0: \tau_0, \Gamma_1 \\
 \dots \\
-\Gamma \vdash stmt_n: \tau_n \\
+\Gamma_n \vdash stmt_n: \tau_n, \Gamma_{n+1} \\
 }
-{\Gamma \vdash \{ stmt_{0}, \dots, stmt_{n} \} : () }
+{\Gamma_0 \vdash \{ stmt_{0}, \dots, stmt_{n} \} : () }
+
+\inferrule*[right=ExprStmt] 
+{\Gamma \vdash e: \tau}
+{\Gamma \vdash e; : \tau}
+
+\inferrule*[right=AnnotatedLetStmt] 
+{
+\Gamma \vdash \llbracket t \rrbracket = \tau \\
+\Gamma \vdash e: \tau \\
+\Gamma \vdash p: \tau, \Gamma' \\
+}
+{\Gamma \vdash \texttt{let} \ p: t = e; : (), \Gamma'}
+
+\inferrule*[right=LetStmt] 
+{
+\Gamma \vdash e: \tau \\
+\Gamma \vdash p: \tau, \Gamma' \\
+}
+{\Gamma \vdash \texttt{let} \ p = e; : (), \Gamma'}
 
 \inferrule*[right=MatchExpr] 
 {
