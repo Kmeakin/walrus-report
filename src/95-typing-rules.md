@@ -216,6 +216,34 @@ v: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \
 }
 {\Gamma \vdash \{ stmt_{0}, \dots, stmt_{n} \} : () }
 
+\inferrule*[right=MatchExpr] 
+{
+\Gamma \vdash e: \tau \\
+\Gamma \vdash p_0: \tau \\
+\dots \\
+\Gamma \vdash p_n: \tau \\
+\Gamma \vdash e_0: \tau' \\
+\dots \\
+\Gamma \vdash e_n: \tau' \\
+}
+{\Gamma \vdash \texttt{match} \ e \ \{ p_0 \Rightarrow e_0, \dots, p_n \Rightarrow e_n \}: \tau'}
+
+\inferrule*[right=NonterminatingLoopExpr] 
+{\Gamma \vdash e' : \tau \\
+ \text{\texttt{break} $e'$ does not occur in $e$}
+}
+{\Gamma \vdash \texttt{loop} \ e : \textbf{Never}}
+
+\inferrule*[right=TerminatingLoopExpr] 
+{
+\Gamma \vdash e : \tau' \\
+\Gamma \vdash e_{1}: \tau\\
+\dots \\
+\Gamma \vdash e_{n}: \tau \\
+\text{\texttt{break} $e_{1}$ \dots \ \texttt{break} $e_{n}$ occur in $e$} \\
+}
+{\Gamma \vdash \texttt{loop} \ e : \tau}
+
 \inferrule*[right=BreakExpr] 
 {\Gamma \vdash e : \tau \\
  \text{\texttt{break} $e$ occurs in a \texttt{loop}}
@@ -227,23 +255,11 @@ v: v \ \{ \dots, v'_k \ \{ v_k^0: \tau_k^0, \dots, v_k^{n_k}: \tau_k^{n_k} \}, \
 {\Gamma \vdash \texttt{continue} : \textbf{Never}}
 
 \inferrule*[right=ReturnExpr] 
-{\Gamma \vdash e_{1} : \tau \\
- \text{\texttt{return} $e$ occurs in a function or lambda expr}
+{
+\Gamma \vdash e: \tau \\
+\text{\texttt{return} $e$ occurs in a function or $\lambda$ expression} \\
 }
 {\Gamma \vdash \texttt{return} \ e : \textbf{Never}}
-
-\inferrule*[right=NonterminatingLoopExpr] 
-{\Gamma \vdash e' : \tau \\
- \text{\texttt{break} $e'$ does not occur in $e$}
-}
-{\Gamma \vdash \texttt{loop} \ e : \textbf{Never}}
-
-\inferrule*[right=TerminatingLoopExpr] 
-{\Gamma \vdash e : \tau' \\
- \Gamma \vdash e_{1}: \tau \dots \Gamma \vdash e_{n}: \tau \\
- \text{\texttt{break} $e_{1}$ \dots \ \texttt{break} $e_{n}$ occur in $e_{1}$}
-}
-{\Gamma \vdash \texttt{loop} \ e : \tau}
 
 \inferrule*[right=FnDef] 
 {
