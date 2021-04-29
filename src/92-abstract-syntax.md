@@ -23,15 +23,15 @@ lit & ::= & bool   & \text{Bool literal}   \\
     &   | & char   & \text{Char literal}   \\
     &   | & string & \text{String literal} \\
 \\
-expr, e & ::= & lit                                                                         & \text{literal expression} \\
+expr, e & ::= & lit                                                                   & \text{literal expression} \\
   &   | & var                                                                         & \text{variable expression} \\
   &   | & (e_0, \dots, e_n)                                                           & \text{tuple expression} \\
   &   | & var \ \{ p_0 : e_0, \dots, p_n : e_n \}                                     & \text{struct expression} \\
-  &   | & var :: var' \ \{ p_0 : e_0, \dots, p_n : e_n \}                              & \text{enum expression} \\
+  &   | & var :: var' \ \{ p_0 : e_0, \dots, p_n : e_n \}                             & \text{enum expression} \\
   &   | & e . var                                                                     & \text{struct field expression} \\
   &   | & e . n                                                                       & \text{tuple field expression} \\
   &   | & \circledast \ e                                                             & \text{unary operator expression} \\
-  &   | & e_1 \circledast e_2                                                             & \text{binary operator expression} \\
+  &   | & e_1 \circledast e_2                                                         & \text{binary operator expression} \\
   &   | & e(e_0, \dots, e_n)                                                          & \text{call expression} \\
   &   | & \lambda (param_0, \dots, param_n) \Rightarrow e                             & \text{lambda expression} \\
   &   | & \texttt{return} \ e                                                         & \text{return expression} \\
@@ -44,14 +44,14 @@ expr, e & ::= & lit                                                             
   &   | & \{ stmt_0, \dots, stmt_n, e \}                                              & \text{block expression} \\
   &   | & \{ stmt_0, \dots, stmt_n \}                                                 &  \\
 \\
-pat, p & ::= & lit                                                   & \text{literal pattern}    \\
+pat, p & ::= & lit                                              & \text{literal pattern}    \\
   &   | & var                                                   & \text{variable pattern}   \\
   &   | & \_                                                    & \text{ignored pattern}    \\
   &   | & (p_0, \dots, p_n)                                     & \text{tuple pattern}      \\
   &   | & var \ \{ var_0 : p_0, \dots, var_n : p_n \}           & \text{struct pattern}     \\
   &   | & var :: var' \ \{ var_0 : p_0, \dots, var_n : p_n \}   & \text{enum pattern}       \\
 \\
-type, t & ::= & var                       & \text{variable type}      \\
+type, t & ::= & va                  & \text{variable type}      \\
   &   | & \_                        & \text{placeholder type}   \\
   &   | & (t_0, \dots, t_n)         & \text{tuple type}         \\
   &   | & (t_0, \dots, t_n) \to t   & \text{function type}      \\
