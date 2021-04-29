@@ -1352,16 +1352,13 @@ inspect.entry:
   store i32 %inspect.params.0, i32* %x.alloca, align 4
   %x = load i32, i32* %x.alloca, align 4
   %Int.eq = icmp eq i32 %x, 42
-  br i1 %Int.eq, label %if.then, label %if.else
+  br i1 %Int.eq, label %if.then, label %if.end
 
 if.then:                                          ; preds = %inspect.entry
   %print.call = call {} @builtin_print(%String { i32 22, i8* getelementptr inbounds ([22 x i8], [22 x i8]* @String.lit, i32 0, i32 0) })
   br label %if.end
 
-if.else:                                          ; preds = %inspect.entry
-  br label %if.end
-
-if.end:                                           ; preds = %if.else, %if.then
+if.end:                                           ; preds = %inspect.entry, %if.then
   ret {} zeroinitializer
 }
 
