@@ -51,7 +51,7 @@ pat, p & ::= & lit                                              & \text{literal 
   &   | & var \ \{ var_0 : p_0, \dots, var_n : p_n \}           & \text{struct pattern}     \\
   &   | & var :: var' \ \{ var_0 : p_0, \dots, var_n : p_n \}   & \text{enum pattern}       \\
 \\
-type, t & ::= & va                  & \text{variable type}      \\
+type, t & ::= & var                 & \text{variable type}      \\
   &   | & \_                        & \text{placeholder type}   \\
   &   | & (t_0, \dots, t_n)         & \text{tuple type}         \\
   &   | & (t_0, \dots, t_n) \to t   & \text{function type}      \\
