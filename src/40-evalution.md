@@ -163,21 +163,19 @@ optimisation levels, but something happens during the optimisation process that
 causes `unreachble` to become a `0` in one case and a `42` in the other.
 
 ### High-level abstractions
-pros:
-first class functions
-pattern matching
-ADTs
-lists example
+The combination of first class functions, pattern matching and algebraic data
+types allows us to express many functional programming design patterns in
+Walrus. For example, in @sec:appendix:lists, we are able to inductively define
+linked lists as either `Nil` or `Cons`, exactly as one would in Haskell or
+Ocaml. We go on to define various functions over lists - `length`, `append`,
+`reverse`, `map` and `fold`. With the addition of polymorphic functions and data
+types, Walrus could provide a `List` type in a standard library, just like
+Haskell.
 
-cons:
-monomorphic
-
-
-### Performance
-pros: 
-
-cons:
-has not been measured yet - pure conjecture
+Of course, Walrus does not yet have polymorphic functions or data types, and
+this severely restricts the reusability of the `List` data type we defined. We
+can only have lists of `Int`, and we can only map them to lists of `Int`, or
+fold them to `Int`.
 
 ### User experience
 #### Error reporting
@@ -261,6 +259,18 @@ other error messages, whilst ensuring that no error is left "uncovered" with no
 error message referring to it (we want to avoid a situation where errors exist
 but no error message about them is emitted). Just like design of error messages,
 deciding which error messages to emit and which to omit is an art, not a science.
+
+### Performance
+This is the aspect of the language that we can evaluate with the least amount of
+certainty. While we are confident that Walrus should fit comfortably in the
+middle tier of languages in terms of performance - faster than dynamically
+typed, interpreted languages such as Python, but slower than statically typed
+systems languages such as Rust or C++ - we have not had the time to perform any
+benchmarks. This estimation is simply our intuition considering that Walrus is
+compiled to native code ahead of time, and is able to provide plenty of
+information to LLVM in the form of static types that it can use in optimisation
+analyses. This is pure conjecture however, and humans are notoriously bad at
+estimating program performance.
 
 ## Future directions
 
