@@ -1,5 +1,7 @@
 # Introduction {#sec:intro}
 
+\bibliographystyle{apalike}
+
 ## Project description
 In this report we present the Walrus programming language, which aims to achieve
 correctness, high-level abstraction and performance. This is achieved by
@@ -78,7 +80,7 @@ Total program correctness is impossible without resorting to formal verification
 even have a formal specification. However it is possible to increase confidence
 in program correctness through introduction of static analyses such as static type
 systems, and omission of features that are easy to use incorrectly, such as
-untagged unions (TODO: ref).
+untagged unions.
 
 We consider correctness to be non-negotiable: there is no use in sacrificing
 correctness for speed if the result is that the programs can produce the wrong
@@ -94,7 +96,7 @@ an operation on each platform (such as signed integer overflow or bit-shifts by
 more than the bit-width, which vary according to the instruction set
 architecture), or because attempting to detect the erroneous condition at
 runtime would be excessively costly in terms of performance (such as checking
-that each pointer is not null before dereferencing it).[@fyfe_digital_2011]
+that each pointer is not null before dereferencing it).
 
 The C++ standard states that compilers are free to give whatever
 semantics they desire to undefined behaviour:
@@ -104,13 +106,12 @@ semantics they desire to undefined behaviour:
 > execution in a documented manner characteristic of the environment (with or
 > without the issuance of a diagnostic message), to terminating a translation or
 > execution (with the issuance of a diagnostic message).
-> -- C++20 standard^[TODO: citation]
 
 This means that it is impossible to reason about the correctness of a program
 that triggers undefined behaviour, since (in theory) literally anything could
 happen: C and C++ folklore warns of such disastrous results as reformatting the
 user's hard-drive, launching missiles, or causing demons to fly out of the
-user's nose.^[http://catb.org/jargon/html/N/nasal-demons.html]
+user's nose [@JargonFile].
 
 In practice most compilers simply assume that undefined behaviour cannot occur.
 From the point of view of the compiler this is a useful interpretation of the

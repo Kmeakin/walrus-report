@@ -210,10 +210,8 @@ that refers to a location in memory: it would not make sense to attempt to
 mutate a literal expression, or a temporary result of an intermediate
 expression. Values that can be mutated are called *lvalues*, and all other
 values are called *rvalues*, for *left-hand side values* and *right-hand side
-values* respectively ^[This terminology is inherited from C. C++ extends the
-classification of values by adding more exotic categories such as *glvalues*,
-*prvalues* and *xvalues*. See TODO cite
-https://en.cppreference.com/w/cpp/language/value_category for more information].
+values* respectively.
+
 Lvalues in Walrus are defined inductively as:
 
 * A variable expression which refers to a local variable is an lvalue
@@ -1021,8 +1019,7 @@ The inclusion of null-references is considered by many today to be a mistake:
 > to put in a null reference, simply because it was so easy to implement. This
 > has led to innumerable errors, vulnerabilities, and system crashes, which have
 > probably caused a billion dollars of pain and damage in the last forty years.
-> -- Tony Hoare
-TODO: citation
+> -- Tony Hoare @[BillionDollars]
 
 Here are just some of the symptoms of those billion dollars of pain and damage:
 
@@ -1137,13 +1134,13 @@ signature, errors are just another first-class value that the programmer can
 handle how they see fit using regular language features.
 
 ## Pattern Matching {#sec:reference:pattern-matching}
-Pattern-matching allows matching against complex, potentially nested data. First
-introduced by TODO in TODO, pattern-matching quickly became a staple feature of
-functional programming languages, but has yet to break into more common
-mainstream languages. For those unfamiliar with it, it can be though of as a
-`switch` statement from C or Java, only generalised to work over all data types,
-and to allow binding of variables: Each *case* is matched against a value in
-order, and the right hand side of the first case to match is evaluated.
+Pattern-matching allows matching against complex, potentially nested data.
+Pattern matching is a staple feature of functional programming languages, but
+has yet to break into more common mainstream languages. For those unfamiliar
+with it, it can be though of as a `switch` statement from C or Java, only
+generalised to work over all data types, and to allow binding of variables: Each
+*case* is matched against a value in order, and the right hand side of the first
+case to match is evaluated.
 
 The most basic patterns are *literal patterns*. In this case `match` operates
 exactly the same as `case`. Note that the *wildcard-pattern*, `_`, matches any
@@ -1285,7 +1282,7 @@ dynamic type system.
 The Walrus type system is a simplification of the Rust type system, which is
 itself an extension of the classic *Hindley-Milner* type system.
 
-The original Hindley-Milner type system (TODO: cite), provides a set of
+The original Hindley-Milner type system @Milner78atheory, provides a set of
 inferences rules for determining a single "most general type" for expressions in
 the *simply-typed λ-calculus*. For the purposes of this report, it is sufficient
 just to be aware that the simply-typed *λ*-calculus is a very primitive
@@ -1636,9 +1633,7 @@ polymorphism known as *ad-hoc polymorphism* ^[The previous, most simple form of
 polymorphism we have talked about is sometimes called *parametric-polymorphism*
 to distinguish it from other more advanced forms of polymorphism]
 
-TODO: first introduced by ??? for Haskell 
-
-In a system with *ad-hoc polymorphism*, polymorphic functions can be
+In a system with *ad-hoc polymorphism* [@TypeClasses], polymorphic functions can be
 additionally augmented with *type-constraints* - a set of requirements that a
 type variable must satisfy. Consider the Rust function `max`:
 ```rust
