@@ -2,24 +2,11 @@
 
 ## Choice of implementation language
 The first design choice to be made when starting a new project is selecting the
-implementation language. For me, Rust was a natural choice:
-
-* **Functional features**: The combination of algebraic data types and pattern
-  matching makes tree-like stuctures, which are used pervasily in compilers,
-  simple to define and traverse. These features have been staples of functional
-  programming languages for decades, yet Rust is one of the few "mainstream"
-  C-like programming languages to include them.
-* **Package management**: Rust's package manager/build system, `cargo` makes
-  adding new dependencies simple, compared to Java's `maven` or `cmake` for c++.
-  I can easily add libraries for lexer-generation or pretty-printing of error
-  messages to avoid having to reimplement these features myself.
-* **Tooling**: On top of the `rustc` compiler, Rust has a rich ecosystem of
-  development tools for unit testing, documentation generation and benchmarking,
-  as well as `rust-analyzer`, which provides IDE functionality for text edtiors.
-
-The only downside to using Rust is adjusting to the constraints of the borrow
-checker. However, after using Rust for a few months it is easy to build an
-intuition for will and will not be accepted by the borrow checker.
+implementation language. For me, Rust was a natural choice. The combination of
+algebraic data types and pattern matching makes tree-like stuctures, which are
+used pervasily in compilers, simple to define and traverse. These features have
+been staples of functional programming languages for decades, yet Rust is one of
+the few "mainstream" C-like programming languages to include them.
 
 ## The pipeline
 The Walrus compiler is implemented as a traditional *pipeline* of *passes*. Each

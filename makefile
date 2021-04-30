@@ -1,5 +1,6 @@
 all:
 	pandoc src/*.md \
+	-s \
 	-o out/report.pdf \
 	--highlight-style pygments \
 	-V fontsize=12pt \
