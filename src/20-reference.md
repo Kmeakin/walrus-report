@@ -1002,7 +1002,7 @@ The inclusion of null-references is considered by many today to be a mistake:
 > to put in a null reference, simply because it was so easy to implement. This
 > has led to innumerable errors, vulnerabilities, and system crashes, which have
 > probably caused a billion dollars of pain and damage in the last forty years.
-- Tony Hoare
+> -- Tony Hoare
 
 Here are just some of the symptoms of those billion dollars of pain and damage:
 
