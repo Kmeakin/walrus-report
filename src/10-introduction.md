@@ -53,7 +53,7 @@ target audience:
 
 Our language does not fill any of those niches. It is intended to be a "general
 purpose" language for writing commandline or desktop applications, the kind of
-task that one might use languages such as Java, C# or Go for.
+task for which one might use languages such as Java, or Go.
 
 ### Correctness and safety
 TODO: distinction between correctness and safety? there can be a lot of overlap
