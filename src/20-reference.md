@@ -182,7 +182,7 @@ code in a functional style where new variables are produced instead of updating
 existing variables. However, the option of mutability is still available if an
 algorithm cannot easily be expressed with immutability.
 
-### Initialization
+### Initialization {#sec:reference:initialisation}
 Local variables must be declared and initialised in the same let-statement. It
 is not possible to declare a variable without initialising it and then
 initialise it by mutating it later. To see why, consider the following C code:
@@ -795,7 +795,7 @@ let weight2 = p.weight;
 let age2 = p.age;
 ```
 
-#### Lack of constructors
+#### Lack of constructors {#sec:reference:no-constructors}
 Unlike C++ or Java classes, Walrus structs cannot have "constructor methods"
 associated with them. The only way to create a struct value is to simply provide
 the value of all the fields up front. This design choice was made because
@@ -999,7 +999,7 @@ void print_int_or_float(IntOrFloat it) {
 ```
 
 #### Enum use cases
-##### Eliminating null
+##### Eliminating null {#sec:reference:null-option}
 Many languages have a concept of a `null` value to represent when a value is
 missing or invalid. This often occurs in algorithms for searching and lookup.
 Consider Java's `HashMap<K, V>` (`java.util.HashMap<K, V>` to be

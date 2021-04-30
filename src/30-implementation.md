@@ -961,7 +961,7 @@ length alongside the contents-pointer:
   character is a Unicode character in its own right ($U+0000$), and a string
   representation that cannot contain null-characters cannot faithfully represent
   every possible Unicode string.
- **Safety**: If the terminating null-character is omitted, attempts to
+* **Safety**: If the terminating null-character is omitted, attempts to
   calculate the string's length will blindly continue searching past the end of
   the string and either return an overestimate of the string's length (if a null
   character belonging to a nearby object in memory is found), or else cause a

@@ -1,12 +1,183 @@
 # Evaluation {#sec:eval}
+We will now retrospectively evaluate the Walrus language against the criteria
+given in @sec:intro, and then discuss potential directions for further
+development of the project.
 
 ## Achievements
 
 ### Correctness
+We believe that by introduction of carefully chosen language features, we have
+been able to replace problematic features that can be sources of crashes or bugs
+in other programs. 
+
+* By providing the ability to define algebraic data types in the form of
+  *enums*, we have replaced the misfeature of *null-pointers*/*null-references*
+  We have also improved on the *tagged-union* design pattern from C - the
+  contents of Walrus enums are impossible to access without first checking which
+  variant the enum currently occupies (see @sec:reference:enums).
+* By both requiring that variables be initialised in let-statements (see
+  @sec:reference:initialisation) and by omitting *constructor methods* and
+  requiring all fields of a struct/enum to be initialised up
+  front(@sec:reference:structs), we have eliminated any potential for undefined
+  behaviour arising from accessing uninitialised variables.
+* The choice of string representation removes the potential for memory safety
+  bugs due to manual string manipulation (@sec:impl:llvm:strings)
+
+There are unfortunately two potential sources of undefined behaviour remaining
+in Walrus: 
+
+Firstly, the results of the arithmetic operators, `+`, `-`, `*`, and `/` are
+not checked for overflow or division by zero. Let us take division by zero as an
+example. The following Walrus program will trigger undefined behaviour when
+compiled with `-O3`, but not with `-O0`:
+```rust
+fn main() {
+    let x = 42;
+    let y = 0;
+    print(int_to_string(x/y));
+}
+```
+
+When compiled and run with `-O0`, this program crashes with the message
+`floating point exception (core dumped)`, but with `-03`, it prints `1`. Some
+kind of undefined behaviour must be occurring for the behaviour to differ
+between optimisation levels, since optimisations must maintain the semantics of
+UB-free programs. Comparing the LLVM IR before and after optimisation reveals
+the difference:
+
+When compiling with `-O0`, the program will load the values `42` and `0` into
+two registers and execute some integer-division instruction. Since this attempts
+a division by zero, a floating point exception is thrown by the CPU and Linux
+kills the program.
+```
+%String = type { i32, i8* }
+
+define {} @main() {
+main.entry:
+  %x.alloca = alloca i32, align 4
+  store i32 42, i32* %x.alloca, align 4
+  %y.alloca = alloca i32, align 4
+  store i32 0, i32* %y.alloca, align 4
+  %x = load i32, i32* %x.alloca, align 4
+  %y = load i32, i32* %y.alloca, align 4
+  %Int.div = sdiv i32 %x, %y
+  %int_to_string.call = call %String @builtin_int_to_string(i32 %Int.div)
+  %print.call = call {} @builtin_print(%String %int_to_string.call)
+  ret {} zeroinitializer
+}
+
+declare %String @builtin_int_to_string(i32)
+
+declare {} @builtin_print(%String)
+```
+
+When compiling with `-O3`, LLVM replaces all reads from `x` and `y` by their
+constant values (*copy progagation*), and then performs constant folding on the
+division, which is now a division of two constants, `42/0`. Division by zero in
+the `sdiv` instruction is undefined behaviour^[TODO cite
+https://llvm.org/docs/LangRef.html#sdiv-instruction], and so the instruction is
+replaced by `undef`. In this particular compilation, LLVM chose to replace that
+particular instance of `undef` by `1` when translating to machine code, but this
+behaviour can not be relied on and could change without warning in future
+versions of LLVM.
+```
+%String = type { i32, i8* }
+
+define {} @main() local_unnamed_addr {
+main.entry:
+  %int_to_string.call = tail call %String @builtin_int_to_string(i32 undef)
+  %print.call = tail call {} @builtin_print(%String %int_to_string.call)
+  ret {} zeroinitializer
+}
+
+declare %String @builtin_int_to_string(i32) local_unnamed_addr
+
+declare {} @builtin_print(%String) local_unnamed_addr
+```
+
+The other source is inexhaustive pattern matching. Consider this program, which
+prints `0` when run with `-O0` but `42` when run with `-03`.
+
+```rust
+fn main() {
+        let x = false;
+        let y = 
+        match x {
+                true => 42,
+        };
+        print(int_to_string(y));
+}
+```
+
+With `-O0` the IR looks like this:
+```
+%String = type { i32, i8* }
+
+define {} @main() {
+main.entry:
+  %x.alloca = alloca i1, align 1
+  store i1 false, i1* %x.alloca, align 1
+  %x = load i1, i1* %x.alloca, align 1
+  br label %match.case0.test
+
+match.case0.test:                                 ; preds = %main.entry
+  %Bool.eq = icmp eq i1 %x, true
+  br i1 %Bool.eq, label %match.case0.then, label %match.fail
+
+match.case0.then:                                 ; preds = %match.case0.test
+  br label %match.end
+
+match.fail:                                       ; preds = %match.case0.test
+  unreachable
+
+match.end:                                        ; preds = %match.case0.then
+  %match.phi = phi i32 [ 42, %match.case0.then ]
+  %y.alloca = alloca i32, align 4
+  store i32 %match.phi, i32* %y.alloca, align 4
+  %y = load i32, i32* %y.alloca, align 4
+  %int_to_string.call = call %String @builtin_int_to_string(i32 %y)
+  %print.call = call {} @builtin_print(%String %int_to_string.call)
+  ret {} zeroinitializer
+}
+
+declare %String @builtin_int_to_string(i32)
+
+declare {} @builtin_print(%String)
+```
+This time the source of UB is the `unreachable` instruction in `match.fail`,
+which we introduced as a placeholder value until we can reject this program at
+compile time for failing to consider the case when `x` is `false`. 
+
+When compiling with `-O3`, LLVM reduces the entire program to
+```
+define {} @main() local_unnamed_addr #0 {
+main.entry:
+  unreachable
+}
+
+attributes #0 = { norecurse noreturn nounwind readnone }
+```
+
+This time it seems that the `unreachable` instruction is being executed at both
+optimisation levels, but something happens during the optimisation process that
+causes `unreachble` to become a `0` in one case and a `42` in the other.
 
 ### High-level abstractions
+pros:
+first class functions
+pattern matching
+ADTs
+lists example
+
+cons:
+monomorphic
+
 
 ### Performance
+pros: 
+
+cons:
+has not been measured yet - pure conjecture
 
 ### User experience
 #### Error reporting
@@ -97,8 +268,8 @@ deciding which error messages to emit and which to omit is an art, not a science
 
 ### Polymorphism
 
+### Parser error recovery
+
 ### Garbage collection
 
 ### Module system
-
-### Parser error recovery
