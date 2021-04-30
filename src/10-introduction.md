@@ -94,7 +94,7 @@ an operation on each platform (such as signed integer overflow or bit-shifts by
 more than the bit-width, which vary according to the instruction set
 architecture), or because attempting to detect the erroneous condition at
 runtime would be excessively costly in terms of performance (such as checking
-that each pointer is not null before dereferencing it). 
+that each pointer is not null before dereferencing it).[@fyfe_digital_2011]
 
 The C++ standard states that compilers are free to give whatever
 semantics they desire to undefined behaviour:

@@ -1,6 +1,9 @@
 all:
 	pandoc src/*.md \
+	--bibliography=src/biblio.bib \
 	-s \
+	--filter pandoc-crossref \
+	--citeproc \
 	-o out/report.pdf \
 	--table-of-contents \
 	--highlight-style pygments \
@@ -9,10 +12,15 @@ all:
 	-V documentclass:report \
 	--number-sections \
 	--pdf-engine=xelatex \
-	--filter pandoc-crossref \
-	--lua-filter=lua-filters/diagram-generator/diagram-generator.lua \
-	--lua-filter lua-filters/wordcount/wordcount.lua \
-	-M wordcount=process-anyway
+	# --lua-filter=lua-filters/diagram-generator/diagram-generator.lua \
+	# --lua-filter lua-filters/wordcount/wordcount.lua \
+	# -M wordcount=process-anyway
+
+fuck:
+	pandoc src/fuck.md \
+	--bibliography=src/biblio.bib \
+	--citeproc \
+	-o out/fuck.pdf
 
 wordcount:
 	pandoc src/*.md \
