@@ -53,45 +53,39 @@ target audience:
 
 Our language does not fill any of those niches. It is intended to be a "general
 purpose" language for writing commandline or desktop applications, the kind of
-task for which one might use languages such as Java, or Go.
+task for which one might use languages such as Java or Go.
 
 ### Correctness and safety
-TODO: distinction between correctness and safety? there can be a lot of overlap
-
 We believe that programming languages are above all a tool for producing
-software, and that the software produced by such tools should be *correct* and
-*safe*. We consider correctness and safety to be non-negotiable: there is no use
-in sacrificing correctness for speed if the result is that the programs can
-produce the wrong result faster.
+software, and that the software produced by such tools should be *correct*. 
 
 By correct, we mean that the program produces the expected result with respect
-to a specification of the program. Total program correctness is impossible
-without resorting to formal verification (and even then it is undeciable in the
-general case), and indeed few programs even have a formal specification. However
-it is possible to increase confidence in program correctness through
-introduction of features such as a strong type system (see @sec:ref:type-system
-for a definition of *strong* typing vs *weak* typing), and omission of features
-that are easy to use incorrectly, such as untagged unions (TODO: ref), null
-references (TODO: ref), or constructor methods (TODO: ref).
+to a specification of the program.  Incorrect programs can at best crash noisely
+with an indication of where the error occurred, silently produce an incorrect
+answer but continue executation, or at worst produce a correct seeming answer
+but create a security vulnerability such as a buffer overflow.
 
-Safety is a more nebulous concept. It can best be desribed as the absence of
-certain disasterious situations, such as the program crashing due to attempting
-to access privelleged memory, or exposing a security vulnerability due to a
-buffer overflow. It is possible for a program to be safe, but incorrect: for
-example, a C program whose intention is to print the string "hello world" but
-whose implementation consists of a single call to `printf("goodbye world")` is
-safe, but it is not correct.
+Total program correctness is impossible without resorting to formal verification
+(and even then it is undeciable in the general case), and indeed few programs
+even have a formal specification. However it is possible to increase confidence
+in program correctness through introduction of features such as a strong type
+system (see @sec:ref:type-system for a definition of *strong* typing vs *weak*
+typing), and omission of features that are easy to use incorrectly, such as
+untagged unions (TODO: ref), null references (TODO: ref), or constructor methods
+(TODO: ref).
 
-Since it can often be hard to distinguish between a program that is incorrect or
-a program that is unsafe, we have grouped both under one goal.
+We consider correctness to be non-negotiable: there is no use in sacrificing
+correctness for speed if the result is that the programs can produce the wrong
+result faster.
 
 #### Undefined behaviour
-A key component of ensuring both correctness and safety is the avoidance of
+A key component of ensuring correctness is the avoidance of
 *undefined-behaviour*. Undefined behaviour is any situation where the expected
-behaviour of the program is not specified by the language specification.
-Undefined behaviour is common in the C and C++ programming languages, both
-because of variation in the specified behaviour of an operation on each platform
-(such as signed integer overflow or out of bounds bitshifts), or because
+behaviour of the program is not specified by the semantics of the language or
+the program being executed on. Undefined behaviour is common in the C and C++
+programming languages, both because of variation in the specified behaviour of
+an operation on each platform (such as signed integer overflow or out of bounds
+bitshifts, which vary according to the instruction set architecture), or because
 attempting to detect the erroneous condition at runtime would be excessively
 costly in terms of performance (such as checking that each pointer is not null
 before dereferencing it). 
@@ -108,11 +102,18 @@ semantics they desire to undefined behaviour:
 
 This means that it is impossible to reason about the correctness of a program
 that triggers undefined behaviour, since (in theory) literally anything could
-happen. C and C++ folklore warns of such disasterous results as reformatting the
+happen: C and C++ folklore warns of such disasterous results as reformatting the
 user's hard-drive, launching missiles, or causing demons to fly out of the
 user's nose.^[http://catb.org/jargon/html/N/nasal-demons.html]
 
-Clearly, a crucial condition of Walrus' safety will be that it does not contain
+In practice most compilers simply assume that undefined behavour cannot occur.
+From the point of view of the compiler this is a useful interpretion of the
+standard, since it allows them to perform extra optimisations making more
+assumptions about the user's code. However, this can still be problematic, as it
+can leads to the compiler eliding safety checks inserted by the programmer or
+producing unexpected results. 
+
+Clearly, a crucial condition of Walrus' correctness will be that it does not contain
 any undefined behaviour: the behaviour of every operation should be defined in
 the specification, and care should be taken that the machine code emitted
 matches the stated behaviour.
