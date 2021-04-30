@@ -769,26 +769,26 @@ program, providing better error-recovery.
 The type checker pass also checks various other properties of the program as it
 traverses the HIR which are difficult to express as equality constraints:
 
-* Every occurrence of `break` or `continue` must be within a `loop`
-* The left-hand side of an assignment expression must be an *l-value* (see
-  @sec:reference:l-values)
+* Every occurrence of `break` or `continue` must be within a loop
+* The left-hand side of an assignment expression must be an l-value
 * The l-value being assigned to must have been declared mutable with the `mut`
   keyword, and it must refer to a local variable
 * Struct or enum patterns must bind all fields, and not refer to non-existant
   fields
 * Field expressions must not attempt to access non-existant fields
 * Patterns in let statements, function parameters or lambda parameters must be
-  *irrefutable* (see @sec:reference:irrefutable-patterns)
+  irrefutable 
 
 ## Error reporting
 Before we can proceed to code generation, we need to first confirm that no
 semantic errors were detected in the semantic analysis pass. We do this by
 collecting all errors emitted by the lowering, name resolution and type
-inference passes into a single `Vec` of errors. If vector is empty, we can
-proceed to the next step. If there are any errors, we abort the compilation
-process and print some (hopefully) useful error messages to the user.
+inference passes into a single `Vec<Diagnostic>` of errors. If vector is empty,
+we can proceed to the next step. If there are any errors, we abort the
+compilation process and print some (hopefully) useful error messages to the
+user.
 
-Each error is represented as an `enum` indicating the kind of error (eg type
+Each error is represented as an enum indicating the kind of error (eg type
 mismatch, undefined variable, mutating an immutable variable) and the HIR nodes
 responsible. The corresponding parse tree node for each HIR node is looked-up in
 the `HashMap` created in the lowering pass to get the source locations. The
@@ -809,7 +809,7 @@ generate *LLVM IR*.
 The LLVM intermediate representation is both low-level enough to allow language
 creators fine-grained control over memory layout and language semantics, but
 also high-level enough to abstract away platform-specific considerations such as
-instruction-set and application-binary-interface (ABI). 
+instruction set and application binary interface (ABI). 
 
 To achieve this, the LLVM IR resembles an assembly programming language, with
 the addition of abstractions for compound data types, global variables, stack
@@ -1044,10 +1044,10 @@ We could have implemented Walrus' library of builtin functions (see
 IR of every program. However, writing complex functions in LLVM IR by hand is
 tedious and error prone. Instead, we implement our builtins in a single C file
 of around 125 lines, and then statically both the C builtins and the LLVM IR of
-the user's program together into a single executable using Clang. We would like
-to investigate writing our builtins in Rust in the future, however this would
-take some effort to implement as Rust has no stable ABI and a significantly more
-complex build process than C.
+the user's program together into a single executable using `clang`. We would
+like to investigate writing our builtins in Rust in the future, however this
+would take some effort to implement as Rust has no stable ABI and a
+significantly more complex build process than C.
 
 ##### Closures
 Closures are significantly more complex to generate IR for. Since a closure can
@@ -1605,7 +1605,7 @@ match.end:                                        ; preds = %match.case0.then, %
 
 ## Native code generation
 Now that we have the LLVM IR representation of the program, we can write it to a
-file and pass it to `Clang` (the C compiler developed in tandem with LLVM) along
+file and pass it to `clang` (the C compiler developed in tandem with LLVM) along
 with `walrus_builtins.c`. For example, compiling the file `hello_world.walrus`
 will result in the invocation of `clang hello_world.walrus walrus_builtins.c -o
 hello_world`. This will statically link the LLVM IR file with
