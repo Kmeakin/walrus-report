@@ -2,14 +2,12 @@
 We define two relations. First, the relation $\llbracket t \rrbracket = \tau$
 maps the abstract syntax of a HIR type to a representation of the type after all
 named types have been resolved to either builtin types or structs/enums. The
-second relation, $x: \tau$, maps various HIR nodes to thier inferred types. Some
-of the inference rules will yeild two conclusions: a type for the node being
-inspect, and a new environment. This allows passing around new environments as
-they are extended. The *environment*, $\Gamma$, maps variables to the type of
-their denotation, and is initialised such that each builtin is mapped to the
-type of its denotation.
+second relation, $x: \tau$, maps the abstract syntax of HIR nodes to thier
+inferred types. We also define an *environment*, $\Gamma$, mapping variables to
+the type of their denotation. The environment is initialised such that the name
+of each builtin type and function is mapped to an appropriate type value.
 
-### Evaluating types
+### Type values
 \begin{longtable}{RRLL}
 \tau & ::= & \textbf{Bool}                      & \text{primitive types} \\
      &   | & \textbf{Int}                       &                        \\
@@ -22,7 +20,10 @@ type of its denotation.
      &   | & \alpha                             & \text{type variable}   \\
      &   | & (\tau_0, \dots, \tau_n)            & \text{tuple type}      \\
      &   | & (\tau_0, \dots, \tau_n) \to \tau   & \text{function type}   \\
-\\
+\end{longtable}
+
+### Environments
+\begin{longtable}{RRLL}
 \Gamma & ::= & \{
 \texttt{Bool}: \textbf{Bool}, \dots, \texttt{exit}: (\textbf{Int}) \to \textbf{Never}
 \}            & \text{initial environment}    \\
