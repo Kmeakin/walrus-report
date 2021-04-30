@@ -1,4 +1,4 @@
-# Evalution {#sec:eval}
+# Evaluation {#sec:eval}
 
 ## Achievements
 
@@ -22,11 +22,11 @@ sometimes even go as far as to tell the user what they can type to fix the error
 ^[TODO: links].
 
 Obviously a single-person project over the course of a year will not have quite
-the same level of polish attatched to the content of error messages, however I
+the same level of polish attached to the content of error messages, however I
 am very pleased with the visual presentation of error messages: each error
 message underlines and highlights the offending code. 
 
-A selection of error messages is demonstrated by this erroenous program:
+A selection of error messages is demonstrated by this erroneous program:
 ```rust
 fn a() {
     b(1, 2, 3);
@@ -73,9 +73,9 @@ fn add(x, y) -> _ {
 Since the `+` operator can be applied to either `Int`s, `Float`s and `String`s,
 and none of the variables are annotated with a type, we do not have enough
 information to determine a unique type for `x` and `y` (the system of equality
-constraints is said to be *underconstrained*). This leads to a cascade of
+constraints is said to be *under-constrained*). This leads to a cascade of
 further type inference error messages, as now the type of the function body and
-all its subexpressions cannot be inferred, and each subexpression emits a new
+all its sub-expressions cannot be inferred, and each sub-expression emits a new
 error message. Therefore, while idealy this program should result in just 3
 error messages (could not infer type of `x`, could not infer type of `y`, could
 not infer return type of `add`), in reality 11 error messages are produced - too
@@ -93,7 +93,7 @@ deciding which error messages to emit and which to omit is an art, not a science
 
 ## Future directions
 
-### Pattern exhaustivity
+### Pattern exhaustiveness
 
 ### Polymorphism
 

@@ -1,7 +1,7 @@
 # Reference {#sec:reference}
 
-## Primitive Datatypes {#sec:reference:primitive-types}
-Walrus has 5 primitive datatypes (`Bool`, `Int`, `Float`, `Char`, `String`), with
+## Primitive Data types {#sec:reference:primitive-types}
+Walrus has 5 primitive data types (`Bool`, `Int`, `Float`, `Char`, `String`), with
 corresponding syntax for creating literal values.
 
 ### `Bool`s {#sec:reference:bools}
@@ -54,8 +54,8 @@ for binary64 floats [^ExtraFloatTypes].
 [^ExtraFloatTypes]: See the `double` or `f64`  types in C and Rust, respectively.
 
 ### `Char`s {#sec:reference:chars}
-The `Char` datatype represents single characters of textual data. However,
-unlike the `char` datatype in C, which may represent a 7-bit ASCII character, a
+The `Char` data type represents single characters of textual data. However,
+unlike the `char` data type in C, which may represent a 7-bit ASCII character, a
 16-bit UTF-16 code-unit, or a 8-bit UTF-8 code-unit depending on the platform,
 Walrus' `Char`s are always capable of representing any Unicode character, and
 have the same representation on every platform.
@@ -83,7 +83,7 @@ have their own special shorthand syntax, inherited from C:
 ```
 
 ### `String`s {#sec:reference:strings}
-The `String` datatype represents textual data. Unlike `Char`s, which represent a
+The `String` data type represents textual data. Unlike `Char`s, which represent a
 single character, `String`s may represent several characters (or none). As with
 `Char`s, `String`s may represent any possible sequence of Unicode characters.
 
@@ -94,7 +94,7 @@ Code Point, or by using the backslash shorthand:
 ```
 "Hello, world!\n"          // A timeless greeting
 "Hello,\u{20}world!\u{0A}" // The same greeting, with Unicode Code Points
-"Γειά σου Κόσμε!\n"        // The same greeing, in Greek
+"Γειά σου Κόσμε!\n"        // The same greeting, in Greek
 ```
 
 ## Identifiers {#sec:reference:identifiers}
@@ -160,7 +160,7 @@ code in a functional style where new variables are produced instead of updating
 existing variables. However, the option of mutability is still available if an
 algorithm cannot easily be expressed with immutability.
 
-### Initalisation
+### Initialization
 Local variables must be declared and initialised in the same let-statement. It
 is not possible to declare a variable without initialising it and then initialise
 it by mutating it later. For a rationale for this design, consider the following
@@ -183,7 +183,7 @@ left out of Walrus for lack of time.
 [^LetTypes]: See @sec:reference:types for more information about types and type-inference.
 
 ### Lvalues {#sec:reference:lvalues}
-Although the assignment operator, `=` can syntactically acccept an expression on
+Although the assignment operator, `=` can syntactically accept an expression on
 its left-hand side, semantically it only makes sense to mutate an expression
 that refers to a location in memory: it would not make sense to attempt to
 mutate a literal expression, or a temporary result of an intermediate
@@ -195,7 +195,7 @@ classification of values by adding more exotic categories such as *glvalues*,
 https://en.cppreference.com/w/cpp/language/value_category for more information]
 Lvalues in Walrus are defined inductively as:
 
-* A variable expression which referes to a local variable is an lvalue
+* A variable expression which refers to a local variable is an lvalue
 * A parenthesised lvalue expression is an lvalue
 * A field-expression, where the expression to the left of the `.` is an lvalue,
   is an lvalue
@@ -654,11 +654,11 @@ fn roots(a: Float, b: Float, c: FLoat) -> Option {
 }
 ```
 
-## Aggregate datatypes {#sec:reference:aggregates}
-All datatypes we have dealt with so far have been so-called
-*primitive datatypes*: the atoms from which other, more complex types can be
-built. Walrus has 3 methods of building more complex *aggregate datatypes* from
-combinations of primitive datatypes and other aggregate datatypes: *tuples*,
+## Aggregate Data Types {#sec:reference:aggregates}
+All data types we have dealt with so far have been so-called
+*primitive data types*: the atoms from which other, more complex types can be
+built. Walrus has 3 methods of building more complex *aggregate data types* from
+combinations of primitive data types and other aggregate data types: *tuples*,
 *structs* and *enums*.
 
 ### Tuples {#sec:reference:tuples}
@@ -796,7 +796,7 @@ class Person {
     Person(String name, int birthYear, float weight) {
         this.name = name;
         int currentYear = getCurrentYear();
-        this.age = currentYear - birtthYear;
+        this.age = currentYear - birthYear;
         this.weight = weight;
     }
 }
@@ -824,7 +824,7 @@ fn new_person(name: String, birth_year: Int, weight: Float) -> PersonResult {
 #### Nominal typing
 Structs are also named and therefore *nominally-typed*: two structs declared with
 different names have different types, even if they have exactly the same contents.
-Nominal typing of structs allows the contents of an aggregate datatype to be
+Nominal typing of structs allows the contents of an aggregate data type to be
 separated from the intended meaning of the type. For example, a coordinate in 3D
 space, and a date in day-month-year format can both be represented as a `(Int,
 Int, Int)` 3-tuple, but this would create an opportunity for two types with
@@ -874,10 +874,10 @@ fn main() {
 ```
 
 ### Enums {#sec:reference:enums}
-Despite their name, enums are much more powerful than enum types in C or Java^[A
-more appropriate name would be *algebraic datatype*, as they are known in
+Despite their name, enums are much more powerful than enum types in C or Java: a
+more appropriate name would be *algebraic data type*, as they are known in
 functional programming. However, Walrus inherits the `enum` name from Rust,
-which chose the name `enum` as it would be more familiar to C programmers].
+which chose the name `enum` as it would be more familiar to C programmers.
 Walrus' enums are capable of representing one of several different structs
 (called *variants* when in the context of an enum) at once:
 ```rust
@@ -888,7 +888,7 @@ enum IntOrFloat {
 ```
 
 Enum values are constructed similarly to struct values, by specifying an
-initalizer for each field:
+initializer for each field:
 ```rust
 let int = IntOrFloat::Int{x: 5},
 let float = IntOrFloat::Float{y: 5.0},
@@ -1036,11 +1036,11 @@ Here are just some of the symptoms of those billion dollars of pain and damage:
   `int` representing the 0-based position in an array that a key was found at,
   or else a negative integer to indicate that no such key was found. However,
   not every primitive type has such a "dummy" value: if a function needs to
-  return either `true`, `false` or a sentinal value the indicate no return
+  return either `true`, `false` or a sentinel value the indicate no return
   value, there is no third value in `boolean` that can be used as the dummy value.
   
 The solution is to do away entirely with `null`, and introduce an algebraic
-datatype with 2 variants: one for when the value is present, and one for when it
+data type with 2 variants: one for when the value is present, and one for when it
 is absent.
 
 In Haskell:
@@ -1069,7 +1069,7 @@ Now we have solved all the attendant problems `null` brings:
   heap-allocated types
 
 Walrus inherits Rust's `enum`s, however because the type system is currently
-monomorphic (does not support generic functions or datatypes), a separate `enum`
+monomorphic (does not support generic functions or data types), a separate `enum`
 must be declared for each instantiation of the `Option<T>` type:
 
 ```rust
@@ -1080,7 +1080,7 @@ enum IntOption {
 ```
 
 ##### Error handling
-As well as potentially-missing data, algebraic datatypes can be used to
+As well as potentially-missing data, algebraic data types can be used to
 represent potentially-erroneous data: one variant for the "correct" data, and
 one for the data representing an error:
 
@@ -1098,7 +1098,8 @@ enum Result<T,E> {
 ```
 
 The same can be expressed in Walrus, though again, because of limitations in the
-type system, each instance of `Result<T,E>` must be monomorphised:
+type system, each instance of `Result<T,E>` must be *monomorphised* (copied for
+each pair of type arguments):
 
 ```rust
 enum IntStringResult {
@@ -1109,7 +1110,7 @@ enum IntStringResult {
 
 The `Result` enum can be used to replace *exceptions* as used in many other
 programming languages for error handling. Keeping exceptions out of the Walrus
-significantly simplifies the semantics of the lanuage - instead of having extra
+significantly simplifies the semantics of the language - instead of having extra
 language constructs for `try`, `throw`, `catch`, and `finally` expressions and
 requiring each function to include `throws` declaration alongside its type
 signature, errors are just another first-class value that the programmer can
@@ -1120,7 +1121,7 @@ Pattern-matching allows matching against complex, potentially nested data. First
 introduced by TODO in TODO, pattern-matching quickly became a staple feature of
 functional programming languages, but has yet to break into more common
 mainstream languages. For those unfamiliar with it, it can be though of as a
-`switch` statement from C or Java, only generalised to work over all datatypes,
+`switch` statement from C or Java, only generalised to work over all data types,
 and to allow binding of variables: Each *case* is matched against a value in
 order, and the right hand side of the first case to match is evaluated.
 
@@ -1151,7 +1152,7 @@ fn is_zero(x: Int) -> Bool {
 }
 ```
 
-As well as matching against primitive datatypes, aggregate types can be matched
+As well as matching against primitive data types, aggregate types can be matched
 against, using the same syntax as their corresponding expression syntax:
 
 ```rust
@@ -1217,7 +1218,7 @@ particular works, as well as its present limitations.
 
 ### Types and type-systems
 In every (non-trivial) programming language it is possible to express programs
-are *syntatically-correct* but nevertheless *semantically-incorrect*: that is,
+are *syntactically-correct* but nevertheless *semantically-incorrect*: that is,
 the program text is parsed by the compiler/interpreter to form a valid abstract
 syntax tree, but the program represented by the abstract syntax tree produces
 some sort of error at runtime, whether an error may be a fatal condition that
@@ -1228,10 +1229,10 @@ As programmers, we would like to be assured that our programs are in fact
 semantically-correct before we run them, so that we can detect errors and
 correct them at development-time, rather than after the program has been
 deployed. The field of *formal-methods* describes several methods for checking
-the correctness of programs, such as automated-theorem provers, model-checkers,
+the correctness of programs, such as automated theorem provers, model-checkers,
 and Hoare logic. The most widespread method for checking correctness is to use a
 *type-system*. *Types and Programming Languages*, widely regarded
-as the definitive textbook on type-systems and thier use in programming
+as the definitive textbook on type-systems and their use in programming
 languages, describes a type system as:
 
 > a tractable syntactic method for proving the absence of certain program
@@ -1282,7 +1283,7 @@ no exception: its extensions to the simply-typed *λ*-calculus include:
 
 * Primitive types and corresponding literals
 * Global variables
-* Algebraic datatypes and pattern matching
+* Algebraic data types and pattern matching
 * Functions and function-calls with zero or more arguments
 * *Side-effects* via assignment or builtin functions such as `print`
 * Control flow via `if`, `loop`, `return`, `break` and `continue`
@@ -1294,7 +1295,7 @@ introduced by the `struct` or `enum` types, or a combination of already existing
 types into functions or tuples.
 
 #### Primitive types
-As described in @sec:reference:primitive-types, each primitive datatype has an
+As described in @sec:reference:primitive-types, each primitive data type has an
 associated type (`Bool`, `Int`, `Float`, `Char` and `String`). The `Never` type
 is also a primitive type, but it has no associated values (see
 @sec:reference:types:never).
@@ -1332,7 +1333,7 @@ minimal type annotations from the user - although type annotations may be added
 anyway to make the program more readable or nudge the type inference algorithm
 in the correct direction.
 
-Consider writing a function that creats a greeting given a person's name. In
+Consider writing a function that creates a greeting given a person's name. In
 Java, we must annotate both the variable `name` and the return type of the function:
 
 ```java
@@ -1361,7 +1362,7 @@ fn greet(name: String) -> String {
 }
 ```
 
-In rare occasions there is not enough information to infer a single, unambigious
+In rare occasions there is not enough information to infer a single, unambiguous
 type for each variable or expression:
 
 ```rust
@@ -1373,7 +1374,7 @@ fn main() -> _ {
 
 In this case, `id` should be of the type `forall a. (a) -> a`. However, since
 Walrus does not (yet) support polymorphism, there is no single *monotype* (a type
-without quantifiers) it can pick unambigiously. In this case, more information
+without quantifiers) it can pick unambiguously. In this case, more information
 is required. Suppose we intend for `id` to be of type `(Int) -> Int`. Any
 one of
 
@@ -1393,7 +1394,7 @@ types can be computed recursively: for tuples and structs, it is the product of
 the number of inhabitants of each fields, and for enums, it is the sum of the
 number of inhabitants of each variant.
 
-Of particular interest are types with exactly 1 inhabitant (a *enit type*), and
+Of particular interest are types with exactly 1 inhabitant (a *unit type*), and
 types with 0 inhabitants (an *uninhabited* or *empty type*).
 
 ##### The unit type {#sec:reference:types:unit}
@@ -1423,7 +1424,7 @@ struct AlsoAUnit {
 Since all these types have only one inhabitant, it is useful to pick one to be
 *the* unit type, and consider all others as *isomorphic* ^[That is, each unit
 type can be safely converted to *the* unit type without any loss of information]
-to it. In Walrus, the cannonical unit type is the 0-tuple, `()`. For this
+to it. In Walrus, the canonical unit type is the 0-tuple, `()`. For this
 reason, `()` is also sometimes called "*the* unit type" or "the unit tuple".
 
 Since any unit type has exactly 1 possible value, it carries no information at
@@ -1437,7 +1438,7 @@ variables, passed to and returned from functions, etc.
 
 ##### The bottom type {#sec:reference:types:never}
 
-A *bottom-type* is a type with 0 inhabitants: it is *uninihabited*. In Walrus'
+A *bottom-type* is a type with 0 inhabitants: it is *uninhabited*. In Walrus'
 such types are either the primitive type `Never`, an `enum` with 0 variants:
 ```rust
 enum EmptyEnum {}
@@ -1461,8 +1462,8 @@ control back to the enclosing scope after they are evaluated. For example, a
 `loop` expression with no `breaks` inside it will never terminate, and so has
 type `Never`: such a loop will never produce any value. Similarly, the builtin
 function `exit` returns `Never`: once the `exit` function is called, the process
-executing the program exits, and so the enclosing context will never recieve a
-value. Constrast this with the type given to
+executing the program exits, and so the enclosing context will never receive a
+value. Contrast this with the type given to
 `std::exit`^[https://en.cppreference.com/w/cpp/utility/program/exit] by C++11:
 `void exit(int)`. This type signature is less accurate than that of
 Walrus's `exit` - it implies that `std::exit` will eventually return. The
@@ -1488,10 +1489,10 @@ return type of their enclosing function/loop: the return type of the enclosing
 function becomes the type of the argument to `return`, or `()` if it has no
 argument, and the same for the enclosing `loop` in the case of `break`.
 
-A useful property of `Never` is that it may be *coereced* to any other
+A useful property of `Never` is that it may be *coerced* to any other
 type. Suppose the programmer has an `Option`, but is certain that at this point
 in the program it will always be `Some`, never `None`. The `unwrap` function
-will print an erorr and abort if the programmer's assumption turned out to be
+will print an error and abort if the programmer's assumption turned out to be
 false, otherwise it will return the inner value:
 
 ```rust
@@ -1563,7 +1564,7 @@ fn float_identity(x: Float) -> Float {
 }
 ```
 This is clearly tedious and requires the programmer to needlessly duplicate an
-indentical function. If Walrus' type system could quantify over other types, we
+identical function. If Walrus' type system could quantify over other types, we
 could write an identity function that could be called with any argument type.
 Such functions are called *generic* in C++, Java and Rust, or *polymorphic* in
 Haskell ^[Here we copy the generics syntax of Rust for the sake of example]:
@@ -1593,14 +1594,14 @@ Walrus' type system also lacks *overloading*: the ability for a single function
 (or operator) to share several implementations with the same name but different
 types. This is the mechanism that allows, for example, Java to have a single
 `toString` method which is able to convert any type to a string representation,
-where the logic to convert a datatype to a string representation may be very
+where the logic to convert a data type to a string representation may be very
 different depending on the type.
 
 Although *overloading* and *polymorphism* both allow a single function name to
 operate on different types, overloading is more flexible than polymorphism. A
 polymorphic function must have exactly the same behaviour for each type of
 argument passed to it, and it must be valid for any possible type of argument.
-In otherwords, a polymorphic function cannot perform any type-specific
+In other words, a polymorphic function cannot perform any type-specific
 operations on its arguments: it can only shuffle them around. Thus it is
 possible to write a polymorphic identity function, or a polymorphic
 list-reversal function, but not a polymorphic `to_string` function or a
@@ -1610,7 +1611,7 @@ an overloaded function can only be called with types that have an overload
 defined for them.
 
 It is for these reasons that Walrus has several different `to_string` functions
-for each of the primitive datatypes, and why its operators cannot be passed
+for each of the primitive data types, and why its operators cannot be passed
 around as first-class values. By being builtin syntactic constructs, the type
 checker can handle operators as a special, limited form of overloading, where
 some operators can be applied to more than one type, but the set of types they
@@ -1631,7 +1632,7 @@ fn max<T: Ord>(v1: T, v2: T) -> T;`
 ```
 
 This function can only be called on types for which a way to compare them has
-been defined. In Rust, requirements are called *traits*, and a type fulfills the
+been defined. In Rust, requirements are called *traits*, and a type fulfils the
 requirements of a trait by providing an *implementation* of the trait ^[The real
 Rust `Ord` trait has its own constraints that we will ignore for the sake of
 simplicity of this example]:

@@ -1,39 +1,40 @@
 # Introduction {#sec:intro}
 
 ## Project description
-In this project, we present the *Walrus* programming language: a language
-syntatically similar to the C-like family of language, but adopting many
-features more common in functional-programming languages. The result is a
-language where functional design patterns like *higher-order functions* and
-*immutable data structures* are encouraged, but imperative features like
-*mutation* and *early return* are still available for when a pure functional
-formulation is inelegant. In the course of this project we have designed the
+In this report we present the Walrus programming language, which aims to achieve
+correctness, high-level abstraction and performance. This is achieved by
+adoption of features commonly found in functional programming languages, such as
+first class functions, algebraic data types and type inference, whilst retaining
+familiar imperative features such as mutation and early return for when a purely
+functional formulation of a program is inelegant.
+
+In the course of this executing this project we have designed the Walrus
 language, implemented a compiler for it, and formally specified its syntax and
 typing rules.
 
 ## Report Structure
 This report consists of 4 sections:
 
-* **Introduction**: what goals we hope the language will fullfil, and
+* **Introduction**: The criteria we hope the language will fulfil, and
   inspirations in its design.
-* **Reference**: a detailed language reference along with example programs and
-  rationales for design decisions where appropraite. 
-* **Implementation**: a walkthrough of the Walrus compiler pipeline - every stage
-  that a program passes through to get from source code to machine code.
-* **Evaluation**: a retrospective evaluation of the Walrus language agaisnt our
+* **Reference**: A detailed language reference along with example code and
+  rationales for design decisions where appropriate. 
+* **Implementation**: A walkthrough of the Walrus compiler pipeline - every
+  stage that a program passes through to get from source code to machine code.
+* **Evaluation**: A retrospective evaluation of the Walrus language against our
   project goals, and directions for future investigation.
 
 ## Project goals
-When designing the language, we selected several criteria that we wanted Walrus to
-fulfill.
+When designing the language, we selected several criteria that we wanted Walrus
+to fulfil.
 
-These are by no means the only criteria by which langauges can be judged: choice
+These are by no means the only criteria by which languages can be judged: choice
 and priority of criteria will be determined by the language's intended use and
 target audience:
 
-* A scripting langauge intended for small "glue" scripts will likely value
+* A scripting language intended for small "glue" scripts will likely value
   low-barriers to entry and fast development time over correctness or
-  performance. This is exactly the tradeoff made by Bash, where the lack of a
+  performance. This is exactly the trade-off made by Bash, where the lack of a
   type system allows any program written in any programming language to be used
   as a library function - when all functions communicate by reading and writing
   strings, there is no need to convert between different types. However this
@@ -52,7 +53,7 @@ target audience:
   accessible to programmers without a grounding in programming language theory.
 
 Our language does not fill any of those niches. It is intended to be a "general
-purpose" language for writing commandline or desktop applications, the kind of
+purpose" language for writing command-line or desktop applications, the kind of
 task for which one might use languages such as Java or Go.
 
 ### Correctness
@@ -60,13 +61,13 @@ We believe that programming languages are above all a tool for producing
 software, and that the software produced by such tools should be *correct*. 
 
 By correct, we mean that the program produces the expected result with respect
-to a specification of the program.  Incorrect programs can at best crash noisely
-with an indication of where the error occurred, silently produce an incorrect
-answer but continue executation, or at worst produce a correct seeming answer
-but create a security vulnerability such as a buffer overflow.
+to a specification of the program.  Incorrect programs can at best crash with an
+indication of where the error occurred, silently produce an incorrect answer but
+continue execution, or at worst produce a correct seeming answer but create a
+security vulnerability such as a buffer overflow.
 
 Total program correctness is impossible without resorting to formal verification
-(and even then it is undeciable in the general case), and indeed few programs
+(and even then it is undecidable in the general case), and indeed few programs
 even have a formal specification. However it is possible to increase confidence
 in program correctness through introduction of features such as a strong type
 system (see @sec:ref:type-system for a definition of *strong* typing vs *weak*
@@ -84,11 +85,11 @@ A key component of ensuring correctness is the avoidance of
 behaviour of the program is not specified by the semantics of the language or
 the program being executed on. Undefined behaviour is common in the C and C++
 programming languages, both because of variation in the specified behaviour of
-an operation on each platform (such as signed integer overflow or out of bounds
-bitshifts, which vary according to the instruction set architecture), or because
-attempting to detect the erroneous condition at runtime would be excessively
-costly in terms of performance (such as checking that each pointer is not null
-before dereferencing it). 
+an operation on each platform (such as signed integer overflow or bitshifts by
+more than the bit-width, which vary according to the instruction set
+architecture), or because attempting to detect the erroneous condition at
+runtime would be excessively costly in terms of performance (such as checking
+that each pointer is not null before dereferencing it). 
 
 The C++ standard states that compilers are free to give whatever
 semantics they desire to undefined behaviour:
@@ -106,8 +107,8 @@ happen: C and C++ folklore warns of such disasterous results as reformatting the
 user's hard-drive, launching missiles, or causing demons to fly out of the
 user's nose.^[http://catb.org/jargon/html/N/nasal-demons.html]
 
-In practice most compilers simply assume that undefined behavour cannot occur.
-From the point of view of the compiler this is a useful interpretion of the
+In practice most compilers simply assume that undefined behaviour cannot occur.
+From the point of view of the compiler this is a useful interpretation of the
 standard, since it allows them to perform extra optimisations making more
 assumptions about the user's code. However, this can still be problematic, as it
 can leads to the compiler eliding safety checks inserted by the programmer or
@@ -132,12 +133,12 @@ The language should also provide features that allow the programmer to solve
 problems at a higher level of abstraction or without writing excessive
 boilerplate code. In our experience this is often achieved through the use of
 features from functional programming such as higher order functions,
-polymorphism, and algebraic datatypes.
+polymorphism, and algebraic data types.
 
 ### Performance
 The language should not produce programs that are needlessly slow to execute. Of
 course, everyone always wants faster programs; it is a question of what
-tradeoffs the language makes in order to acheive it.
+trade-offs the language makes in order to achieve it.
 
 Systems languages such as C++ and Rust are willing to significantly complicate
 the model of the language in order to squeeze the last few drops of performance
@@ -184,21 +185,21 @@ order to compare certain design or implementation decisions to the same
 decisions made in other languages. Knowledge of an imperative programming
 language such as C, C++ or Java is assumed. Knowledge of Rust and of a
 functional programming language such as Haskell could also be helpful to better
-understand some of the comparisons, but is not absolutetly necessary.
+understand some of the comparisons, but is not absolutely necessary.
 
 A key inspiration of the design of the Walrus language is the Rust language.
-Rust does indeed fulfill many of the design criteria we gave earlier. It
+Rust does indeed fulfil many of the design criteria we gave earlier. It
 guarantees that undefined behaviour will not be triggered, unless the programmer
 specifically opts in via use of the `unsafe` keyword to indicate that the code
 cannot be checked but is nevertheless safe. It provides high level abstractions
-such as type inference, algebraic datatypes and pattern pattern matching.
+such as type inference, algebraic data types and pattern pattern matching.
 However, as we mentioned above, Rust's unwavering pursuit of performance
 requires the programmer to give undue attention to details of memory management
 that are often not relevant and limits the power of abstraction capabilities. 
 
 Since we agree with many of the design decisions taken by Rust, we have often
 looked to Rust for inspiration in the design of the syntax and semantics of
-Walrus, whilst simplifying those aspects that we believe are unnecesarily
+Walrus, whilst simplifying those aspects that we believe are unnecessarily
 complex for Walrus' lower performance requirements. Our hope is that Walrus will
 be attractive to other users of Rust admire many of its design choices but who
 share our frustration at the limitations imposed by its high performance

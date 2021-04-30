@@ -117,7 +117,7 @@ language in question, but not more. Therefore, although a lexer could be written
 by hand in the Turing-complete language Rust, this is overkill when a
 finite-state-machine can do the job adequately ^[The lexical structure of Walrus
 is not quite regular, as its block-comments are in fact context-free, but this
-can be adjusted by a minor addition to the lexer, which will be exlained later
+can be adjusted by a minor addition to the lexer, which will be explained later
 in this section].
 
 The job of lexing Walrus code was therefore delegated to the excellent
@@ -135,7 +135,7 @@ of glue code to drive the lexer and source locations to each token.
 
 ## Parsing
 Once a flat stream of tokens has been produced, they must be assembled into a
-more structured tree-like structure, where each syntatic construct is a child of
+more structured tree-like structure, where each syntactic construct is a child of
 its enclosing construct (with a whole file forming the root node). For example,
 this Walrus file 
 ```rust
@@ -189,7 +189,7 @@ contrast, there are numerous competing approaches to parsing, each with their
 own advantages and disadvantages ^[For a good overview of commonly used parsing
 approaches, see
 https://tratt.net/laurie/blog/entries/which_parsing_approach.html]. In the
-course of writing the Walrus compiler, I have experiemented with 4 different
+course of writing the Walrus compiler, I have experimented with 4 different
 parsing approaches: the parser is by far the most rewritten component of the
 Walrus compiler, and still the component I am least satisfied with.
 
@@ -204,9 +204,9 @@ in another token of input), *reduce* (create a new syntax node) or *accept*
 LR parsers are able proven to be able to parse a large class of possible
 context-free languages, and tend to be very fast. For this reason they are given
 great prominence in university compiler courses. However, LR parser-generators
-one great weakensses: LR-parser generators will only accept grammars that are in
+one great weaknesses: LR-parser generators will only accept grammars that are in
 a LR-compatible form. Grammars that do not conform to this expected style will
-generally cause the parser generator to give inscruitable errors related to
+generally cause the parser generator to give inscrutable errors related to
 *shift-reduce* errors. For example, attempting to pass the following grammar:
 ```
 %start Expr
@@ -221,7 +221,7 @@ to the venerable `Yacc` produces:
 expr1.y: yacc finds 4 shift/reduce conflicts
 ```
 which is incomprehensible unless the user is familiar with the underlying LR
-algorithm. The root cause is that the grammar is *ambigous*: the same imput
+algorithm. The root cause is that the grammar is *ambiguous*: the same input
 string can be parsed in more than one way. For example, the string `1 - 2 - 3`
 could be parsed as either `(1 - 2) - 3` or `1 - (2 - 3)`. The workaround to this
 is to rewrite the grammar as
@@ -239,7 +239,7 @@ Factor: "INT"
 ```
 While the solution seems simple for this small example, naively copying a
 context-free grammar of a real life programming language into a LR-parser
-generator will produce hundreads of such shift-reduce conflicts, and the
+generator will produce hundreds of such shift-reduce conflicts, and the
 resulting fixed grammar will be contorted beyond recognition.
 
 LR parser generators were my first attempt at writing a parser for Walrus (in
@@ -250,7 +250,7 @@ so moved onto the next attempt:
 
 #### Handwritten recursive descent {#sec:impl:parser:recursive-descent}
 A handwritten recursive descent parser is simply a series of functions
-representing each nonterminal in the language grammar. In this sense
+representing each non-terminal in the language grammar. In this sense
 recursive-descent is the simplest form of parsing: no intermediate tool or
 domain-specific language is needed; instead, one simply writes in the same
 programming language that they would use for any other task. The only caveat is
@@ -258,7 +258,7 @@ that care must be taken to ensure that operator precedences and associativities
 are correctly handled, and that the resulting program is not
 *left-recursive* (it attempts to parse the same non-terminal repeatedly without
 consuming any tokens between each call), otherwise it will loop-forever/crash
-witha stack-overflow.
+with a stack-overflow.
 
 In recent years, error recovery has become an important consideration when
 writing a parser in order to improve compiler user experience. Therefore it is
@@ -266,10 +266,10 @@ crucial that a compiler does not abort on the first encountered syntax error: it
 should be able to insert a placeholder node for to represent a syntax error and
 continue parsing the rest of the file to detect more syntax errors, and
 potentially even perform semantic analysis to detect any semantic errors in code
-that was succesfully parsed. Error recovery is an ongoing research problem, and
+that was successfully parsed. Error recovery is an ongoing research problem, and
 so far no parser generator seems to be able to produce a complete parse tree in
 the presence of several syntax errors. For this reason, the 2 most popular C
-compilers, GCC and Clang, as well as the rust compiler, rustc, all use
+compilers, `gcc` and `clang`, as well as the rust compiler, `rustc`, all use
 handwritten recursive descent parsers that go to great pains to always recover
 in the presence of syntax errors.
 
@@ -287,11 +287,11 @@ Parsing-expression grammars (PEGs) also describe a recursive-descent parser,
 however rather than writing the parser by hand, a corresponding function is
 generated for each *rule* in the grammar. These rules have syntax very similar
 to that of Backus-Naur Form, however the *choice operator*, `|`, is replaced by
-the *ordered-choice operator*, `/`. Rather than nondeterministically selected
+the *ordered-choice operator*, `/`. Rather than non-deterministically selected
 the "most appropriate" alternative to parse with, the ordered-choice operator
-selects the first alternative that suceeds and sticks with it, even if
-subsequent parsing fails. This results in the problem of ambigious grammars
-being defined out of existance, since every string will be parsed in exactly one
+selects the first alternative that succeeds and sticks with it, even if
+subsequent parsing fails. This results in the problem of ambiguous grammars
+being defined out of existence, since every string will be parsed in exactly one
 way.
 
 For example, the same grammar as given in @sec:impl:parser:lr would be:
@@ -369,21 +369,22 @@ Of the 4 approaches I have explored in writing the Walrus parser, I find parser
 combinators to be the most satisfactory: they are nearly as declarative as
 Parsing Expression Grammars, whilst still allowing the programmer to use the
 full abstraction capabilities of the normal implementation language, as in
-hand-written recursive descent. However, the implementation is still far from
-satisfactory: it provides neither error reporting nor error recovery. Since my
-parser combinators currently do not distingush between failure to parse due to a
-syntax error and failure to parse because another alternative rule needs to be
-attempted, the precise location of a syntax error cannot easily be detected -
-the only indication that a syntax error was encountered was that the whole input
-string was not consumed. Therefore, the Walrus parser will simply abort if the
-entire input file is not consumed, without any indication of where the first
-syntax error occurred. Error-reporting and error-recovering parser-combinators
-would be one of my first priorities if I were to continue working on the
-compiler.
+hand-written recursive descent. 
+
+However, the implementation is still far from satisfactory: it provides neither
+error reporting nor error recovery. Since my parser combinators currently do not
+distinguish between failure to parse due to a syntax error and failure to parse
+because another alternative rule needs to be attempted, the precise location of
+a syntax error cannot easily be detected - the only indication that a syntax
+error was encountered was that the whole input string was not consumed.
+Therefore, the Walrus parser will simply abort if the entire input file is not
+consumed, without any indication of where the first syntax error occurred.
+Error-reporting and error-recovering parser-combinators would be one of my first
+priorities if I were to continue working on the compiler.
 
 ## Semantic Analysis
 The two previous sections have covered *syntactic-analysis*: ensuring that the
-program is *syntatically-correct*. Now we will move onto *semantic-analysis*:
+program is *syntactically-correct*. Now we will move onto *semantic-analysis*:
 checking that the program is *semantically-correct* (it contains no type errors,
 all referenced variables are defined, etc), and gathering enough information to
 be able to generate LLVM IR if the program is indeed semantically-correct.
@@ -391,7 +392,7 @@ be able to generate LLVM IR if the program is indeed semantically-correct.
 ### Lowering
 Before we can begin performing semantic-analysis, we must convert the parse-tree
 which was generated by the parser to a more suitable Intermediate
-Representation. This is because the parse-tree contains a lot of extraenous
+Representation. This is because the parse-tree contains a lot of extraneous
 nodes to represent syntactic elements such as commas and parentheses which carry
 no semantic information. The parse-tree also carries the source-location of
 every node. This is useful for display the source location of errors to the
@@ -401,17 +402,12 @@ not need this extra information.
 
 For these reasons, when performing semantic-analysis we operate over a more
 abstracted, high level representation, named unimaginatively the High-level
-Intermediate Representation. This name was inherited from the rustc compiler,
+Intermediate Representation. This name was inherited from the `rustc` compiler,
 which has several IRs, including a High-level Intermediate Representation and a
-Mid-level Intermediate Representation. ^[Some textbooks and compilers name the
-IR they perform semantic analysis over the "Abstract Syntax", however I
-have chosen to avoid that name as it may be confused for the parse tree produced
-by a parser, which is also sometimes called an "Abstract Syntax Tree"]. The
-process of converting a parse tree to its HIR is called *lowering*.
-
-In Walrus, the HIR of a program is represented by several mutually recursive
-types (see @sec:appendix:hir), the most important being `FnDef`, `StructDef`,
-`EnumDef`, `Expr`, `Pat` and `Type`. 
+Mid-level Intermediate Representation. The process of converting a parse tree to
+its HIR is called *lowering*. During this process, literals are also evaluated
+to get their values - `Int`s and `Float`s are parsed, and escape characters are
+replaced in `Char`s and `String`s.
 
 #### HIR annotation
 Having a representation of the all the source level entities - expressions,
@@ -420,7 +416,7 @@ need a way to associate each entity with certain semantic information that is
 produced and consumed during semantic analysis and code generation - for
 example, each expression must be associated with its inferred type after type
 inference, or each variable with its parent scope. This problem of having to
-annotate trees with different peices of metadata at different stages in a
+annotate trees with different pieces of metadata at different stages in a
 program has been referred to in the literature as *The AST Typing Problem* ^[BIB
 http://blog.ezyang.com/2013/05/the-ast-typing-problem] or the *The tree
 Decoration Problem* ^[BIB Trees that Grow paper].
@@ -429,12 +425,11 @@ The naive solution to this problem is to have multiple IRs for each stage of the
 semantic analysis and annotate each new IR with the appropriate information, so
 that, for example, scope-checking converts `Expr`s to `ScopedExpr`s and
 type-inference converts `ScopeExpr`s to `TypedExprs`. However, this approach
-would require a large amount of code duplication: the HIR definitions given in
-@sec:appendix:hir run to about 250 lines, so each new IR woudld add at least 250
-lines of nearly identitical struct definitions plus code to convert between the
-representations.
+would require a large amount of code duplication: the HIR definitions run to
+about 250 lines, so each new IR would add at least 250 lines of nearly identical
+definitions plus code to convert between the representations.
 
-The approach we have chosen is to store auxiallary data in *side-tables* (eg a
+The approach we have chosen is to store auxiliary data in *side-tables* (eg a
 `HashMap` or other associative container), rather than storing them *inline*
 inside the tree data structure. For example, as a first attempt, we could create
 a `HashMap<hir::Expr, types::Type>`{.rust}, for mapping each `Expr` to its
@@ -453,18 +448,20 @@ fn f(x: Int) {
 ```
 
 In this function, the variable `x` appears 7 times in different locations, and
-each occurance of the variale `x` may require different information to be
-associated with it (eg each occurance of `x` should have a distinct source
+each occurrence of the variable `x` may require different information to be
+associated with it (eg each occurrence of `x` should have a distinct source
 location for reporting errors, and may potentially have a different inferred
 type as new variables shadow old ones). The solution is to use an
 *arena-allocation strategy*: the HIR nodes themselves are stored in `Vec`
 (Rust's dynamic array type), and the index of the node into the arena is used to
 provide identity semantics. The `Vec` that holds each type of HIR node is
-refered to as the *arena*, and the index into the arena is the node's *ID*. Each
-`Id<T>`{.rust} is parameterised by the type it represents, even though it does
-not store an actual reference or value of type `T`. This provides extra
+referred to as the *arena*, and the index into the arena is the node's *ID*.
+Each `Id<T>`{.rust} is parametrised by the type it represents, even though it
+does not store an actual reference or value of type `T`. This provides extra
 type-safety over using plain `usize`{.rust}s by preventing an index generated by
-an arena of one type being used to index into an arena of another type.
+an arena of one type being used to index into an arena of another type^[A type
+parameter that does not appear in the body of a type is called a "phantom
+type"].
 
 ```rust
 struct Id<T> {
@@ -600,7 +597,7 @@ pub struct InferenceResult {
 }
 ```
 
-Where a `Type` is either a primitive type, `Uknown`, or various combinations of other types:
+Where a `Type` is either a primitive type, `Unknown`, or various combinations of other types:
 ```rust
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Type {
@@ -629,7 +626,6 @@ pub struct FnType {
     pub ret: Box<Type>,
 }
 ```
-
 The `Unknown` type is used as a placeholder when a correct type could not be
 inferred, either due to some form of semantic error (such as an unbound
 variable), or when there is not enough information available to infer a concrete
@@ -700,25 +696,25 @@ rules used are provided in @sec:appendix:type-rules.
 | $\tau_{7} = Int$                      | IntLit
 | $\tau_{8} = Int$                      | IntLit
 
-Finally, we solve the set of contraints via *unification* (TODO: citation).
+Finally, we solve the set of constraints via *unification* (TODO: citation).
 Unification is the process of solving a system of symbolic equations by finding
 a *substitution* mapping variables to their values. The unification algorithm
 required for our type inference algorithm is relatively simple, since we are
 only dealing with equality constraints (symbolic equations of the form $x = y$):
 
 ```text
-fn unify(constraints: Constraint list) -> Substition {
+fn unify(constraints: Constraint list) -> Substitution {
     if cons is empty, return the empty substitution
     else
         let first_constraint :: rest_constraints = constraints;
         let first_subst = unify1(first_constraint)
-        let rest_constraints = replace all variables in rest_constaints by thier values
+        let rest_constraints = replace all variables in rest_constraints by their values
             in first_subst
         let rest_subst = unify(rest_constraints)
-        replace all type in first_subst by thier values in rest_subst
+        replace all type in first_subst by their values in rest_subst
 }
 
-fn unify1(ty1: Type, ty2: Type) -> Substition {
+fn unify1(ty1: Type, ty2: Type) -> Substitution {
     if ty1 and ty2 are both the same primitive type, return the empty substitution
     else if ty1 is a type variable, unify_var(ty1, ty2)
     else if ty2 is a type variable, unify_var(ty2, ty1)
@@ -727,12 +723,12 @@ fn unify1(ty1: Type, ty2: Type) -> Substition {
     else the two types could not be unified, return an error
 }
 
-fn unify_var(ty: Type, var: TypeVar) -> Substition {
+fn unify_var(ty: Type, var: TypeVar) -> Substitution {
     if ty is a type variable
-        if ty and var are the same type variable, return the empty substituion
-        else return a singleton substution, {var: ty}
+        if ty and var are the same type variable, return the empty substitution
+        else return a singleton substitution, {var: ty}
     else if var occurs as a variable in ty, return an error
-    else return a singleton substution, {var: ty}
+    else return a singleton substitution, {var: ty}
 }
 ```
 
@@ -747,7 +743,7 @@ a stack overflow, depending on the implementation.
 Consider solving the constraint set generated above. We start with an empty
 substitution, and remove the first constraint, $\tau_0 = () \to \tau_1$. Since
 the left-hand side of the constraint is a type-variable, we add $\tau_0 = ()
-\to \tau_1$ to the substitution, and replace all occurences of
+\to \tau_1$ to the substitution, and replace all occurrences of
 $\tau_0$ in the remaining constraints by $() \to \tau_1$ (there are none, so the
 constraint set remains unchanged). Repeating this for all the constraints in the
 set eventually gives this substitution: TODO.
@@ -757,7 +753,7 @@ interleaves **step 2** and **step 3** by performing unification on demand. This
 allows for better error-reporting: messages about unification errors can refer
 to the HIR node that was being visited when the unification failed, and be
 specialised according to the node: for example, if we discover that the type of
-the function in a function-call expression is infact not a function, we can emit
+the function in a function-call expression is in fact not a function, we can emit
 an error of the form "attempted to call a non-function", rather than a more
 generic "type mismatch" error. If unification fails, the type of the node is
 assumed to be `Type::Unknown` and inference can continue over the rest of the
@@ -767,14 +763,14 @@ program, providing better error-recovery.
 The type checker pass also checks various other properties of the program as it
 traverses the HIR which are difficult to express as equality constraints:
 
-* Every occurence of `break` or `continue` must be within a `loop`
+* Every occurrence of `break` or `continue` must be within a `loop`
 * The left-hand side of an assignment expression must be an *l-value* (see
   @sec:reference:l-values)
 * The l-value being assigned to must have been declared mutable with the `mut`
   keyword, and it must refer to a local variable
-* Struct or enum patterns must bind all fields, and not refer to nonexistant
+* Struct or enum patterns must bind all fields, and not refer to non-existant
   fields
-* Field expressions must not attempt to access nonexistant fields
+* Field expressions must not attempt to access non-existant fields
 * Patterns in let statements, function parameters or lambda parameters must be
   *irrefutable* (see @sec:reference:irrefutable-patterns)
 
@@ -783,25 +779,25 @@ Before we can proceed to code generation, we need to first confirm that no
 semantic errors were detected in the semantic analysis pass. We do this by
 collecting all errors emitted by the lowering, name resolution and type
 inference passes into a single `Vec` of errors. If vector is empty, we can
-proceed to the next step. If there are any errors, we abort the compilition
+proceed to the next step. If there are any errors, we abort the compilation
 process and print some (hopefully) useful error messages to the user.
 
-Each error is represnted as an `enum` indicating the kind of error (eg type
+Each error is represented as an `enum` indicating the kind of error (eg type
 mismatch, undefined variable, mutating an immutable variable) and the HIR nodes
 responsible. The corresponding parse tree node for each HIR node is looked-up in
 the `HashMap` created in the lowering pass to get the source locations. The
-codespan-reporting ^[TODO: link] library then handles the details of printing a
+`codespan-reporting`^[TODO: link] library then handles the details of printing a
 message to the terminal with the correct escape-sequences to display lines and
 coloured text.
 
-## LLVM IR generation
+## Code generation
 Once we have finished type inference, we have successfully detected all semantic
 errors that could occur in the program, and are ready to generate an executable
 file that can be run. For this task we will defer to the LLVM framework. LLVM
 handles the intricacies of generating instructions appropriate to the hardware
-architecture the progrmam is compiled on and the Application Binary Interface
+architecture the program is compiled on and the Application Binary Interface
 mandated by the operating system being used. All that we need to do is to
-generate *LLVM-IR*. 
+generate *LLVM IR*. 
 
 ### LLVM IR
 The LLVM intermediate representation is both low-level enough to allow language
@@ -810,23 +806,23 @@ also high-level enough to abstract away platform-specific considerations such as
 instruction-set and application-binary-interface (ABI). 
 
 To achieve this, the LLVM IR resembles an assembly programming language, with
-the addition of abstractions for compound datatypes, global variables, stack
+the addition of abstractions for compound data types, global variables, stack
 allocation, and functions. Each LLVM program consists of a series of global
 variable definitions, type definitions and function definitions. Unlike
-platform-specific programming languges - where the only datatype is a
+platform-specific programming languages - where the only data type is a
 machine-words (and floating-point types, if the processor supports them) and the
 same machines word can be freely reinterpreted as a pointer, an integer, a
 character, a boolean, etc by each instruction - LLVM is strongly-typed: each
 value has a type, each instruction operates on specified types, and values must
-be explictly converted between types. 
+be explicitly converted between types. 
 
 Each function body consists of a flat stream of assembly instructions, split
-into *basic-blocks* - a continious sequence of instructions, terminated by a
+into *basic-blocks* - a contiguous sequence of instructions, terminated by a
 branch or return). Instructions must be in *static single assignment form*
 (SSA): each variable must be assigned to exactly once. Mutation is achieved by
 storing a value on the stack or heap and writing to the pointed-to value.
 
-### The codegen pass
+### Generating LLVM IR
 Generating LLVM IR for a program is accomplished by first generating definitions
 for structs, enums and functions, and then generating the body of each function
 by a recursive traversal of the function's HIR. The LLVM library provides a
@@ -840,7 +836,7 @@ value can be represented as a single bit at runtime (with `false` mapping to `0`
 and `true` to `1`). LLVM IR allows arbitrary-width
 integer types &[That is, the width of integer type is still fixed, but is not
 restricted to powers of two. LLVM does *not* have in built support for
-*arbirary-precision* or so-called "bignum" integers, where the number of bits
+*arbitrary-precision* or so-called "bignum" integers, where the number of bits
 occupied by the value is not known at compile-time]. Therefore, each `Bool` can
 be represented by the LLVM `i1` type: a 1-bit integer. When translating to
 machine-code, LLVM will map this to an 8-bit byte.
@@ -884,11 +880,11 @@ ASCII string. Only Code Points greater than $FF_{16}$ will be encoded as
 multiple 8-bit Code Units. For this reason, Walrus uses UTF-8 for its `String`
 encoding.
 
-A `String`'s representation in memory is more complex than the other datatypes:
-while all other primitive datatypes occupy a fixed amount of space that can be
+A `String`'s representation in memory is more complex than the other data types:
+while all other primitive data types occupy a fixed amount of space that can be
 known ahead of time, `String`s whose size cannot be known at compile-time can be
 created by concatenating two existing `String`s together [^StringConcat], or by
-converting another datatype to a human-readable representation [^ToString].
+converting another data type to a human-readable representation [^ToString].
 Therefore `String`s are represented as a struct containing an 32-bit integer
 representing the `String`s 'length' (the number of bytes occupied by the
 `String`'s characters), and a pointer to the `String`'s UTF-8 encoded contents.
@@ -913,9 +909,10 @@ known at compile-time, we can store the contents as a constant global array of
 bytes, and then store a pointer to the global variable in the `bytes` field.
 When converting to machine-code, LLVM will place these global arrays in a
 section of the executable for global, readonly data (such as the `.rodata`
-section in ELF executables). As a further optimiastion, we *deduplicate* string
-literals: during codegen we maintain a `HashMap<String, PointerValue>`{.rust} mapping
-each string literal contents to a global pointer. Thus the following program:
+section in ELF executables). As a further optimization, we *deduplicate* string
+literals: during LLVM IR generation we maintain a `HashMap<String,
+PointerValue>`{.rust} mapping each string literal contents to a global pointer.
+Thus the following program:
 
 ```rust
 fn main() {
@@ -969,8 +966,9 @@ length alongside the contents-pointer:
 
 [^StringConcat]: See @sec:reference:operators
 [^ToString]: See @sec:reference:builtin-functions for a list of functions that convert
-builtin datatypes to their string representations.
-[^NullTruncated]: For example, the C code `printf("Hello\0world!\n")` will
+builtin data types to their string representations.
+ [^NullTruncated]: For example, the C
+code `printf("Hello\0world!\n")` will
 output `Hello` to the terminal.
 
 #### Variables and mutation
@@ -1029,10 +1027,10 @@ add.entry:
 }
 ```
 
-Note that we immediatly allocate stack space for each parameter passed in,
+Note that we immediately allocate stack space for each parameter passed in,
 because function parameters can be mutated just like let-bound variables, if
 they have been marked with the `mut` keyword. As before, we rely on the LLVM
-optimizer to alleviate any performance loss due to our naive codegen strategy.
+optimizer to alleviate any performance loss due to our naive strategy.
 
 ##### Builtin functions {#sec:impl:llvm:builtins}
 We could have implemented Walrus' library of builtin functions (see
@@ -1046,14 +1044,14 @@ take some effort to implement as Rust has no stable ABI and a significantly more
 complex build process than C.
 
 ##### Closures
-Closures are significantly more complex to codegen. Since a closure can capture
-variables from its environment, we need to include the captured values in
-whatever runtime representation we select for closures. We chose to implement
+Closures are significantly more complex to generate IR for. Since a closure can
+capture variables from its environment, we need to include the captured values
+in whatever runtime representation we select for closures. We chose to implement
 closures using a method known as *closure-conversion*. The body of each closure
 is represented as a top-level function, and closure values become a pair of a
 pointer to the closure's function and a pointer to the closure's environment.
 The closure's environment is allocated on the heap, via `malloc`, as the
-environemnt can *escape* from the current stack-frame if the closure is returned
+environment can *escape* from the current stack-frame if the closure is returned
 from a function - therefore if it were allocated on the stack, it would be
 deallocated before the function returns. When calling a closure, the environment
 pointer is passed to the top-level function, which then extracts the captured
@@ -1100,10 +1098,10 @@ lambda.entry:
 }
 ```
 
-##### Wrapping toplevel and builtin functions
-Since we want to be able to treat toplevel functions, builtin functions and
-lambda expressions interchangably as first class values, function values must
-have the same in memory-representation. Therefore toplevel and builtin functions
+##### Wrapping top-level and builtin functions
+Since we want to be able to treat top-level functions, builtin functions and
+lambda expressions interchangeably as first class values, function values must
+have the same in memory-representation. Therefore top-level and builtin functions
 are wrapped in a closure with an empty environment, represented by the null
 pointer. It is safe to use the null pointer, since the top-level/builtin
 function will ignore the extra argument on the stack and never attempt to
@@ -1138,11 +1136,11 @@ get_five.entry:
 ```
 
 Because it would be excessively wasteful (and make the resulting LLVM IR much
-harder to understand when trying to debug the codegen pass) to wrap every
-toplevel or builtin function in an empty closure before immediatly unwrapping
+harder to understand when trying to debug the IR generation pass) to wrap every
+top-level or builtin function in an empty closure before immediately unwrapping
 the closure to call it, we apply another optimisation: calls to variables, where
-the variable is known to refer to a toplevel or builtin function, skip the
-unneccesary closure wrapping and unwrapping, and just call the function
+the variable is known to refer to a top-level or builtin function, skip the
+unnecessary closure wrapping and unwrapping, and just call the function
 directly:
 
 ```rust
@@ -1316,14 +1314,14 @@ loop.exit:                                        ; preds = %if.then
 }
 ```
 
-#### Aggregate datatypes
+#### Aggregate data types
 ##### Tuples
 Code-generation of tuple-values is simple. Tuple values consist merely of the
-values of thier elements stored one after another in contigious memory (and it
+values of their elements stored one after another in contiguous memory (and it
 follows from this that 0-tuples occupy no memory at runtime). Since LLVM IR
 includes anonymous struct types, we don't even need to declare a struct type
 before constructing one. We simply construct an anonymous struct with the
-correct fields in the correct order. Since LLVM doesnt allow constructing a
+correct fields in the correct order. Since LLVM doesn't allow constructing a
 struct in one go (unless all the fields are constant expressions, which will not
 be true in the general case), we have to stack allocate the struct, and then
 initialize each field individually:
@@ -1354,7 +1352,7 @@ main.entry:
 Code-generation of struct values is nearly identical to that of tuple values,
 since structs are simply tuples with named fields. The only distinction is that
 we generate a distinct, named type for each struct type to allow for
-recursive types (see @sec:impl:llvm:recurisve-types):
+recursive types (see @sec:impl:llvm:recursive-types):
 
 ```rust
 struct S {
@@ -1390,11 +1388,11 @@ main.entry:
 Code-generation of enum values is more complicated: this is because an enum can
 take on one of many different variants at different points in the program. Which
 particular variant the enum is currently occupying is tracked by the enum's
-*tag* or *discriminant*: an integer of appropriate bitwidth ^[in the case of 0
-or 1 variants, the discriminant is represented by a 0-typle, `{}`, as LLVM does
+*tag* or *discriminant*: an integer of appropriate bit-width ^[in the case of 0
+or 1 variants, the discriminant is represented by a 0-tuple, `{}`, as LLVM does
 not have an `i0` type] to represent all possible variants, where $width =
 log_{256} (num\_variants)$ . The enum value must occupy enough memory to be able
-to accomodate all possible variants, so the enum type is defined to LLVM as a
+to accommodate all possible variants, so the enum type is defined to LLVM as a
 pair of the tag-integer and an anonymous struct representing the fields of the
 variant with the largest size in memory, and then we cast to other variants as
 appropriate when constructing enums or pattern matching over them.
@@ -1447,11 +1445,11 @@ err.entry:
 }
 ```
 
-##### Recursive types {#sec:impl:llvm:recurisve-types}
+##### Recursive types {#sec:impl:llvm:recursive-types}
 The ability to have named types, in the form of structs and enums, introduces a
 complication to our naive scheme of layout out fields inline on the stack. This
 is because programmers can define *self-referential* types - types that contain
-themselves as one of thier fields. Consider this inductive definition of a list
+themselves as one of their fields. Consider this inductive definition of a list
 of `Int`s:
 
 ```rust
@@ -1490,14 +1488,14 @@ it introduces needless overhead in the case of non-recursive types, and would
 certainly warrant further investigation if more time were available.
 
 #### Pattern matching
-To codegen a match-expression, we generate a chain of if-then-else, testing if
-the value being scruitinized matches the pattern in each case:
+To generate IR for a match-expression, we generate a chain of if-then-else, testing if
+the value being scrutinized matches the pattern in each case:
 
-* **Literal patterns** compare agaisnt the scrutinezed value for equality
-* **variable patterns** and **wildcard patterns** always suceed
-* **tuple patterns** and **struct patterns** simply recursive over thier sub-patterns,
-* **enum patterns** compare agaisnt the scrutinee's discriminant against the
-  expected value then recurse over the subpatterns if they are equal.
+* **Literal patterns** compare against the scrutinized value for equality
+* **variable patterns** and **wildcard patterns** always succeed
+* **tuple patterns** and **struct patterns** simply recursive over their sub-patterns,
+* **enum patterns** compare the scrutinee's discriminant against the
+  expected value then recurse over the sub-patterns if they are equal.
 
 If the pattern does match, we can branch to the case's right hand side. If not,
 we branch to the next case and try again. If no cases match, we fall through to
