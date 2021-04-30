@@ -7,9 +7,9 @@ features more common in functional-programming languages. The result is a
 language where functional design patterns like *higher-order functions* and
 *immutable data structures* are encouraged, but imperative features like
 *mutation* and *early return* are still available for when a pure functional
-formulation is inelegant. In the course of this project we have designed
-the language, implemented a compiler for it, and formally it's syntax and typing
-rules.
+formulation is inelegant. In the course of this project we have designed the
+language, implemented a compiler for it, and formally specified its syntax and
+typing rules.
 
 ## Report Structure
 This report consists of 4 sections:
