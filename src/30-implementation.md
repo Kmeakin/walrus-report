@@ -121,17 +121,16 @@ can be adjusted by a minor addition to the lexer, which will be explained later
 in this section].
 
 The job of lexing Walrus code was therefore delegated to the excellent
-lexer-generator `Logos` ^[TODO cite See https://github.com/maciejhirsz/logos].
-`Logos` accepts a description of a language's lexical syntax expressed via a
-*regular-expression* matching each token, and generates an optimised Rust
-program to perform the lexical analysis. `Logos` also allows providing a
-handwritten function to lex a single token, when that token's structure cannot
-be expressed as a regular-expression: this is what we use to lex nested
-block-comments, which are context-free, not regular. By using a lexer-generator,
-we can keep the implementation of the lexer small and easy to maintain, whilst
-still getting a lexer that is just as fast as an optimised hand-written
-implementation. All that the compiler writer need provide is a few dozen lines
-of glue code to drive the lexer and source locations to each token.
+lexer-generator `Logos`[@Logos]. `Logos` accepts a description of a language's
+lexical syntax expressed via a *regular-expression* matching each token, and
+generates an optimised Rust program to perform the lexical analysis. `Logos`
+also allows providing a handwritten function to lex a single token, when that
+token's structure cannot be expressed as a regular-expression: this is what we
+use to lex nested block-comments, which are context-free, not regular. By using
+a lexer-generator, we can keep the implementation of the lexer small and easy to
+maintain, whilst still getting a lexer that is just as fast as an optimised
+hand-written implementation. All that the compiler writer need provide is a few
+dozen lines of glue code to drive the lexer and source locations to each token.
 
 ## Parsing
 Once a flat stream of tokens has been produced, they must be assembled into a
@@ -278,9 +277,7 @@ trying to achieve the perfect parser without moving onto the rest of the
 compiler implementation.
 
 #### Parsing expression grammars {#sec:impl:parser:peg}
-TODO PEGs were first introduced by ??? in ???
-
-The next attempt was to use Parsing Expression Grammars (PEGs). PEGs also
+The next attempt was to use Parsing Expression Grammars [@PEG]. PEGs also
 describe a recursive-descent parser, however rather than writing the parser by
 hand, a corresponding function is generated for each *rule* in the grammar.
 These rules have syntax very similar to that of Backus-Naur Form, however the
@@ -324,7 +321,7 @@ abandoned in favour of parser combinators.
 Parser combinators may be considered as functional programming applied to the
 traditional imperative recursive-descent parser. Parser combinators were first
 introduced for Haskell by Phil Wadler in 1995 as a demonstration of the power of
-monads for functional programming ^[TODO: citation], and have since been adapted
+monads for functional programming [@Monads], and have since been adapted
 to many other programming languages. 
 
 In Rust,a parser is any type that provides a way to parse an input, `I`, into an
