@@ -273,13 +273,79 @@ analyses. This is pure conjecture however, and humans are notoriously bad at
 estimating program performance.
 
 ## Future directions
+We now consider future work that can be performed, in rough order of priority.
 
-### Pattern exhaustiveness
+### Plugging correctness holes
+The first priority is undoubtedly to fix the behaviour of the arithmetic
+operators so that division by zero is detected and causes the program to abort
+at all optimisation levels. What action to perform in the case of integer
+under/overflow depends if one considers the correct behaviour to be. While
+simply wrapping around is certainly a valid option, it is debatable if this
+should be considered *correct*: there are very few numerical calculations where
+modulo $2^{31}-1$ is the behaviour being modelled and wraparound is simply an
+erroneous edge case. Programmers have simply got used to wrapping behaviour or
+assumed that they will be dealing with numbers that are too small to wrap
+around. 
+
+A potential compromise could be to detect under/overflow and abort when
+compiling with `-O0`, but to allow wraparound when compiling with `-O3`. This
+would allow bugs to be detected during development and testing, but not degrade
+the performance of release builds.
 
 ### Polymorphism
+The next priority is to introduce polymorphism into the type system. This will
+allow generic functions and data types to be defined, and so massively expand
+the class of useful programs that can be written in Walrus without requiring
+duplicated boilerplate code.
 
-### Parser error recovery
+If polymorphism were to be added, a strategy for compiling to LLVM IR would have
+to be decided upon, since LLVM IR is monomorphic. There are broadly two options
+for this: *monomorphisation* or *boxing*.
 
-### Garbage collection
+In *monomorphisation*, each generic function or data type is replicated in LLVM
+IR for each set of type arguments it is applied to. This is effectively the
+compiler writing the duplicated boilerplate code for, only in a lower level
+language. This approach provides the best performance - there is no difference
+in performance between manually writing the same monomorphic function for each
+type yourself, or writing a generic function and letting the compiler do it for
+you, since both approaches will generate identical LLVM IR. It is because of
+this *zero-cost* property that monomorphisation is used by C++ and Rust. The
+disadvantage of this approach is that it massively increases compilation times,
+as LLVM must optimise potentially dozens of copies of the same function.
 
-### Module system
+With *boxing*, arguments to generic functions are stored on the heap and generic
+functions receive a pointer to the heap object along with a tag indicating the
+type of the argument. Parametrically polymorphic functions can pass the boxed
+arguments around unchanged (since parametric functions cannot inspect the type
+of their arguments), and ad-hoc polymorphic ("overloaded") functions select the
+correct implementation to call based on the type tag (*dynamic-dispatch*).
+
+This significantly reduces runtime performance, as it requires accessing the
+heap for every argument, and reduces opportunities for inlining, as it is not
+apparent at compile time to which implementation an overloaded function will
+dispatch.
+
+### Parser error reporting and recovery
+Next the parser should be written yet again, this time to both report syntax
+errors and recover from them. This would significantly improve user-experience,
+and also make developing the compiler easier, as scores of syntactically correct
+test programs have to be written for unit tests.
+
+Although all of the examples of error-recovering parsers so far seem to be
+handwritten recursive descent, there should not be any reason in principle that
+one can be written using parser combinators, since parser combinators are simply
+recursive descent in a functional style.
+
+### Memory management
+Walrus currently has the simplest memory management strategy possible: none.
+Heap memory is allocated as needed for closure environments, `String` contents,
+and struct or enum fields that are themselves structs or enums, but it is never
+freed. While this is a reasonable strategy for small programs where the
+runtime is short and the total amount of heap memory used is small, it will not
+scale as the Walrus language grows - long running programs that generate a lot
+of short lived objects will generate lots of garbage that is never freed.
+
+The simplest solution seems to be *garbage collection* since it preserves memory
+safety without requiring a complex system of lifetimes and borrows. The downside
+is that this will be another performance degradation, but this is unavoidable,
+as Walrus will have to adopt a real memory management strategy sooner or later.
