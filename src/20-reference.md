@@ -1,5 +1,27 @@
 # Reference {#sec:reference}
 
+## Comments
+Comments mark text to be ignored by the compiler. This can be used to provide
+documentation for API consumers, explanation for other developers, or simply to
+briefly disable a section of code while debugging.
+
+*Line-comments* start with a double forward-slash, `//` and continue until the end of
+the current line. *Block-comments* are delimited by pairs of matching `/*` and
+`*/`. Note that unlike block-comments in C/C++, block-comments in Walrus can be
+nested.
+
+
+```rust
+// line comment
+/* 
+    block comment
+    /* 
+        nested block comment
+    */
+    block comment
+*/
+```
+
 ## Primitive Data types {#sec:reference:primitive-types}
 Walrus has 5 primitive data types (`Bool`, `Int`, `Float`, `Char`, `String`), with
 corresponding syntax for creating literal values.
@@ -91,7 +113,7 @@ String literals are given by enclosing the text within double-quotes. As with
 `Char` literals, the contents may be entered verbatim, by giving the Unicode
 Code Point, or by using the backslash shorthand:
 
-```
+```rust
 "Hello, world!\n"          // A timeless greeting
 "Hello,\u{20}world!\u{0A}" // The same greeting, with Unicode Code Points
 "Γειά σου Κόσμε!\n"        // The same greeting, in Greek
@@ -162,9 +184,8 @@ algorithm cannot easily be expressed with immutability.
 
 ### Initialization
 Local variables must be declared and initialised in the same let-statement. It
-is not possible to declare a variable without initialising it and then initialise
-it by mutating it later. For a rationale for this design, consider the following
-C code:
+is not possible to declare a variable without initialising it and then
+initialise it by mutating it later. To see why, consider the following C code:
 ```c
 int x;
 printf("The value of x is %d\n", x);
@@ -175,15 +196,15 @@ the possibility of reading from uninitialised variables by making a let-statemen
 without an initialising expression a syntax error.
 
 Rust *does* manage to allow separate definition and initialisation of variables,
-without undefined behaviour creeping into user programs, by performing a
-data-flow analysis to check that each variable has been initialised in every
-possible path of control flow before it is first read from. This feature was
-left out of Walrus for lack of time.
+without undefined behaviour creeping into programs, by performing a data-flow
+analysis to check that each variable has been initialised in every possible path
+of control flow before it is first read from. This feature was left out of
+Walrus for lack of time.
 
 [^LetTypes]: See @sec:reference:types for more information about types and type-inference.
 
 ### Lvalues {#sec:reference:lvalues}
-Although the assignment operator, `=` can syntactically accept an expression on
+Although the assignment operator, `=`, can syntactically accept an expression on
 its left-hand side, semantically it only makes sense to mutate an expression
 that refers to a location in memory: it would not make sense to attempt to
 mutate a literal expression, or a temporary result of an intermediate
@@ -191,13 +212,13 @@ expression. Values that can be mutated are called *lvalues*, and all other
 values are called *rvalues*, for *left-hand side values* and *right-hand side
 values* respectively ^[This terminology is inherited from C. C++ extends the
 classification of values by adding more exotic categories such as *glvalues*,
-*prvalues* and *xvalues*. See
-https://en.cppreference.com/w/cpp/language/value_category for more information]
+*prvalues* and *xvalues*. See TODO cite
+https://en.cppreference.com/w/cpp/language/value_category for more information].
 Lvalues in Walrus are defined inductively as:
 
 * A variable expression which refers to a local variable is an lvalue
 * A parenthesised lvalue expression is an lvalue
-* A field-expression, where the expression to the left of the `.` is an lvalue,
+* A field expression (@sec:reference:structs), where the expression to the left of the `.` is an lvalue,
   is an lvalue
 
 Intuitively, this means that only local variables and struct fields can be mutated.
@@ -250,7 +271,7 @@ in parentheses: `(+)`{.haskell} and passed to other functions: `foldr (+) 0
 xs`{.haskell}. The set of types to which each operator can be applied is also
 fixed: the user cannot provide their own implementation of an operator for other
 types. These two limitations are due to a current shortcoming in Walrus' type
-system, which will be explained in depth in @sec:reference:types.
+system, which will be explained in depth in @sec:reference:types:overloading.
 
 ## Functions and Closures {#sec:reference:functions}
 Functions are the primary unit of abstraction in Walrus, allowing complex
@@ -273,9 +294,10 @@ Functions automatically return the value of the last expression in their body
 (or the unit value, `()`, if the body is empty or consists only of statements).
 No explicit `return` is necessary as in C ^[though explicit returns can still be
 used, see @sec:reference:control-flow]. The return type of a function can be
-specified on the right-hand-side of the `->` (as in `hello`), or left blank to let
-the Walrus compiler infer the correct type (as in `world`). If no return type is
-given, the function is assumed to return the unit type, `()`, (as in `main`).
+specified on the right-hand-side of the arrow, as in `hello`, or left blank to
+let the Walrus compiler infer the correct type, as in `world`. If no return type
+is given, the function is assumed to return the unit type^[see @sec:types:unit],
+`()`, as in `main`.
 
 ### Function parameters
 As well as returning values, functions can accept input *parameters* and operate
@@ -438,17 +460,17 @@ fn main() {
 ```
 
 ## Blocks {#sec:reference:blocks}
-A block expression allows sequencing statements. In this respect they are the
+A block-expression allows sequencing statements. In this respect they are the
 same as *compound-statements* from C or Java, except that they evaluate to a
 final value. A statement is either a let-statement, which was described earlier
-in @sec:ref:variables, or an *expression-statement*, which is simply a normal
+in @sec:ref:let-bindings, or an *expression-statement*, which is simply a normal
 expression terminated by a semicolon - this has the effect of evaluating the
 expression for its side-effects and discarding the return value. The return
-value of a bock expression is the return value of its trailing expression, or
-else `()` if no trailing expression is present. Block expressions also follow
-the rules of *lexical-scoping*: each variable defined within a block expression
-shadows and previously defined variables of the same name, and go out of scope
-at the end of the innermost block expression in which they were defined:
+value of a bock-expression is the return value of its trailing expression, or
+else `()` if no trailing expression is present. Block-expressions also follow
+the rules of *lexical-scoping*: each variable defined within a block-expression
+shadows any previously defined variables of the same name, and go out of scope
+at the end of the innermost block-expression in which they were defined:
 
 ```rust
 fn main() {
@@ -487,7 +509,8 @@ fn is_zero(x: Int) -> bool {
 ```
 
 ## Builtin Functions {#sec:reference:builtin-functions}
-Walrus has a small collection of built-in functions provided by the compiler:
+Walrus has a small collection of built-in functions provided by the compiler in
+lieu of a standard library:
 
 |Name             |Type                 |Description                      |
 |-----------------|---------------------|---------------------------------|
@@ -559,7 +582,7 @@ fn sign(x: Int) -> String {
 ```
 
 ### Loops {#sec:reference:loops}
-A loop-expression simply repeats its body until it encounters a `break`
+A *loop-expression* simply repeats its body until it encounters a `break`
 expression:
 ```rust
     loop {
@@ -588,7 +611,7 @@ fn smallest_prime_factor(x: Int) -> Int {
 ```
 
 As well as `break` to terminate early, loops may `continue` to skip the rest of
-the loop body and start the next iteration early [^NoReadLine]:
+the loop body and start the next iteration early:
 ```rust
 fn login() -> Int {
     let secret = 42;
@@ -741,10 +764,6 @@ fn main() {
 }
 ```
 
-A 0-tuple is the canonical unit type in Walrus, and is used for expressions that
-return no meaningful data, such as the assignment expression or the `print`
-function. See @sec:reference:types:unit for more information.
-
 ### Structs {#sec:reference:structs}
 Structs are similar to tuples, in that they are heterogeneous collections.
 However, unlike tuples, struct fields are indexed by name rather than position:
@@ -756,7 +775,7 @@ struct Person {
 }
 ```
 
-Once declared, values of a struct can be *constructed* by giving an initializer
+Once declared, values of a struct can be constructed by giving an initializer
 value for each field in the struct:
 ```rust
 let p = Person {
@@ -766,8 +785,9 @@ let p = Person {
 };
 ```
 The fields in the constructor needn't be initialised in the same order as they
-are given in the struct declaration, but all fields must be initialised: a *
-via pattern matching, or by accessing individual fields:
+are given in the struct declaration, but all fields must be initialised. A
+structs fields can be accessed either via pattern matching, or by naming a
+single field:
 ```rust
 let Person{name, weight, age} = p;
 let name2 = p.name;
@@ -804,8 +824,7 @@ class Person {
 
 By contrast, the corresponding Walrus function will either successfully return a
 fully initialised person, or else return an error which must be handled by the
-caller ^[See @sec:reference:enums and @sec:reference:pattern-matching for a
-description of the `enum` and `match` keywords]:
+caller ^[See @sec:reference:enums and for a description of the `enum` keyword]:
 ```rust
 enum PersonResult {
     Ok{p: Person},
@@ -822,13 +841,14 @@ fn new_person(name: String, birth_year: Int, weight: Float) -> PersonResult {
 ```
 
 #### Nominal typing
-Structs are also named and therefore *nominally-typed*: two structs declared with
-different names have different types, even if they have exactly the same contents.
-Nominal typing of structs allows the contents of an aggregate data type to be
-separated from the intended meaning of the type. For example, a coordinate in 3D
-space, and a date in day-month-year format can both be represented as a `(Int,
-Int, Int)` 3-tuple, but this would create an opportunity for two types with
-different meanings to get confused:
+The other difference from tuples is that structs are also named and therefore
+*nominally-typed*: two structs declared with different names have different
+types, even if they have exactly the same contents. Nominal typing of structs
+allows the contents of an aggregate data type to be separated from the intended
+meaning of the type. For example, a coordinate in 3D space, and a date in
+day-month-year format can both be represented as a `(Int, Int, Int)` 3-tuple,
+but this would create an opportunity for two types with different meanings to
+get confused:
 ```rust
 fn print_event(date: (Int, Int, Int), position: (Int, Int, Int), description: String) {
     let (day, month, year) = date;
@@ -840,7 +860,7 @@ fn main() {
     let date = (01, 01, 1970);
     let position = (0, 0, 0);
     let description = "something happened";
-    print_event(date, position, description); // Order of arguments is incorrect, 
+    print_event(position, date, description); // Order of arguments is incorrect, 
                                               // but no error is indicated
 }
 ```
@@ -878,8 +898,8 @@ Despite their name, enums are much more powerful than enum types in C or Java: a
 more appropriate name would be *algebraic data type*, as they are known in
 functional programming. However, Walrus inherits the `enum` name from Rust,
 which chose the name `enum` as it would be more familiar to C programmers.
-Walrus' enums are capable of representing one of several different structs
-(called *variants* when in the context of an enum) at once:
+Walrus' enums are capable of representing one of several different collections
+of fields, called *variants*, at once:
 ```rust
 enum IntOrFloat {
     Int{x: Int},
@@ -894,10 +914,9 @@ let int = IntOrFloat::Int{x: 5},
 let float = IntOrFloat::Float{y: 5.0},
 ```
 
-Unlike structs, the fields of an enum cannot be accessed simply by accessing the
-individual fields, since which variant the enum occupies is only known at
-runtime. Instead, the enum must be pattern-matched over ^[See
-@sec:reference:pattern-matching for more information on pattern-matching]:
+Unlike structs, the fields of an enum cannot be accessed with the `base.field`
+syntax, since which variant the enum occupies is only known at runtime. Instead,
+the enum must be pattern-matched over:
 
 ```rust
 fn print_int_or_float(it: IntOrFloat) {
@@ -947,11 +966,11 @@ void main() {
     printf("%f\n", floating.y); // prints "-1.000000"
 }
 ```
-In contrast, Walrus enums carry a *tag* indicating which variant they occupy at
-runtime, which allows fields to be accessed safely via pattern matching. The
-tag + fields representation is similar to that of the *tagged-union* design
-pattern in C, except in C the burden is still on the programmer to check the tag
-before accessing the fields:
+In contrast, Walrus enums carry a *tag*^[also sometimes called a *discriminant*]
+indicating which variant they occupy at runtime, which allows fields to be
+accessed safely via pattern matching. The tag-and-fields representation is
+similar to that of the *tagged-union* design pattern in C, except in C the
+burden is still on the programmer to check the tag before accessing the fields:
 
 ```c
 typedef enum {
@@ -970,10 +989,10 @@ typedef struct {
 void print_int_or_float(IntOrFloat it) {
    switch (it.tag) {
        case INT:
-        printf("its an Int: %d\n", it.x);
+        printf("It's an Int: %d\n", it.x);
         break;
        case FLOAT:
-        printf("its a Float: %f\n", it.y);
+        printf("It's a Float: %f\n", it.y);
         break;
    }
 }
@@ -1003,6 +1022,7 @@ The inclusion of null-references is considered by many today to be a mistake:
 > has led to innumerable errors, vulnerabilities, and system crashes, which have
 > probably caused a billion dollars of pain and damage in the last forty years.
 > -- Tony Hoare
+TODO: citation
 
 Here are just some of the symptoms of those billion dollars of pain and damage:
 
@@ -1060,17 +1080,17 @@ Now we have solved all the attendant problems `null` brings:
 
 * **More accurate type signatures**: If a function accepts a `T`, it is an error
   to attempt to pass an `Option<T>` to it.
-* **Different cases are separated by the type system**: our hypothetical hashmap
+* **Different cases are separated by the type system**: Our hypothetical hashmap
   of student degrees would become `HashMap<String, Option<Degree>>`{.rust}, and `get`
   returns an `Option<Option<Degree>>`{.rust}: `None` for the case where the
   student is not present, `Some(None)` for when the student has not yet
   graduated, and `Some(Some(...))` for when the student is present and graduated.
-* **It is general enough**: any type can be wrapped in an `Option`, not just
+* **It is general enough**: Any type can be wrapped in an `Option`, not just
   heap-allocated types
 
-Walrus inherits Rust's `enum`s, however because the type system is currently
-monomorphic (does not support generic functions or data types), a separate `enum`
-must be declared for each instantiation of the `Option<T>` type:
+A similar enum can be declared in Walrus, however because the type system is
+currently monomorphic ^[see @sec:reference:types:polymorphism] (does not support generic functions or data types), a
+separate enum must be declared for each instantiation of the `Option<T>` type:
 
 ```rust
 enum IntOption {
@@ -1211,12 +1231,12 @@ possible case to match against, the pattern being matched against must be
 that literal and enum patterns are not allowed.
 
 ## Type System {#sec:reference:types}
-Previous sections of this reference have mentioned *types* and Walrus'
-*type-system*, but the terms have not been properly described. This section will
-define what a type and a type-system is, and how Walrus' type system in
-particular works, as well as its present limitations. 
+Previous sections of this reference have mentioned *types* and Walrus' *type
+system*, but the terms have not been properly defined. This section will define
+what a type and a type system is, and how Walrus' type system in particular
+works, as well as its present limitations. 
 
-### Types and type-systems
+### Types and type systems
 In every (non-trivial) programming language it is possible to express programs
 are *syntactically-correct* but nevertheless *semantically-incorrect*: that is,
 the program text is parsed by the compiler/interpreter to form a valid abstract
@@ -1231,9 +1251,8 @@ correct them at development-time, rather than after the program has been
 deployed. The field of *formal-methods* describes several methods for checking
 the correctness of programs, such as automated theorem provers, model-checkers,
 and Hoare logic. The most widespread method for checking correctness is to use a
-*type-system*. *Types and Programming Languages*, widely regarded
-as the definitive textbook on type-systems and their use in programming
-languages, describes a type system as:
+*type system*. The textbook *Types and Programming Languages*, describes a type
+system as:
 
 > a tractable syntactic method for proving the absence of certain program
 > behaviors by classifying phrases according to the kinds of values they
@@ -1243,12 +1262,12 @@ That is, each value has an associated *type*, which describes (amongst other
 properties) the valid operations that may be performed on values of that type.
 For example, it is meaningful to attempt to divide one rational number by
 another, but it is not meaningful to attempt the same operation on two strings.
-The *type-system* of a particular programming-language is the set of rules that
+The *type system* of a particular programming language is the set of rules that
 describe what operations may be performed on which types, how types are assigned
 to values, and how simpler types may be combined to form more complex types.
 
 #### Static vs Dynamic type systems
-Type-systems may be classified as either *static* or *dynamic*. In a
+Type systems may be classified as either *static* or *dynamic*. In a
 *dynamically-typed* language, each value carries around a *type-tag* at runtime
 to indicate its type, whilst in a *statically-typed* language, the type of value
 produced by each expression is known *statically* (that is, before the program
@@ -1266,15 +1285,14 @@ dynamic type system.
 The Walrus type system is a simplification of the Rust type system, which is
 itself an extension of the classic *Hindley-Milner* type system.
 
-The original Hindley-Milner type system, introduced in (TODO) by (TODO),
-provides a set of inferences rules for determining a single "most general type"
-for expressions in the *simply-typed λ-calculus*. For the purposes of this
-report, it is sufficient just to be aware that the simply-typed *λ*-calculus
-is a very primitive programming language, providing only *variables*,
-*application* (call a function with exactly one argument), *abstraction*
-(creating an anonymous function of exactly one argument) and *let-binding*
-(binding a variable to a value, and evaluating a second expression in the
-extended environment).
+The original Hindley-Milner type system (TODO: cite), provides a set of
+inferences rules for determining a single "most general type" for expressions in
+the *simply-typed λ-calculus*. For the purposes of this report, it is sufficient
+just to be aware that the simply-typed *λ*-calculus is a very primitive
+programming language, providing only *variables*, *application* (call a function
+with exactly one argument), *abstraction* (creating an anonymous function of
+exactly one argument) and *let-binding* (binding a variable to a value, and
+evaluating a second expression in the extended environment).
 
 Modern day functional programming languages use the simply-typed *λ*-calculus
 (or some other *λ*-calculi) as their underlying theory, while adding
@@ -1376,26 +1394,24 @@ In this case, `id` should be of the type `forall a. (a) -> a`. However, since
 Walrus does not (yet) support polymorphism, there is no single *monotype* (a type
 without quantifiers) it can pick unambiguously. In this case, more information
 is required. Suppose we intend for `id` to be of type `(Int) -> Int`. Any
-one of
+one of the following would be sufficient to constraint `id` to have a single monotype:
 
 * `let id: (Int) -> Int = (x) => x;`{.rust}
 * `let id = (x: Int) => x;`{.rust}
 * `fn main() -> (Int) -> Int {...}`{.rust}
 
-would be sufficient to constrain `id` to have a single monotype.
-
 #### Inhabitants
 When discussing properties of certain types, it can be useful to consider the
 number of different values a type may take. These values are called the
 *inhabitants* of a type. For example, the `Bool` type has two inhabitants:
-`true` and `false`; the `Int` type has $2^32$ inhabitants (the integers in the
-range $-2^-31$ and $2^31-1$ inclusive). The number of inhabitants of aggregate
+`true` and `false`; the `Int` type has $2^{32}$ inhabitants (the integers in the
+range $-2^{-31}$ and $2^{31}-1$ inclusive). The number of inhabitants of aggregate
 types can be computed recursively: for tuples and structs, it is the product of
 the number of inhabitants of each fields, and for enums, it is the sum of the
 number of inhabitants of each variant.
 
 Of particular interest are types with exactly 1 inhabitant (a *unit type*), and
-types with 0 inhabitants (an *uninhabited* or *empty type*).
+types with 0 inhabitants (an *uninhabited* or *bottom type*).
 
 ##### The unit type {#sec:reference:types:unit}
 
@@ -1422,15 +1438,15 @@ struct AlsoAUnit {
 ```
 
 Since all these types have only one inhabitant, it is useful to pick one to be
-*the* unit type, and consider all others as *isomorphic* ^[That is, each unit
-type can be safely converted to *the* unit type without any loss of information]
-to it. In Walrus, the canonical unit type is the 0-tuple, `()`. For this
+*the* unit type, and consider all others as *isomorphic* to it^[That is, each
+unit type can be safely converted to *the* unit type without any loss of
+information]. In Walrus, the canonical unit type is the 0-tuple, `()`. For this
 reason, `()` is also sometimes called "*the* unit type" or "the unit tuple".
 
 Since any unit type has exactly 1 possible value, it carries no information at
 runtime: that is, it can be represented by zero bits. This makes unit types
 natural placeholders for when some type is needed, but no information is
-returned. It is for this reason that functions with empty bodies/no trailing
+returned. It is for this reason that functions with empty bodies or no trailing
 expression return `()`, and assignment expression expressions evaluate to `()`.
 Unit types can be considered analogous to the `void` type from C, however unlike
 C's `void`, values of unit types are first class values that can be stored in
@@ -1523,20 +1539,18 @@ the role expected of it by any other type - since such a value is impossible, we
 will never be asked to make good on our promise.
 
 This coercion behaviour can also be explained by appeal to mathematical logic.
-The *Curry-Howard correspondence*, in brief, states that a type signature is a
-proposition, and its implementation is a proof of the proposition. For example,
-the signature of the function `fn id(x: Int) -> Int {x}`{.rust} is equivalent to
-the natural deduction proposition $\forall x. x \in Int \to \exists y. y \in
-Int$, where $Int$ is the set of all signed 32-bit integers; the body of the
-function then gives a proof that it is indeed possible to produce an element of
-the $Int$ set given another (not necessarily distinct) element of $Int$
-^[Formulating rules to translate each Walrus expression to a connective of
-natural deduction would be an interesting challenge, but is not the aim of this
-project so no such attempt has been made]. Similarly, the function `fn absurd(x:
-Never) -> Int {x}`{.rust} generates the proposition $\forall x.x \in
-\emptyset \to \exists y. y \in Int$. The proposition $x \in \emptyset$ is
-a contradiction, and the *Principle of Explosion* states that any proposition
-can be proven from a contradiction. 
+The *Curry-Howard correspondence*, in brief, states that types are equivalent to
+propositions in intuitionistic logic and values are equivalent to proofs. For
+example, the value `let x: (Int) -> Int = ...`{.rust} is equivalent to the
+proposition $Int \to Int$, where $Int$ is proposition representing "the Int type
+is inhabited"; giving a value for `x` then is equivalent to proving that
+proposition: `(x) => x` corresponds to a proof using the implication
+introduction rule^[Formulating deduction rules to correspond to each kind of
+Walrus expression would be an interesting challenge, but is beyond the scope of
+this project]. Similarly, the value `let absurd: (Never) -> Int = ...`{.rust}
+generates the proposition $\bot \to Int$. This is trivially true because the
+left hand side of the implication is false, and by the *principle of explosion*,
+any proposition can be proven starting from a contradiction.
 
 This behaviour also describes why such types are called "bottom types": in a
 type system with subtyping, a bottom type is a subtype of all other types
@@ -1545,7 +1559,7 @@ generalised subtyping mechanism: `Never` is the only type that will be
 automatically coerced.
 
 #### Limitations {#sec:reference:types:limitations}
-##### No quantification
+##### No quantification {#sec:reference:types:polymorphism}
 The largest limitation in the current type-system of Walrus is that it is
 entirely *monomorphic*: that is, although the Walrus compiler is able to infer a
 type for every expression and function, the type must cannot *quantify* over
@@ -1567,7 +1581,7 @@ This is clearly tedious and requires the programmer to needlessly duplicate an
 identical function. If Walrus' type system could quantify over other types, we
 could write an identity function that could be called with any argument type.
 Such functions are called *generic* in C++, Java and Rust, or *polymorphic* in
-Haskell ^[Here we copy the generics syntax of Rust for the sake of example]:
+Haskell. Here we copy the generics syntax of Rust for the sake of example:
 ```rust
 fn identity<T>(x: T) -> T {
     x
@@ -1579,17 +1593,17 @@ The same problem extends to defining structs and enums. We cannot write a single
 `enum` for each type that we wish to wrap:
 ```rust
 enum IntOption {
-    None,
+    None{},
     Some{val: Int},
 }
 
 enum FloatOption {
-    None,
+    None{},
     Some{val: Int},
 }
 ```
 
-##### No overloading
+##### No overloading {#sec:reference:types:overloading}
 Walrus' type system also lacks *overloading*: the ability for a single function
 (or operator) to share several implementations with the same name but different
 types. This is the mechanism that allows, for example, Java to have a single
@@ -1633,9 +1647,7 @@ fn max<T: Ord>(v1: T, v2: T) -> T;`
 
 This function can only be called on types for which a way to compare them has
 been defined. In Rust, requirements are called *traits*, and a type fulfils the
-requirements of a trait by providing an *implementation* of the trait ^[The real
-Rust `Ord` trait has its own constraints that we will ignore for the sake of
-simplicity of this example]:
+requirements of a trait by providing an *implementation* of the trait:
 
 ```rust
 enum Ordering {
@@ -1644,7 +1656,7 @@ enum Ordering {
     Greater,
 }
 
-trait Ord<T> {
+trait Ord<T: PartialEq> {
     fn cmp(v1: T, v2: T) -> Ordering;
 }
 

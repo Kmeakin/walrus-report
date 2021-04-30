@@ -5,7 +5,11 @@ named types have been resolved to either builtin types or structs/enums. The
 second relation, $x: \tau$, maps the abstract syntax of HIR nodes to thier
 inferred types. We also define an *environment*, $\Gamma$, mapping variables to
 the type of their denotation. The environment is initialised such that the name
-of each builtin type and function is mapped to an appropriate type value.
+of each builtin type and function is mapped to an appropriate type value. Where
+rules have multiple conclusions, any of those conclusions can be used in the
+hypotheses in subsequent inferences, separated by a comma. Rules with multiple
+conclusions are a notational convenience to succinctly express accumulation of
+new bindings.
 
 ### Type values
 \begin{longtable}{RRLL}

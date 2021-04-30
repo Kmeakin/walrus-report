@@ -174,7 +174,7 @@ Error-recovery is the ability of a compiler to continue with syntactic or
 semantic analysis in the presence of an error. This is important for a good user
 experience because it allows subsequent errors to be detected, and so more
 errors can be reported by a single invocation of the compiler. The more errors
-that can be detected in one invocation, the fewer trips around the
+that can be reported in one invocation, the fewer trips around the
 *edit-compile-run cycle* (the loop between writing new code, compiling it,
 correcting errors and recompiling) will be required during development, and so the
 more productive the programmer feels.
@@ -196,11 +196,12 @@ A key inspiration of the design of the Walrus language is the Rust language.
 Rust does indeed fulfil many of the design criteria we gave earlier. It
 guarantees that undefined behaviour will not be triggered, unless the programmer
 specifically opts in via use of the `unsafe` keyword to indicate that the code
-cannot be checked but is nevertheless safe. It provides high level abstractions
-such as type inference, algebraic data types and pattern pattern matching.
-However, as we mentioned above, Rust's unwavering pursuit of performance
-requires the programmer to give undue attention to details of memory management
-that are often not relevant and limits the power of abstraction capabilities. 
+cannot be checked but is nevertheless correct. It provides high level
+abstractions such as type inference, algebraic data types and pattern pattern
+matching. However, as we mentioned above, Rust's unwavering pursuit of
+performance requires the programmer to give undue attention to details of memory
+management that are often not relevant and limits the power of abstraction
+capabilities. 
 
 Since we agree with many of the design decisions taken by Rust, we have often
 looked to Rust for inspiration in the design of the syntax and semantics of

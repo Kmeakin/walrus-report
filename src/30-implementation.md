@@ -2,7 +2,7 @@
 
 ## Choice of implementation language
 The first design choice to be made when starting a new project is selecting the
-implementation language. For me, Rust was a natural choice. The combination of
+implementation language. Rust was a natural choice. The combination of
 algebraic data types and pattern matching makes tree-like structures, which are
 used pervasively in compilers, simple to define and traverse. These features have
 been staples of functional programming languages for decades, yet Rust is one of
@@ -60,9 +60,9 @@ digraph {
 
 Alternatives to this "batch processing" model do exist, and are growing in
 prominence as programmers start to demand more advanced features of their
-Integrated Development Environments (IDEs). For example, `rust-analyzer`,
-provides IDE features such as code completion, error highlighting and code
-navigation. To do this it must replicate the front and middle ends of the
+Integrated Development Environments (IDEs). For example, the `rust-analyzer`
+program provides IDE features such as code completion, error highlighting and
+code navigation. To do this it must replicate the front and middle ends of the
 traditional batch `rustc` compiler. However, `rust-analyzer` runs in the
 background and responds to queries from the IDE; it would be too unresponsive to
 run the batch processing pipeline over the whole codebase for every query.
@@ -73,8 +73,7 @@ cache.
 This query-based architecture would be an interesting part of the design space
 to explore. However, it significantly complicates the implementation of the
 compiler and is not yet well established in the literature or learning
-resources. I therefore decided that I would stick with the simpler design for my
-first attempt at compiler construction.
+resources. 
 
 ## Command line interface
 The command line interface parses command line arguments (courtesy of the `clap`
@@ -93,7 +92,7 @@ generation if any fatal errors were produced by the midend.
 ## Lexing
 Before the text of a program can be parsed into a parse tree, it must be first
 split into a flat stream of *tokens*: chunks of text with a label classifying
-their role in parsing, such as `Whitespace`, `Identifier`, or `StringLit`. This
+their role in parsing, such as `Whitespace`, `Identifier`, or `String`. This
 process is called *lexical analysis*, or *lexing* for short.
 
 For example, the Walrus code
@@ -105,8 +104,9 @@ fn main() {
 
 would be lexed as:
 ```
-KwFn("fn") Whitespace(" ") Ident("main") LParen("(") RParen(")") Whitespace(" ") LCurly("{") Whitespace("\n\t") Ident("print)
-LParen("(") String("\Hello, world!\\n\"") RParen(")") Semicolon(";") Whitespace("\n") RCurly("}")
+KwFn("fn") Whitespace(" ") Ident("main") LParen("(") RParen(")") Whitespace(" ") LCurly("{") 
+Whitespace("\n\t") Ident("print) LParen("(") String(""\Hello, world!\\n\"") RParen(")") 
+Semicolon(";") Whitespace("\n") RCurly("}")
 ```
 
 The tokens of a programming language are often simple enough to be expressed as
@@ -121,8 +121,8 @@ can be adjusted by a minor addition to the lexer, which will be explained later
 in this section].
 
 The job of lexing Walrus code was therefore delegated to the excellent
-lexer-generator `Logos` ^[See https://github.com/maciejhirsz/logos]. `Logos`
-accepts a description of a language's lexical syntax expressed via a
+lexer-generator `Logos` ^[TODO cite See https://github.com/maciejhirsz/logos].
+`Logos` accepts a description of a language's lexical syntax expressed via a
 *regular-expression* matching each token, and generates an optimised Rust
 program to perform the lexical analysis. `Logos` also allows providing a
 handwritten function to lex a single token, when that token's structure cannot
@@ -186,12 +186,10 @@ The task of parsing is significantly more complex than lexing. Lexing is largely
 considered a "solved problem" with lexer-generators capable of generating lexers
 just as fast, if not faster, than any written by an experienced programmer. By
 contrast, there are numerous competing approaches to parsing, each with their
-own advantages and disadvantages ^[For a good overview of commonly used parsing
-approaches, see
-https://tratt.net/laurie/blog/entries/which_parsing_approach.html]. In the
-course of writing the Walrus compiler, I have experimented with 4 different
-parsing approaches: the parser is by far the most rewritten component of the
-Walrus compiler, and still the component I am least satisfied with.
+own advantages and disadvantages. In the course of writing the Walrus compiler,
+we have experimented with 4 different parsing approaches: the parser is by far
+the most rewritten component of the Walrus compiler, and still the component we
+are least satisfied with.
 
 #### LR parser-generators {#sec:impl:parser:lr}
 LALR (lookahead left-to-right) parser generators generate a parser from a
@@ -204,10 +202,11 @@ in another token of input), *reduce* (create a new syntax node) or *accept*
 LR parsers are able proven to be able to parse a large class of possible
 context-free languages, and tend to be very fast. For this reason they are given
 great prominence in university compiler courses. However, LR parser-generators
-one great weaknesses: LR-parser generators will only accept grammars that are in
-a LR-compatible form. Grammars that do not conform to this expected style will
-generally cause the parser generator to give inscrutable errors related to
-*shift-reduce* errors. For example, attempting to pass the following grammar:
+tend to be very difficult to use: LR-parser generators will only accept grammars
+that are in a LR-compatible form. Grammars that do not conform to this expected
+style will generally cause the parser generator to give inscrutable errors
+related to *shift-reduce* errors. For example, attempting to pass the following
+grammar:
 ```
 %start Expr
 %%
@@ -242,11 +241,9 @@ context-free grammar of a real life programming language into a LR-parser
 generator will produce hundreds of such shift-reduce conflicts, and the
 resulting fixed grammar will be contorted beyond recognition.
 
-LR parser generators were my first attempt at writing a parser for Walrus (in
-particular, using the LALRPOP parser generator ^[See
-https://github.com/lalrpop/lalrpop]), however I quickly became frustrated by the
-need to contort my grammar to meet the expectations of the parser generator, and
-so moved onto the next attempt:
+LR parser generators were used for the first attempt at writing a parser for
+Walrus however the need to contort the grammar to meet the needs of the parser
+generator was frustrating and thus a different solution needed to be found.
 
 #### Handwritten recursive descent {#sec:impl:parser:recursive-descent}
 A handwritten recursive descent parser is simply a series of functions
@@ -255,10 +252,10 @@ recursive-descent is the simplest form of parsing: no intermediate tool or
 domain-specific language is needed; instead, one simply writes in the same
 programming language that they would use for any other task. The only caveat is
 that care must be taken to ensure that operator precedences and associativities
-are correctly handled, and that the resulting program is not
-*left-recursive* (it attempts to parse the same non-terminal repeatedly without
-consuming any tokens between each call), otherwise it will loop-forever/crash
-with a stack-overflow.
+are correctly handled, and that the resulting program is not *left-recursive*
+(it attempts to parse the same non-terminal repeatedly without consuming any
+tokens between each call), otherwise it will loop forever or crash with a
+stack overflow.
 
 In recent years, error recovery has become an important consideration when
 writing a parser in order to improve compiler user experience. Therefore it is
@@ -273,26 +270,26 @@ compilers, `gcc` and `clang`, as well as the rust compiler, `rustc`, all use
 handwritten recursive descent parsers that go to great pains to always recover
 in the presence of syntax errors.
 
-I attempted for a few weeks to add error recovery to my own handwritten
+We attempted for a few weeks to develop an error-recovering handwritten
 recursive descent parser. However, writing a parser that can both recover from
 all possible syntax errors and still accept correct programs is a time-consuming
-and difficult process, and I realised that I risked sinking too much time trying
-to achieve the perfect parser without moving onto the rest of the compiler
-implementation.
+and difficult process, and we realised that we risked sinking too much time
+trying to achieve the perfect parser without moving onto the rest of the
+compiler implementation.
 
 #### Parsing expression grammars {#sec:impl:parser:peg}
 TODO PEGs were first introduced by ??? in ???
 
-Parsing-expression grammars (PEGs) also describe a recursive-descent parser,
-however rather than writing the parser by hand, a corresponding function is
-generated for each *rule* in the grammar. These rules have syntax very similar
-to that of Backus-Naur Form, however the *choice operator*, `|`, is replaced by
-the *ordered-choice operator*, `/`. Rather than non-deterministically selected
-the "most appropriate" alternative to parse with, the ordered-choice operator
-selects the first alternative that succeeds and sticks with it, even if
-subsequent parsing fails. This results in the problem of ambiguous grammars
-being defined out of existence, since every string will be parsed in exactly one
-way.
+The next attempt was to use Parsing Expression Grammars (PEGs). PEGs also
+describe a recursive-descent parser, however rather than writing the parser by
+hand, a corresponding function is generated for each *rule* in the grammar.
+These rules have syntax very similar to that of Backus-Naur Form, however the
+*choice operator*, `|`, is replaced by the *ordered-choice operator*, `/`.
+Rather than non-deterministically selected the "most appropriate" alternative to
+parse with, the ordered-choice operator selects the first alternative that
+succeeds and sticks with it, even if subsequent parsing fails. This results in
+the problem of ambiguous grammars being defined out of existence, since every
+string will be parsed in exactly one way.
 
 For example, the same grammar as given in @sec:impl:parser:lr would be:
 ```
@@ -303,14 +300,13 @@ Factor <- INT
 
 This generates a similar set of mutually recursive functions as one would write
 if they were writing a recursive descent parser by hand, but retains the
-advantage of being declarative and easier to maintain. I was satisfied with the
-PEG implementation of the Walrus parser for quite some time, however I
-eventually grew frustrated with PEGs. Because PEGs are, like
-LR-parser-generators, a *domain-specific-language*, their abstract abilities are
-limited by whatever facilities the designer of the language thought to include.
-For example, although you can define a rule for parsing a tuple of expressions,
-and another rule for parsing a tuple of patterns, and a third for parsing a
-tuple of types:
+advantage of being declarative and easier to maintain. The PEG implementation of
+the Walrus parser was satisfactory for quite some time, but it is not without
+its faults. Because PEGs are, like LR-parser-generators, a *domain specific
+language*, their abstraction abilities are limited to whatever facilities the
+designer of the language thought to include. For example, although one can
+define a rule for parsing a tuple of expressions, and another rule for parsing a
+tuple of patterns, and a third for parsing a tuple of types:
 
 ```
 TupleExpr <- LParen (Expr (Comma Expr)*)? Comma? RParen
@@ -321,8 +317,8 @@ TupleType <- LParen (Type (Comma Type)*)? Comma? RParen
 there is no way of abstracting over the "parse a comma separated list of
 elements between two parentheses" part and substituting in the element of the
 tuple to be parsed. In other words, we need *higher-order* rules: functions that
-take in one rule and produce another rule. Hence I abandoned PEGs in favour of
-parser combinators.
+take in one rule and produce another rule. Hence the PEG implementation was
+abandoned in favour of parser combinators.
 
 #### Parser combinators {#sec:impl:parser:parser-combinators}
 Parser combinators may be considered as functional programming applied to the
@@ -365,49 +361,48 @@ where
 }
 ```
 
-Of the 4 approaches I have explored in writing the Walrus parser, I find parser
-combinators to be the most satisfactory: they are nearly as declarative as
-Parsing Expression Grammars, whilst still allowing the programmer to use the
-full abstraction capabilities of the normal implementation language, as in
-hand-written recursive descent. 
+Of the 4 approaches explored in this project, find parser combinators proved to
+be the most satisfactory: they are nearly as declarative as Parsing Expression
+Grammars, whilst still allowing the programmer to use the full abstraction
+capabilities of the normal implementation language, as in hand-written recursive
+descent. 
 
-However, the implementation is still far from satisfactory: it provides neither
-error reporting nor error recovery. Since my parser combinators currently do not
+However, the implementation is still far from perfect: it provides neither error
+reporting nor error recovery. Since parser combinators given above do not
 distinguish between failure to parse due to a syntax error and failure to parse
 because another alternative rule needs to be attempted, the precise location of
 a syntax error cannot easily be detected - the only indication that a syntax
 error was encountered was that the whole input string was not consumed.
 Therefore, the Walrus parser will simply abort if the entire input file is not
 consumed, without any indication of where the first syntax error occurred.
-Error-reporting and error-recovering parser-combinators would be one of my first
-priorities if I were to continue working on the compiler.
 
 ## Semantic Analysis
-The two previous sections have covered *syntactic-analysis*: ensuring that the
-program is *syntactically-correct*. Now we will move onto *semantic-analysis*:
-checking that the program is *semantically-correct* (it contains no type errors,
+The two previous sections have covered *syntactic analysis*: ensuring that the
+program is *syntactically correct*. Now we will move onto *semantic analysis*:
+checking that the program is *semantically correct* (it contains no type errors,
 all referenced variables are defined, etc), and gathering enough information to
-be able to generate LLVM IR if the program is indeed semantically-correct.
+be able to generate LLVM IR if the program is indeed semantically correct.
 
-### Lowering
-Before we can begin performing semantic-analysis, we must convert the parse-tree
-which was generated by the parser to a more suitable Intermediate
-Representation. This is because the parse-tree contains a lot of extraneous
-nodes to represent syntactic elements such as commas and parentheses which carry
-no semantic information. The parse-tree also carries the source-location of
-every node. This is useful for display the source location of errors to the
-programmer, but is only needed once semantic-analysis has been performed and all
-errors have been collected - while actual semantic analysis takes place, we do
-not need this extra information.
+### HIR generation
+Before we can begin performing semantic analysis, we must convert the parse tree
+which was output from the parser to a more suitable Intermediate Representation.
+This is because the parse tree contains a lot of extraneous nodes to represent
+syntactic elements such as commas and parentheses which carry no semantic
+information. The parse tree also carries the source location of every node. This
+is useful for displaying the source location of errors to the programmer, but is
+only needed once semantic analysis has been performed and all errors have been
+collected - while actual semantic analysis takes place, we do not need this
+extra information.
 
 For these reasons, when performing semantic-analysis we operate over a more
 abstracted, high level representation, named unimaginatively the High-level
-Intermediate Representation. This name was inherited from the `rustc` compiler,
+Intermediate Representation. This name was borrowed from the `rustc` compiler,
 which has several IRs, including a High-level Intermediate Representation and a
 Mid-level Intermediate Representation. The process of converting a parse tree to
 its HIR is called *lowering*. During this process, literals are also evaluated
-to get their values - `Int`s and `Float`s are parsed, and escape characters are
-replaced in `Char`s and `String`s.
+to get their values - `Int`s and `Float`s are parsed, and escape sequences in
+`Char`s and `String`s are replaced by their corresponding values. The abstract
+syntax of the High-level Intermediate Representation is given in @sec:appendix:hir.
 
 #### HIR annotation
 Having a representation of the all the source level entities - expressions,
@@ -417,19 +412,19 @@ produced and consumed during semantic analysis and code generation - for
 example, each expression must be associated with its inferred type after type
 inference, or each variable with its parent scope. This problem of having to
 annotate trees with different pieces of metadata at different stages in a
-program has been referred to in the literature as *The AST Typing Problem* ^[BIB
-http://blog.ezyang.com/2013/05/the-ast-typing-problem] or the *The tree
-Decoration Problem* ^[BIB Trees that Grow paper].
+program has been referred to in the literature as *The AST Typing Problem*
+^[TODO http://blog.ezyang.com/2013/05/the-ast-typing-problem] or the *The tree
+Decoration Problem* ^[TODO Trees that Grow paper].
 
 The naive solution to this problem is to have multiple IRs for each stage of the
 semantic analysis and annotate each new IR with the appropriate information, so
-that, for example, scope-checking converts `Expr`s to `ScopedExpr`s and
-type-inference converts `ScopeExpr`s to `TypedExprs`. However, this approach
-would require a large amount of code duplication: the HIR definitions run to
-about 250 lines, so each new IR would add at least 250 lines of nearly identical
+that, for example, scope generation converts `Expr`s to `ScopedExpr`s and type
+inference converts `ScopeExpr`s to `TypedExprs`. However, this approach would
+require a large amount of code duplication: the HIR definitions run to about 250
+lines, so each new IR would add at least 250 lines of nearly identical
 definitions plus code to convert between the representations.
 
-The approach we have chosen is to store auxiliary data in *side-tables* (eg a
+The approach we have chosen is to store auxiliary data in *side tables* (eg a
 `HashMap` or other associative container), rather than storing them *inline*
 inside the tree data structure. For example, as a first attempt, we could create
 a `HashMap<hir::Expr, types::Type>`{.rust}, for mapping each `Expr` to its
@@ -472,7 +467,7 @@ struct Id<T> {
 type ExprId = Id<Expr>;
 ```
 
-### Name resolution {#sec:impl:scopes}
+### Scope generation {#sec:impl:scopes}
 Any non-trivial semantic analysis over the HIR will require us to be able to
 *resolve names*: lookup the entity (if any) that a variable name refers to in a
 given scope. Since a variable can refer to one of many different named entities
@@ -1596,10 +1591,6 @@ match.end:                                        ; preds = %match.case0.then, %
   ret %Option %match.phi
 }
 ```
-
-
-
-
 
 ## Native code generation
 Now that we have the LLVM IR representation of the program, we can write it to a
