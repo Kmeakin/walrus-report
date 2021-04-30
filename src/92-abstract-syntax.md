@@ -1,4 +1,4 @@
-## Abstract Syntax {#sec:appendix:hir}
+## Abstract Syntax of HIR {#sec:appendix:hir}
 \newcolumntype{L}{>{$}l<{$}}
 \newcolumntype{R}{>{$}r<{$}}
 \begin{longtable}{RRLL}
@@ -52,8 +52,8 @@ expr, e & ::= & lit                                                             
   &   | & \texttt{break} \ e                                                          & \text{break expression} \\
   &   | & \texttt{continue}                                                           & \text{continue expression} \\
 \\
-op, \circledast & ::= & +, -, !                               & \text{Unary operators}  \\
-                &   | & +, -, *, /,                           & \text{Binary operators} \\
+op, \circledast & ::= & +, -, !                               & \text{unary operators}  \\
+                &   | & +, -, *, /,                           & \text{binary operators} \\
                 &   | & \equiv, \nequiv, <, \leq, >, \geq,    &                         \\
                 &   | & \land, \lor                           &                         \\
 \\
