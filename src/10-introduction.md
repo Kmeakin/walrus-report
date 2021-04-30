@@ -24,7 +24,7 @@ This report consists of 4 sections:
   project goals, and directions for future investigation.
 
 ## Project goals
-When designing the language, we selected 4 principles that we wanted Walrus to
+When designing the language, we selected several criteria that we wanted Walrus to
 fulfill.
 
 These are by no means the only criteria by which langauges can be judged: choice
@@ -55,7 +55,7 @@ Our language does not fill any of those niches. It is intended to be a "general
 purpose" language for writing commandline or desktop applications, the kind of
 task for which one might use languages such as Java or Go.
 
-### Correctness and safety
+### Correctness
 We believe that programming languages are above all a tool for producing
 software, and that the software produced by such tools should be *correct*. 
 
@@ -151,6 +151,33 @@ We believe that the combination of native compilation via LLVM and a static type
 system will make Walrus programs "fast enough" for most common applications,
 even in the presence of garbage collection.
 
+### User experience {#sec:intro:user-experience}
+It is not enough for a compiler to simply detect that a program is incorrect. It
+should also provide enough information to the programmer for them to correct the
+program. In other words, the compiler should exhibit both good *error-reporting*
+and good *error-recovery*.
+
+Error-reporting is the ability of a compiler to accurately report the location
+of the offending code that was responsible for a syntactic or semantic error,
+and to provide a meaningful message describing the error. Line drawings and
+coloured output highlighting the offending code can make identifying the
+location of the error much easier for the reader. The compiler may even go so
+far as to suggest what the offending code should be replaced with.
+
+Error-recovery is the ability of a compiler to continue with syntactic or
+semantic analysis in the presence of an error. This is important for a good user
+experience because it allows subsequent errors to be detected, and so more
+errors can be reported by a single invocation of the compiler. The more errors
+that can be detected in one invocation, the fewer trips around the
+*edit-compile-run cycle* (the loop between writing new code, compiling it,
+correcting errors and recompiling) will be required during development, and so the
+more productive the programmer feels.
+
+Improving user experience should not require trading off on any of the other
+listed criteria (other than taking away from time that could be spent on other
+aspects of the compiler), as user experience is a property of the particular
+implementation of the compiler, not the design of the language itself.
+
 ## Inspirations
 Throughout this report we may make references to other programming languages, in
 order to compare certain design or implementation decisions to the same
@@ -176,3 +203,4 @@ complex for Walrus' lower performance requirements. Our hope is that Walrus will
 be attractive to other users of Rust admire many of its design choices but who
 share our frustration at the limitations imposed by its high performance
 requirements.
+
