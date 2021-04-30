@@ -33,7 +33,7 @@ and priority of criteria will be determined by the language's intended use and
 target audience:
 
 * A scripting language intended for small "glue" scripts will likely value
-  low-barriers to entry and fast development time over correctness or
+  low barriers to entry and fast development time over correctness or
   performance. This is exactly the trade-off made by Bash, where the lack of a
   type system allows any program written in any programming language to be used
   as a library function - when all functions communicate by reading and writing
@@ -43,10 +43,17 @@ target audience:
 * A systems language intended for development of operating systems
   is likely to prioritise performance above all else: for example, the C++
   language community expects new abstractions added to the language to be
-  "zero-cost", in the words of Bjarne Stroustrup, its original developer: "What
-  you don’t use, you don’t pay for. And further: What you do use, you couldn’t
-  hand code any better." This leads to a reluctance to add new features until it
-  can be shown that they can be implemented with zero performance cost.
+  "zero-cost":
+
+  > What you don’t use, you don’t pay for. And further: What you do use, you
+  > couldn’t hand code any better." This leads to a reluctance to add new
+  > features until it can be shown that they can be implemented with zero
+  > performance cost.
+  > --Bjarne Stroustrup
+
+  This leads to a reluctance to add new features until it can be shown that they
+  can be implemented with zero performance cost.
+
 * An academic language intended for research is likely to focus on adding
   elaborate new features and proving various formal properties of the language's
   semantics, rather than on delivering high performance or being easily easily
@@ -69,11 +76,9 @@ security vulnerability such as a buffer overflow.
 Total program correctness is impossible without resorting to formal verification
 (and even then it is undecidable in the general case), and indeed few programs
 even have a formal specification. However it is possible to increase confidence
-in program correctness through introduction of features such as a strong type
-system (see @sec:ref:type-system for a definition of *strong* typing vs *weak*
-typing), and omission of features that are easy to use incorrectly, such as
-untagged unions (TODO: ref), null references (TODO: ref), or constructor methods
-(TODO: ref).
+in program correctness through introduction of static analyses such as static type
+systems, and omission of features that are easy to use incorrectly, such as
+untagged unions (TODO: ref).
 
 We consider correctness to be non-negotiable: there is no use in sacrificing
 correctness for speed if the result is that the programs can produce the wrong
@@ -85,7 +90,7 @@ A key component of ensuring correctness is the avoidance of
 behaviour of the program is not specified by the semantics of the language or
 the program being executed on. Undefined behaviour is common in the C and C++
 programming languages, both because of variation in the specified behaviour of
-an operation on each platform (such as signed integer overflow or bitshifts by
+an operation on each platform (such as signed integer overflow or bit-shifts by
 more than the bit-width, which vary according to the instruction set
 architecture), or because attempting to detect the erroneous condition at
 runtime would be excessively costly in terms of performance (such as checking
@@ -103,7 +108,7 @@ semantics they desire to undefined behaviour:
 
 This means that it is impossible to reason about the correctness of a program
 that triggers undefined behaviour, since (in theory) literally anything could
-happen: C and C++ folklore warns of such disasterous results as reformatting the
+happen: C and C++ folklore warns of such disastrous results as reformatting the
 user's hard-drive, launching missiles, or causing demons to fly out of the
 user's nose.^[http://catb.org/jargon/html/N/nasal-demons.html]
 

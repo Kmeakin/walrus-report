@@ -3,8 +3,8 @@
 ## Choice of implementation language
 The first design choice to be made when starting a new project is selecting the
 implementation language. For me, Rust was a natural choice. The combination of
-algebraic data types and pattern matching makes tree-like stuctures, which are
-used pervasily in compilers, simple to define and traverse. These features have
+algebraic data types and pattern matching makes tree-like structures, which are
+used pervasively in compilers, simple to define and traverse. These features have
 been staples of functional programming languages for decades, yet Rust is one of
 the few "mainstream" C-like programming languages to include them.
 
@@ -59,7 +59,7 @@ digraph {
 ```
 
 Alternatives to this "batch processing" model do exist, and are growing in
-prominance as programmers start to demand more advanced features of thier
+prominence as programmers start to demand more advanced features of their
 Integrated Development Environments (IDEs). For example, `rust-analyzer`,
 provides IDE features such as code completion, error highlighting and code
 navigation. To do this it must replicate the front and middle ends of the

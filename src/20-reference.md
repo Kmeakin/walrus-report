@@ -5,11 +5,11 @@ Walrus has 5 primitive data types (`Bool`, `Int`, `Float`, `Char`, `String`), wi
 corresponding syntax for creating literal values.
 
 ### `Bool`s {#sec:reference:bools}
-The `Bool` datatype represents the logical values of Boolean Algebra: `true` and
+The `Bool` data type represents the logical values of Boolean Algebra: `true` and
 `false`. 
 
 ### `Int`s {#sec:reference:ints}
-The `Int` datatype represents signed 32-bit integers: that is, integers between
+The `Int` data type represents signed 32-bit integers: that is, integers between
 $-2^{-31}$ ($-2,147,483,648$) and $2^{31}-1$  ($2,147,483,657$) inclusive. 
 
 `Int` literals may be given in either decimal, binary or hexadecimal notation.
@@ -33,7 +33,7 @@ to Walrus with little effort in future versions.
 in Rust
 
 ### `Float`s {#sec:reference:floats}
-The `Float` datatype represents (approximations of) real numbers: the binary32
+The `Float` data type represents (approximations of) real numbers: the binary32
 format specified in IEEE-754-2008. This allows representing rational numbers
 between $-3.40282347 \times 10^{38}$ and $3.40282347 \times 10^{38}$, as well as
 positive and negative zero, positive and negative infinity, and various NaN

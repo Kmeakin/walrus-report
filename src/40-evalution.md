@@ -76,7 +76,7 @@ information to determine a unique type for `x` and `y` (the system of equality
 constraints is said to be *under-constrained*). This leads to a cascade of
 further type inference error messages, as now the type of the function body and
 all its sub-expressions cannot be inferred, and each sub-expression emits a new
-error message. Therefore, while idealy this program should result in just 3
+error message. Therefore, while ideally this program should result in just 3
 error messages (could not infer type of `x`, could not infer type of `y`, could
 not infer return type of `add`), in reality 11 error messages are produced - too
 many to even fit in one terminal screen at my normal font size:
