@@ -182,6 +182,26 @@ left out of Walrus for lack of time.
 
 [^LetTypes]: See @sec:reference:types for more information about types and type-inference.
 
+### Lvalues {#sec:reference:lvalues}
+Although the assignment operator, `=` can syntactically acccept an expression on
+its left-hand side, semantically it only makes sense to mutate an expression
+that refers to a location in memory: it would not make sense to attempt to
+mutate a literal expression, or a temporary result of an intermediate
+expression. Values that can be mutated are called *lvalues*, and all other
+values are called *rvalues*, for *left-hand side values* and *right-hand side
+values* respectively ^[This terminology is inherited from C. C++ extends the
+classification of values by adding more exotic categories such as *glvalues*,
+*prvalues* and *xvalues*. See
+https://en.cppreference.com/w/cpp/language/value_category for more information]
+Lvalues in Walrus are defined inductively as:
+
+* A variable expression which referes to a local variable is an lvalue
+* A parenthesised lvalue expression is an lvalue
+* A field-expression, where the expression to the left of the `.` is an lvalue,
+  is an lvalue
+
+Intuitively, this means that only local variables and struct fields can be mutated.
+
 ## Operators {#sec:reference:operators}
 Walrus provides a set of arithmetical and logical operators (both *prefix* and
 *infix*) for performing operations that are too primitive to be implemented by
@@ -231,26 +251,6 @@ xs`{.haskell}. The set of types to which each operator can be applied is also
 fixed: the user cannot provide their own implementation of an operator for other
 types. These two limitations are due to a current shortcoming in Walrus' type
 system, which will be explained in depth in @sec:reference:types.
-
-## Lvalues {#sec:reference:lvalues}
-Although the assignment operator, `=` can syntactically acccept an expression on
-its left-hand side, semantically it only makes sense to mutate an expression
-that refers to a location in memory: it would not make sense to attempt to
-mutate a literal expression, or a temporary result of an intermediate
-expression. Values that can be mutated are called *lvalues*, and all other
-values are called *rvalues*, for *left-hand side values* and *right-hand side
-values* respectively ^[This terminology is inherited from C. C++ extends the
-classification of values by adding more exotic categories such as *glvalues*,
-*prvalues* and *xvalues*. See
-https://en.cppreference.com/w/cpp/language/value_category for more information]
-Lvalues in Walrus are defined inductively as:
-
-* A variable expression is an lvalue
-* A parenthesised lvalue expression is an lvalue
-* A field-expression, where the expression to the left of the `.` is an lvalue,
-  is an lvalue
-
-Intuitively, this means that only variables and struct fields can be mutated.
 
 ## Functions and Closures {#sec:reference:functions}
 Functions are the primary unit of abstraction in Walrus, allowing complex
@@ -558,7 +558,7 @@ fn sign(x: Int) -> String {
 }
 ```
 
-### Loops {
+### Loops {#sec:reference:loops}
 A loop-expression simply repeats its body until it encounters a `break`
 expression:
 ```rust

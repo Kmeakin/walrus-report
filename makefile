@@ -2,6 +2,7 @@ all:
 	pandoc src/*.md \
 	-s \
 	-o out/report.pdf \
+	--table-of-contents \
 	--highlight-style pygments \
 	-V fontsize=12pt \
 	-V papersize=a4paper \

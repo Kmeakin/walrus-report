@@ -1,4 +1,7 @@
 ---
+title: "The Walrus Programming Language"
+author: "Karl Meakin"
+
 geometry: margin=1cm
 monofont: 'Fira Mono'
 header-includes: |
