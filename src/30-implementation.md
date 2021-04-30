@@ -651,16 +651,16 @@ variable:
 
 \begin{tikzpicture}
 % Nodes
-\node (FnDef)                                   {FnDef};      \node[right=1pt of FnDef]      {$\tau_{0}$};
-\node (RetType)     [below right=of FnDef]      {RetType};    \node[right=1pt of RetType]    {$\tau_{9}$};
-\node (LambdaExpr)  [below left=of FnDef]       {LambdaExpr}; \node[right=1pt of LambdaExpr] {$\tau_{1}$};
-\node (VarPat)      [below left=of LambdaExpr]  {VarPat};     \node[right=1pt of VarPat]     {$\tau_{2}$};
-\node (IfExpr)      [below right=of LambdaExpr] {IfExpr};     \node[right=1pt of IfExpr]     {$\tau_{3}$};
-\node (CallExpr)    [below left=of IfExpr]      {CallExpr};   \node[right=1pt of CallExpr]   {$\tau_{4}$};
-\node (VarExpr)     [below left=of CallExpr]    {VarExpr};    \node[right=1pt of VarExpr]    {$\tau_{5}$};
-\node (IntLit1)     [below right=of CallExpr]   {IntLit};     \node[right=1pt of IntLit1]    {$\tau_{6}$};
-\node (IntLit2)     [below=of IfExpr]           {IntLit};     \node[right=1pt of IntLit2]    {$\tau_{7}$};
-\node (IntLit3)     [below right=of IfExpr]     {IntLit};     \node[right=1pt of IntLit3]    {$\tau_{8}$};
+\node (FnDef)                                   {FnDef};      \node[right=1pt of FnDef]      {$\alpha_{0}$};
+\node (RetType)     [below right=of FnDef]      {RetType};    \node[right=1pt of RetType]    {$\alpha_{9}$};
+\node (LambdaExpr)  [below left=of FnDef]       {LambdaExpr}; \node[right=1pt of LambdaExpr] {$\alpha_{1}$};
+\node (VarPat)      [below left=of LambdaExpr]  {VarPat};     \node[right=1pt of VarPat]     {$\alpha_{2}$};
+\node (IfExpr)      [below right=of LambdaExpr] {IfExpr};     \node[right=1pt of IfExpr]     {$\alpha_{3}$};
+\node (CallExpr)    [below left=of IfExpr]      {CallExpr};   \node[right=1pt of CallExpr]   {$\alpha_{4}$};
+\node (VarExpr)     [below left=of CallExpr]    {VarExpr};    \node[right=1pt of VarExpr]    {$\alpha_{5}$};
+\node (IntLit1)     [below right=of CallExpr]   {IntLit};     \node[right=1pt of IntLit1]    {$\alpha_{6}$};
+\node (IntLit2)     [below=of IfExpr]           {IntLit};     \node[right=1pt of IntLit2]    {$\alpha_{7}$};
+\node (IntLit3)     [below right=of IfExpr]     {IntLit};     \node[right=1pt of IntLit3]    {$\alpha_{8}$};
 
 % Edges
 \draw[->] (FnDef) -- (LambdaExpr);
@@ -679,17 +679,17 @@ rules used are provided in @sec:appendix:type-rules.
 
 | Constraint                            | Rule applied
 |---------------------------------------|--------------
-| $\tau_{0} = () \to \tau_{1}$          | FnDef
-| $\tau_{1} = \tau_{9}$                 | FnDef
-| $\tau_{1} = (\tau_{2}) \to \tau_{3}$  | LambdaExpr
-| $\tau_{4} = Bool$                     | IfThenElseExpr
-| $\tau_{3} = \tau_{7}$                 | IfThenElseExpr
-| $\tau_{3} = \tau_{8}$                 | IfThenElseExpr
-| $\tau_{5} = (\tau_{6}) \to \tau_{4}$  | CallExpr
-| $\tau_{5} = \tau_{2}$                 | VarExpr
-| $\tau_{6} = Int$                      | IntLit
-| $\tau_{7} = Int$                      | IntLit
-| $\tau_{8} = Int$                      | IntLit
+| $\alpha_{0} = () \to \alpha_{1}$          | FnDef
+| $\alpha_{1} = \alpha_{9}$                 | FnDef
+| $\alpha_{1} = (\alpha_{2}) \to \alpha_{3}$  | LambdaExpr
+| $\alpha_{4} = \textbf{Bool}$            | IfThenElseExpr
+| $\alpha_{3} = \alpha_{7}$                 | IfThenElseExpr
+| $\alpha_{3} = \alpha_{8}$                 | IfThenElseExpr
+| $\alpha_{5} = (\alpha_{6}) \to \alpha_{4}$  | CallExpr
+| $\alpha_{5} = \alpha_{2}$                 | VarExpr
+| $\alpha_{6} = \textbf{Int}$             | IntLit
+| $\alpha_{7} = \textbf{Int}$             | IntLit
+| $\alpha_{8} = \textbf{Int}$             | IntLit
 
 Finally, we solve the set of constraints via *unification* (TODO: citation).
 Unification is the process of solving a system of symbolic equations by finding
@@ -727,21 +727,32 @@ fn unify_var(ty: Type, var: TypeVar) -> Substitution {
 }
 ```
 
-The so-called *occurs-check* in `unify_var` is required to prevent attempting to
-construct an infinite type. Consider trying to type check the expression `(f) =>
-f(f)`{.rust}. This would generate a constraint of the form $\tau_1 = (\tau_1) \to
-\tau_1$, which has no finite solution: attempts to unify the solution would
-attempt to construct an infinite type $\tau_1 \to (\tau_1) \to \dots \to
-\tau_1$, and cause the unifier to either loop forever or eventually crash due to
-a stack overflow, depending on the implementation.
-
 Consider solving the constraint set generated above. We start with an empty
-substitution, and remove the first constraint, $\tau_0 = () \to \tau_1$. Since
-the left-hand side of the constraint is a type-variable, we add $\tau_0 = ()
-\to \tau_1$ to the substitution, and replace all occurrences of
-$\tau_0$ in the remaining constraints by $() \to \tau_1$ (there are none, so the
+substitution, and remove the first constraint, $\alpha_0 = () \to \alpha_1$. Since
+the left-hand side of the constraint is a type-variable, we add $\alpha_0 = ()
+\to \alpha_1$ to the substitution, and replace all occurrences of
+$\alpha_0$ in the remaining constraints by $() \to \alpha_1$ (there are none, so the
 constraint set remains unchanged). Repeating this for all the constraints in the
-set eventually gives this substitution: TODO.
+set eventually gives the substitution: 
+\begin{align*}
+\alpha_0 &:= () \to ((\textbf{Int}) \to \textbf{Bool}) \to \textbf{Int} \\
+\alpha_2 &:= (\textbf{Int}) \to \textbf{Bool} \\
+\alpha_3 &:= \textbf{Int} \\
+\alpha_4 &:= \textbf{Bool} \\
+\alpha_5 &:= (\textbf{Int}) \to \textbf{Bool} \\
+\alpha_6 &:= \textbf{Int} \\
+\alpha_7 &:= \textbf{Int} \\
+\alpha_8 &:= \textbf{Int} \\
+\alpha_9 &:= \textbf{Int}
+\end{align*}
+
+The so-called *occurs-check* in `unify_var` is required to prevent attempting to
+construct an infinite type. Consider trying to infer the type of the expression
+`(f) => f(f)`{.rust}. This would generate a constraint of the form $\alpha_1 =
+(\alpha_1) \to \alpha_1$, which has no finite solution: attempts to unify the
+solution would attempt to construct an infinite type $\alpha_1 \to (\alpha_1) \to
+\dots \to \alpha_1$, and cause the unifier to either loop forever or eventually
+crash due to a stack overflow, depending on the implementation.
 
 The Walrus type-checker conceptually performs the same steps, however it
 interleaves **step 2** and **step 3** by performing unification on demand. This

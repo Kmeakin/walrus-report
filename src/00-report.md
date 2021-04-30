@@ -6,6 +6,7 @@ bibliography: biblio.bib
 geometry: margin=1cm
 monofont: 'Fira Mono'
 header-includes: |
+    \usepackage{amsmath} 
     \usepackage{textcomp}
     \usepackage{longtable}
     \usepackage{stmaryrd}
