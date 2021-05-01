@@ -74,8 +74,7 @@ declare {} @builtin_print(%String)
 When compiling with `-O3`, LLVM replaces all reads from `x` and `y` by their
 constant values (*copy progagation*), and then performs constant folding on the
 division, which is now a division of two constants, `42/0`. Division by zero in
-the `sdiv` instruction is undefined behaviour^[TODO cite
-https://llvm.org/docs/LangRef.html#sdiv-instruction], and so the instruction is
+the `sdiv` instruction is undefined behaviour [@SDiv], and so the instruction is
 replaced by `undef`. In this particular compilation, LLVM chose to replace that
 particular instance of `undef` by `1` when translating to machine code, but this
 behaviour can not be relied on and could change without warning in future
@@ -185,10 +184,9 @@ indicate **where** in the program the error occurred, preferably by underlining
 the offending section of code or even highlighting it in bold colours; and
 provide an understandable explanation of **what** the error means and how it can
 be fixed. The design of error messages is more an art than a science: languages
-like Rust and Elm, which pride themselves on compiler user experience, have
-extensive developer guidelines for writing helpful error messages and will
-sometimes even go as far as to tell the user what they can type to fix the error
-^[TODO: links].
+like Rust, which pride themselves on compiler user experience, have extensive
+developer guidelines for writing helpful error messages and will sometimes even
+go as far as to tell the user what they can type to fix the error [@RustcErrors].
 
 Obviously a single-person project over the course of a year will not have quite
 the same level of polish attached to the content of error messages, however I

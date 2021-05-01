@@ -12,15 +12,9 @@ all:
 	-V documentclass:report \
 	--number-sections \
 	--pdf-engine=xelatex \
-	# --lua-filter=lua-filters/diagram-generator/diagram-generator.lua \
+	--lua-filter=lua-filters/diagram-generator/diagram-generator.lua \
 	# --lua-filter lua-filters/wordcount/wordcount.lua \
 	# -M wordcount=process-anyway
-
-fuck:
-	pandoc src/fuck.md \
-	--bibliography=src/biblio.bib \
-	--citeproc \
-	-o out/fuck.pdf
 
 wordcount:
 	pandoc src/*.md \

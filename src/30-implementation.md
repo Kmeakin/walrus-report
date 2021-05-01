@@ -409,11 +409,10 @@ produced and consumed during semantic analysis and code generation - for
 example, each expression must be associated with its inferred type after type
 inference, or each variable with its parent scope. This problem of having to
 annotate trees with different pieces of metadata at different stages in a
-program has been referred to in the literature as *The AST Typing Problem*
-^[TODO http://blog.ezyang.com/2013/05/the-ast-typing-problem] or the *The tree
-Decoration Problem* ^[TODO Trees that Grow paper].
+program has been referred to in the literature as *The AST Typing Problem* [@AstTyping]
+or the *The tree Decoration Problem* [@TreesThatGrow].
 
-The naive solution to this problem is to have multiple IRs for each stage of the
+A naive solution to this problem is to have multiple IRs for each stage of the
 semantic analysis and annotate each new IR with the appropriate information, so
 that, for example, scope generation converts `Expr`s to `ScopedExpr`s and type
 inference converts `ScopeExpr`s to `TypedExprs`. However, this approach would
@@ -688,7 +687,7 @@ rules used are provided in @sec:appendix:type-rules.
 | $\alpha_{7} = \textbf{Int}$             | IntLit
 | $\alpha_{8} = \textbf{Int}$             | IntLit
 
-Finally, we solve the set of constraints via *unification* (TODO: citation).
+Finally, we solve the set of constraints via *unification* [@TAPL].
 Unification is the process of solving a system of symbolic equations by finding
 a *substitution* mapping variables to their values. The unification algorithm
 required for our type inference algorithm is relatively simple, since we are
@@ -789,7 +788,7 @@ Each error is represented as an enum indicating the kind of error (eg type
 mismatch, undefined variable, mutating an immutable variable) and the HIR nodes
 responsible. The corresponding parse tree node for each HIR node is looked-up in
 the `HashMap` created in the lowering pass to get the source locations. The
-`codespan-reporting`^[TODO: link] library then handles the details of printing a
+`codespan` library [@Codespan] then handles the details of printing a
 message to the terminal with the correct escape-sequences to display lines and
 coloured text.
 

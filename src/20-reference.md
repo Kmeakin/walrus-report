@@ -294,7 +294,7 @@ No explicit `return` is necessary as in C ^[though explicit returns can still be
 used, see @sec:reference:control-flow]. The return type of a function can be
 specified on the right-hand-side of the arrow, as in `hello`, or left blank to
 let the Walrus compiler infer the correct type, as in `world`. If no return type
-is given, the function is assumed to return the unit type^[see @sec:types:unit],
+is given, the function is assumed to return the unit type ^[see @sec:reference:types:unit],
 `()`, as in `main`.
 
 ### Function parameters
@@ -461,7 +461,7 @@ fn main() {
 A block-expression allows sequencing statements. In this respect they are the
 same as *compound-statements* from C or Java, except that they evaluate to a
 final value. A statement is either a let-statement, which was described earlier
-in @sec:ref:let-bindings, or an *expression-statement*, which is simply a normal
+in @sec:reference:let-bindings, or an *expression-statement*, which is simply a normal
 expression terminated by a semicolon - this has the effect of evaluating the
 expression for its side-effects and discarding the return value. The return
 value of a bock-expression is the return value of its trailing expression, or
@@ -1248,7 +1248,7 @@ correct them at development-time, rather than after the program has been
 deployed. The field of *formal-methods* describes several methods for checking
 the correctness of programs, such as automated theorem provers, model-checkers,
 and Hoare logic. The most widespread method for checking correctness is to use a
-*type system*. The textbook *Types and Programming Languages*, describes a type
+*type system*. The textbook *Types and Programming Languages* [@TAPL], describes a type
 system as:
 
 > a tractable syntactic method for proving the absence of certain program
@@ -1476,15 +1476,14 @@ control back to the enclosing scope after they are evaluated. For example, a
 type `Never`: such a loop will never produce any value. Similarly, the builtin
 function `exit` returns `Never`: once the `exit` function is called, the process
 executing the program exits, and so the enclosing context will never receive a
-value. Contrast this with the type given to
-`std::exit`^[https://en.cppreference.com/w/cpp/utility/program/exit] by C++11:
-`void exit(int)`. This type signature is less accurate than that of
-Walrus's `exit` - it implies that `std::exit` will eventually return. The
-`[[noreturn]]` attribute can be added to the declaration of `std::exit` to mark
-that the function does in fact never return, but this is not as flexible as
-encoding the non-termination of the function into its type. Since
-non-termination is a first class type in Walrus, it is trivial to write a
-function that accepts only non-terminating functions as inputs:
+value. Contrast this with the type given to `std::exit` by C++20: `void
+exit(int)`. This type signature is less accurate than that of Walrus's `exit` -
+it implies that `std::exit` will eventually return. The `[[noreturn]]` attribute
+can be added to the declaration of `std::exit` to mark that the function does in
+fact never return, but this is not as flexible as encoding the non-termination
+of the function into its type. Since non-termination is a first class type in
+Walrus, it is trivial to write a function that accepts only non-terminating
+functions as inputs:
 
 ```rust
 fn wrap_exit(f: (Int) -> Never) -> Never {

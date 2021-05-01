@@ -51,7 +51,7 @@ target audience:
   > couldn’t hand code any better." This leads to a reluctance to add new
   > features until it can be shown that they can be implemented with zero
   > performance cost.
-  > --Bjarne Stroustrup
+  > --Bjarne Stroustrup [@ZeroCost]
 
   This leads to a reluctance to add new features until it can be shown that they
   can be implemented with zero performance cost.
